@@ -8,6 +8,7 @@
 *.dll
 *.so
 *.dylib
+package.json
 
 # Test binary, build with `go test -c`
 *.test
