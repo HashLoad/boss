@@ -13,7 +13,7 @@ var installCmd = &cobra.Command{
 	Short: "Install a dependency",
 	Long:  `Install a dependency`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loadPackage, e := models.LoadPackage("package.json")
+		loadPackage, e := models.LoadPackage("package.json", true)
 		if e != nil {
 			e.Error()
 		}
