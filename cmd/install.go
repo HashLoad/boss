@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"github.com/hashload/boss/core"
 	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/utils"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -13,7 +15,7 @@ var installCmd = &cobra.Command{
 	Short: "Install a dependency",
 	Long:  `Install a dependency`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loadPackage, e := models.LoadPackage("package.json", true)
+		loadPackage, e := models.LoadPackage(true)
 		if e != nil {
 			e.Error()
 		}
@@ -27,12 +29,16 @@ var installCmd = &cobra.Command{
 				loadPackage.AddDependency(split[0], split[1])
 			}
 		}
+		if loadPackage.IsNew && len(args) == 0 {
+			return
+		}
 		loadPackage.Save()
+		core.EnsureDependencies(loadPackage)
+		utils.UpdateLibraryPath()
 	},
 }
 
 func init() {
-	installCmd.Flags().BoolVar(&dev, "d", false, "add dev mode")
-	installCmd.Flags().BoolVar(&dev, "dev", false, "add dev mode")
+	installCmd.Flags().BoolVarP(&dev, "dev", "d", false, "add dev mode")
 	RootCmd.AddCommand(installCmd)
 }

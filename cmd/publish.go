@@ -16,7 +16,7 @@ var publishCmd = &cobra.Command{
 	Short: "publish a dependency",
 	Long:  `publish a dependency`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loadPackage, e := models.LoadPackage("package.json")
+		loadPackage, e := models.LoadPackage( false)
 		if e != nil {
 			e.Error()
 		}

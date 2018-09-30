@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/.cacheC" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/DataSetConverter4Delphi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/REST4Delphi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/SQLBuilder4Delphi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/issrc" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/REST4Delphi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/REST4Delphi/dependencies/delphimvcframework" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/REST4Delphi/dependencies/delphimvcframework/lib/delphistompclient" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/REST4Delphi/dependencies/delphimvcframework/lib/dmustache" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/SQLBuilder4Delphi" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/issrc" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/issrc/Components/Ps" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp/modules/issrc/Components/UniPs" vcs="Git" />
+  </component>
+</project>

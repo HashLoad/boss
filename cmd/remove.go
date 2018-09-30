@@ -10,7 +10,7 @@ var removeCmd = &cobra.Command{
 	Short: "Remove a dependency",
 	Long:  `Remove a dependency`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loadPackage, e := models.LoadPackage("package.json", false)
+		loadPackage, e := models.LoadPackage(false)
 		if e != nil {
 			e.Error()
 		}

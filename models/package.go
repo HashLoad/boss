@@ -2,13 +2,14 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/hashload/boss/consts"
 	. "io/ioutil"
 	"time"
 )
 
 type Package struct {
-	fileName string
-
+	fileName        string
+	IsNew           bool
 	Name            string      `json:"name"`
 	Description     string      `json:"description"`
 	Version         string      `json:"version"`
@@ -16,6 +17,7 @@ type Package struct {
 	Homepage        string      `json:"homepage"`
 	MainSrc         string      `json:"mainsrc"`
 	Supported       string      `json:"supported"`
+	DprojName       string      `json:"dprojFile"`
 	ModifyedAt      time.Time   `json:"modifyedAt"`
 	Scripts         interface{} `json:"scripts"`
 	Dependencies    interface{} `json:"dependencies"`
@@ -73,21 +75,23 @@ func getNew(file string) *Package {
 		res.Scripts = make(map[string]interface{})
 	*/
 	res.fileName = file
+	res.IsNew = true
 
 	return res
 }
 
-func LoadPackage(file string, createNew bool) (*Package, error) {
-	if bytes, e := ReadFile(file); e != nil {
+func LoadPackage(createNew bool) (*Package, error) {
+	if bytes, e := ReadFile(consts.FILE_PACKAGE); e != nil {
 		if createNew {
 			e = nil
 		}
-		return getNew(file), e
+		return getNew(consts.FILE_PACKAGE), e
 	} else {
-		result := getNew(file)
+		result := getNew(consts.FILE_PACKAGE)
 		if err := json.Unmarshal(bytes, result); err != nil {
 			return nil, e
 		}
+		result.IsNew = false
 		return result, nil
 	}
 }

@@ -1,0 +1,10 @@
+package: github.com/hashload/boss
+import:
+- package: github.com/spf13/cobra
+  version: ^0.0.3
+- package: github.com/beevik/etree
+  version: ^1.0.1
+- package: gopkg.in/src-d/go-git.v4
+  version: ^4.7.0
+- package: github.com/mitchellh/go-homedir
+  version: ^1.0.0

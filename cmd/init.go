@@ -15,7 +15,7 @@ var initCmd = &cobra.Command{
 	Long:  `Initialize a new project or install dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
 		printHead()
-		pkgJson, _ := models.LoadPackage("package.json", true)
+		pkgJson, _ := models.LoadPackage(true)
 		s, _ := os.Getwd()
 
 		rxp, _ := regexp.Compile(`\\(\w+)$`)
