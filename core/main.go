@@ -15,10 +15,10 @@ func EnsureDependencies(pkg *models.Package) {
 
 	makeCache(deps)
 
-	ensureModules
+	ensureModules(deps)
 }
 
-func makeCache(deps []models.Dependency)  {
+func makeCache(deps []models.Dependency) {
 	msg.Info("Building cache files..")
 
 	for _, dep := range deps {
@@ -26,11 +26,10 @@ func makeCache(deps []models.Dependency)  {
 	}
 }
 
-func ensureModules(deps []models.Dependency)  {
-	msg.Info("Installing modules in project paht");
+func ensureModules(deps []models.Dependency) {
+	msg.Info("Installing modules in project paht")
 	for _, dep := range deps {
 		GetDependency(dep)
 	}
-
 
 }
