@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"io"
+	"regexp"
 	"strings"
 )
 
@@ -40,4 +41,9 @@ func GetDependencies(deps map[string]interface{}) []Dependency {
 		dependencies = append(dependencies, ParseDependency(repo, info.(string)))
 	}
 	return dependencies
+}
+
+func (d *Dependency) GetName() string {
+	var re = regexp.MustCompile(`(?m)\w+$`)
+	return re.FindString(d.Repository)
 }
