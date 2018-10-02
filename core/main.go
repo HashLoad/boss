@@ -33,7 +33,7 @@ func makeCache(deps []models.Dependency) {
 }
 
 func ensureModules(deps []models.Dependency) {
-	msg.Info("Installing modules in project path")
+	msg.Info("Installing modules in project patch")
 	for _, dep := range deps {
 		repository := OpenRepository(dep)
 		versions := git.GetVersions(repository)

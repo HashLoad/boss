@@ -2,14 +2,15 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/hashload/boss/consts"
 	. "io/ioutil"
 	"time"
+
+	"github.com/hashload/boss/consts"
 )
 
 type Package struct {
 	fileName        string
-	IsNew           bool
+	IsNew           bool        `json:"-"`
 	Name            string      `json:"name"`
 	Description     string      `json:"description"`
 	Version         string      `json:"version"`
@@ -19,9 +20,9 @@ type Package struct {
 	Supported       string      `json:"supported"`
 	DprojName       string      `json:"dprojFile"`
 	ModifyedAt      time.Time   `json:"modifyedAt"`
-	Scripts         interface{} `json:"scripts"`
-	Dependencies    interface{} `json:"dependencies"`
-	DevDependencies interface{} `json:"devDependencies"`
+	Scripts         interface{} `json:"scripts,omitempty"`
+	Dependencies    interface{} `json:"dependencies,omitempty"`
+	DevDependencies interface{} `json:"devDependencies,omitempty"`
 }
 
 func (p *Package) updateTime() {
@@ -69,10 +70,10 @@ func (p *Package) RemoveDependency(dep string) {
 func getNew(file string) *Package {
 	res := new(Package)
 	/*
-	    ALL PROPS CREATION
-		res.DevDependencies = make(map[string]interface{})
-		res.Dependencies = make(map[string]interface{})
-		res.Scripts = make(map[string]interface{})
+		    ALL PROPS CREATION
+			res.DevDependencies = make(map[string]interface{})
+			res.Dependencies = make(map[string]interface{})
+			res.Scripts = make(map[string]interface{})
 	*/
 	res.fileName = file
 	res.IsNew = true

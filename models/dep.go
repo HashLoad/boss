@@ -75,3 +75,8 @@ func GetDependencies(deps map[string]interface{}) []Dependency {
 	}
 	return dependencies
 }
+
+func (d *Dependency) GetName() string {
+	var re = regexp.MustCompile(`(?m)\w+$`)
+	return re.FindString(d.Repository)
+}
