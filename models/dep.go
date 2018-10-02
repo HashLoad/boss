@@ -50,6 +50,7 @@ func (d *Dependency) GetURL() string {
 }
 
 var re = regexp.MustCompile(`(?m)^(.|)(\d+)\.(\d+)$`)
+var re2 = regexp.MustCompile(`(?m)^(.|)(\d+)$`)
 
 func ParseDependency(repo string, info string) Dependency {
 	parsed := strings.Split(info, ":")
@@ -61,7 +62,11 @@ func ParseDependency(repo string, info string) Dependency {
 			dependency.Repository, dependency.version, dependency.version+".0")
 		dependency.version = dependency.version + ".0"
 	}
-
+	if re2.MatchString(dependency.version) {
+		msg.Warn("Current version for %s is not semantic (x.y.z), for comparation using %s -> %s",
+			dependency.Repository, dependency.version, dependency.version+".0.0/")
+		dependency.version = dependency.version + ".0.0"
+	}
 	if len(parsed) > 1 {
 		dependency.UseSSH = parsed[1] == "ssh"
 	}
@@ -77,6 +82,6 @@ func GetDependencies(deps map[string]interface{}) []Dependency {
 }
 
 func (d *Dependency) GetName() string {
-	var re = regexp.MustCompile(`(?m)\w+$`)
+	var re = regexp.MustCompile(`[^\/]+(:?\/$|$)`)
 	return re.FindString(d.Repository)
 }

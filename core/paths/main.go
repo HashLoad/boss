@@ -24,14 +24,16 @@ func EnsureCacheDir(dep models.Dependency) {
 
 func EnsureModulesDir() {
 	cacheDir := env.GetModulesDir()
-
 	fi, err := os.Stat(cacheDir)
-	if err != nil {
+	if os.IsNotExist(err) {
 		msg.Debug("Creating %s", cacheDir)
 		if err := os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
 			msg.Die("Could not create %s: %s", cacheDir, err)
 		}
 	} else if !fi.IsDir() {
 		msg.Die("modules is not a directory")
+	} else {
+		os.RemoveAll(cacheDir)
+		EnsureModulesDir()
 	}
 }

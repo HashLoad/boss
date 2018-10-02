@@ -96,3 +96,15 @@ func LoadPackage(createNew bool) (*Package, error) {
 		return result, nil
 	}
 }
+
+func LoadPackageOther(path string) (*Package, error) {
+	if bytes, e := ReadFile(path); e != nil {
+		return nil, e
+	} else {
+		result := getNew(path)
+		if err := json.Unmarshal(bytes, result); err != nil {
+			return nil, e
+		}
+		return result, nil
+	}
+}

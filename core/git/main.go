@@ -76,8 +76,8 @@ func makeStorageCache(dep models.Dependency) storage.Storer {
 
 func GetRepository(dep models.Dependency) *git.Repository {
 	cache := makeStorageCache(dep)
-	mfs := memfs.New()
-	repository, e := git.Open(cache, mfs)
+	dir := osfs.New(filepath.Join(env.GetModulesDir(), dep.GetName()))
+	repository, e := git.Open(cache, dir)
 	if e != nil {
 		msg.Err("Error on open repository %s: %s", dep.Repository, e)
 	}
