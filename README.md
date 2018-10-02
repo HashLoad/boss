@@ -27,3 +27,6 @@ Use "boss [command] --help" for more information about a command.
 + Sample: 
 	+ `boss install github.com/HashLoad/horse`
 	+ `boss install github.com/HashLoad/horse:1.0.0`
+
+
+### For use yor project in boss create a tag with [semantic version](https://semver.org/) 
