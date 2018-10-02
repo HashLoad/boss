@@ -28,7 +28,7 @@ func EnsureDependencies(pkg *models.Package) {
 
 	makeCache(deps)
 
-	ensureModules(deps)
+	ensureModules(pkg, deps)
 
 	processOthers()
 }
@@ -40,7 +40,7 @@ func makeCache(deps []models.Dependency) {
 	}
 }
 
-func ensureModules(deps []models.Dependency) {
+func ensureModules(pkg *models.Package, deps []models.Dependency) {
 	msg.Info("Installing modules in project patch")
 	for _, dep := range deps {
 		msg.Info("Processing dependency: %s", dep.GetName())
@@ -74,7 +74,9 @@ func ensureModules(deps []models.Dependency) {
 		} else {
 			msg.Info("\tFor %s using version %s", dep.Repository, bestMatch.Name().Short())
 		}
-
+		if dep.GetVersion() == "> 0.0.0" {
+			pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + bestMatch.Name().Short()
+		}
 		worktree, _ := repository.Worktree()
 		worktree.Filesystem.TempFile(filepath.Join(env.GetCacheDir(), "tmp"), "tpt")
 		err := worktree.Checkout(&git2.CheckoutOptions{

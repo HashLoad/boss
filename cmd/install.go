@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/hashload/boss/core"
 	"github.com/hashload/boss/core/gb"
 	"github.com/hashload/boss/core/paths"
@@ -8,7 +10,6 @@ import (
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 var dev bool
@@ -28,7 +29,7 @@ var installCmd = &cobra.Command{
 			split := strings.Split(dependency, ":")
 			var ver string
 			if len(split) == 1 {
-				ver = "^1"
+				ver = "x"
 			} else {
 				ver = split[1]
 			}
@@ -42,10 +43,10 @@ var installCmd = &cobra.Command{
 		if loadPackage.IsNew && len(args) == 0 {
 			return
 		}
-		loadPackage.Save()
 		paths.EnsureModulesDir()
 		core.EnsureDependencies(loadPackage)
 		utils.UpdateLibraryPath()
+		loadPackage.Save()
 		gb.RunGB()
 	},
 }
