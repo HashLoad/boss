@@ -44,6 +44,7 @@ var installCmd = &cobra.Command{
 			return
 		}
 		paths.EnsureModulesDir()
+		msg.Info("Installing modules in project patch")
 		core.EnsureDependencies(loadPackage)
 		utils.UpdateLibraryPath()
 		loadPackage.Save()
