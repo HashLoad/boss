@@ -1,6 +1,10 @@
 package core
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/Masterminds/semver"
 	"github.com/hashload/boss/core/git"
 	"github.com/hashload/boss/env"
@@ -8,14 +12,11 @@ import (
 	"github.com/hashload/boss/msg"
 	git2 "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 var processed = make([]string, 0)
 
-var processedOld = 0
+var processedOld = -1
 
 func EnsureDependencies(pkg *models.Package) {
 	if pkg.Dependencies == nil {
@@ -50,6 +51,7 @@ func ensureModules(deps []models.Dependency) {
 			msg.Err("\tVersion type not supported! %s", e)
 		}
 		var bestMatch *plumbing.Reference
+		var bestVersion *semver.Version
 		hasMatch := false
 		for _, version := range versions {
 			short := version.Name().Short()
@@ -58,11 +60,13 @@ func ensureModules(deps []models.Dependency) {
 				msg.Warn("\tErro to parse version %s: '%s' in dependency %s", short, err, dep.Repository)
 				continue
 			}
-			validate, _ := constraints.Validate(newVersion)
-			if validate {
-				//msg.Debug("Dependency %s with version %s is %s", dep.Repository, newVersion.String(), validate)
+			if constraints.Check(newVersion) {
+				//msg.Info("Dependency %s with version %s", dep.Repository, newVersion.String())
 				hasMatch = true
-				bestMatch = version
+				if bestVersion == nil || newVersion.GreaterThan(bestVersion) {
+					bestMatch = version
+					bestVersion = newVersion
+				}
 			}
 		}
 		if !hasMatch {
@@ -80,7 +84,6 @@ func ensureModules(deps []models.Dependency) {
 		if err != nil {
 			msg.Die("\tError on switch to needed version from dependency: %s", dep.Repository)
 		}
-		processed = append(processed, dep.GetName())
 	}
 }
 
