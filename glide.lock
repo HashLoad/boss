@@ -1,8 +1,10 @@
-hash: 5e774688bb73b807caed96645b29b95961c8068079c922b8e15a7b5444efeb40
-updated: 2018-09-30T00:38:01.5111974-03:00
+hash: 5669ff413f338cb319d0f0df307fbc693fb2d4113b1e55fd395402a0a096d9d5
+updated: 2018-10-01T02:29:24.5836514-03:00
 imports:
 - name: github.com/beevik/etree
   version: 9d7e8feddccb4ed1b8afb54e368bd323d2ff652c
+- name: github.com/denisbrodbeck/machineid
+  version: e2e48f90c87f1f77286682531a46ff99e95d8089
 - name: github.com/emirpasic/gods
   version: 1615341f118ae12f353cc8a983f35b584342c9b3
   subpackages:
@@ -24,8 +26,10 @@ imports:
   version: 9ef6ca313b3200079861f2de4e567b1d22081d19
   subpackages:
   - msg
+- name: github.com/Masterminds/semver
+  version: c7af12943936e8c39859482e61f0574c2fd7fc75
 - name: github.com/Masterminds/vcs
-  version: df81cd881f84b6bd2ed4e35cd16d41a4ff9ece17
+  version: 6f1c6d150500e452704e9863f68c2559f58616bf
 - name: github.com/mitchellh/go-homedir
   version: ae18d6b8b3205b561c79e8e5f69bff09736185f4
 - name: github.com/pelletier/go-buffruneio
@@ -83,6 +87,7 @@ imports:
   subpackages:
   - helper/chroot
   - helper/polyfill
+  - memfs
   - osfs
   - util
 - name: gopkg.in/src-d/go-git.v4

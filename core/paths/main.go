@@ -9,16 +9,16 @@ import (
 )
 
 func EnsureCacheDir(dep models.Dependency) {
-	cacheDir := filepath.Join(env.GetCacheDir(),dep.GetHashName())
+	cacheDir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
 
 	fi, err := os.Stat(cacheDir)
 	if err != nil {
-		msg.Default.Debug("Creating %s", cacheDir)
+		msg.Debug("Creating %s", cacheDir)
 		if err := os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
-			msg.Default.Die("Could not create %s: %s", cacheDir, err)
+			msg.Die("Could not create %s: %s", cacheDir, err)
 		}
 	} else if !fi.IsDir() {
-		msg.Default.Die(".cache is not a directory")
+		msg.Die(".cache is not a directory")
 	}
 }
 
@@ -27,11 +27,11 @@ func EnsureModulesDir() {
 
 	fi, err := os.Stat(cacheDir)
 	if err != nil {
-		msg.Default.Debug("Creating %s", cacheDir)
+		msg.Debug("Creating %s", cacheDir)
 		if err := os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
-			msg.Default.Die("Could not create %s: %s", cacheDir, err)
+			msg.Die("Could not create %s: %s", cacheDir, err)
 		}
 	} else if !fi.IsDir() {
-		msg.Default.Die("modules is not a directory")
+		msg.Die("modules is not a directory")
 	}
 }

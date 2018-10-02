@@ -99,7 +99,13 @@ func Contains(a []string, x string) bool {
 }
 
 func getNewPaths(paths []string) []string {
-	filepath.Walk(consts.FOLDER_DEPENDENCIES, func(path string, info os.FileInfo, err error) error {
+	dir, _ := os.Getwd()
+	path := filepath.Join(dir, consts.FOLDER_DEPENDENCIES)
+	_, e := os.Stat(path)
+	if os.IsNotExist(e) {
+		return nil
+	}
+	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
 		if matched {

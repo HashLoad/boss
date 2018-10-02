@@ -8,3 +8,7 @@ import:
   version: ^4.7.0
 - package: github.com/mitchellh/go-homedir
   version: ^1.0.0
+- package: github.com/Masterminds/semver
+  version: ^1.4.2
+- package: github.com/denisbrodbeck/machineid
+  version: ^1.0.0

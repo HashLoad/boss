@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/hashload/boss/core"
+	"github.com/hashload/boss/core/gb"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/utils"
 	"github.com/spf13/cobra"
@@ -35,6 +36,7 @@ var installCmd = &cobra.Command{
 		loadPackage.Save()
 		core.EnsureDependencies(loadPackage)
 		utils.UpdateLibraryPath()
+		gb.RunGB()
 	},
 }
 
