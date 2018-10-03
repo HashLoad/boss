@@ -1,5 +1,5 @@
 hash: 5669ff413f338cb319d0f0df307fbc693fb2d4113b1e55fd395402a0a096d9d5
-updated: 2018-10-02T10:54:30.8930988-03:00
+updated: 2018-10-02T18:25:44.2672787-03:00
 imports:
 - name: github.com/beevik/etree
   version: 9d7e8feddccb4ed1b8afb54e368bd323d2ff652c
