@@ -7,6 +7,10 @@
     <mapping directory="$PROJECT_DIR$/modules/REST4Delphi" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/modules/SQLBuilder4Delphi" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/modules/issrc" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp-awd" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp-awd/bin/references" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp-awd/libs/DOSCommand" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tmp-awd/libs/x-superobject" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/tmp/modules/REST4Delphi" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/tmp/modules/REST4Delphi/dependencies/delphimvcframework" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/tmp/modules/REST4Delphi/dependencies/delphimvcframework/lib/delphistompclient" vcs="Git" />

@@ -27,7 +27,7 @@ func EnsureDependencies(pkg *models.Package) {
 
 	makeCache(deps)
 
-	ensureModules(deps)
+	ensureModules(pkg, deps)
 
 	processOthers()
 }
@@ -39,7 +39,7 @@ func makeCache(deps []models.Dependency) {
 	}
 }
 
-func ensureModules(deps []models.Dependency) {
+func ensureModules(pkg *models.Package, deps []models.Dependency) {
 	msg.Info("Installing modules in project patch")
 	for _, dep := range deps {
 		msg.Info("Processing dependency: %s", dep.GetName())
@@ -50,6 +50,7 @@ func ensureModules(deps []models.Dependency) {
 			msg.Err("\tVersion type not supported! %s", e)
 		}
 		var bestMatch *plumbing.Reference
+		var bestVersion *semver.Version
 		hasMatch := false
 		for _, version := range versions {
 			short := version.Name().Short()
@@ -58,11 +59,13 @@ func ensureModules(deps []models.Dependency) {
 				msg.Warn("\tErro to parse version %s: '%s' in dependency %s", short, err, dep.Repository)
 				continue
 			}
-			validate, _ := constraints.Validate(newVersion)
-			if validate {
-				//msg.Debug("Dependency %s with version %s is %s", dep.Repository, newVersion.String(), validate)
+			if constraints.Check(newVersion) {
+				//msg.Info("Dependency %s with version %s", dep.Repository, newVersion.String())
 				hasMatch = true
-				bestMatch = version
+				if bestVersion == nil || newVersion.GreaterThan(bestVersion) {
+					bestMatch = version
+					bestVersion = newVersion
+				}
 			}
 		}
 		if !hasMatch {
@@ -70,7 +73,9 @@ func ensureModules(deps []models.Dependency) {
 		} else {
 			msg.Info("\tFor %s using version %s", dep.Repository, bestMatch.Name().Short())
 		}
-
+		if dep.GetVersion() == "> 0.0.0" {
+			pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + bestMatch.Name().Short()
+		}
 		worktree, _ := repository.Worktree()
 		worktree.Filesystem.TempFile(filepath.Join(env.GetCacheDir(), "tmp"), "tpt")
 		err := worktree.Checkout(&git2.CheckoutOptions{
