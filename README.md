@@ -12,7 +12,7 @@ Usage:
 
 Available Commands:
   help        Help about any command
-  init        Initialize a new project or install dependencies
+  init        Initialize a new project
   install     Install a dependency
   login       Register login to repo
   publish     publish a dependency
