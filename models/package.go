@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	. "io/ioutil"
-	"time"
 
 	"github.com/hashload/boss/consts"
 )
@@ -19,18 +18,12 @@ type Package struct {
 	MainSrc         string      `json:"mainsrc"`
 	Supported       string      `json:"supported"`
 	DprojName       string      `json:"dprojFile"`
-	ModifyedAt      time.Time   `json:"modifyedAt"`
 	Scripts         interface{} `json:"scripts,omitempty"`
 	Dependencies    interface{} `json:"dependencies,omitempty"`
 	DevDependencies interface{} `json:"devDependencies,omitempty"`
 }
 
-func (p *Package) updateTime() {
-	p.ModifyedAt = time.Now()
-}
-
 func (p *Package) Save() {
-	p.updateTime()
 	marshal, _ := json.MarshalIndent(p, "", "\t")
 	WriteFile(p.fileName, marshal, 664)
 }

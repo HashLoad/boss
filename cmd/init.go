@@ -3,11 +3,12 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/hashload/boss/models"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/hashload/boss/models"
+	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
@@ -27,7 +28,7 @@ var initCmd = &cobra.Command{
 		}
 
 		pkgJson.Name = getParamOrDef("package name: ("+folderName+")", folderName)
-		pkgJson.Homepage = getParamOrDef("homepage:", "")
+		pkgJson.Homepage = getParamOrDef("homepage", "")
 		pkgJson.Version = getParamOrDef("version: (1.0.0)", "1.0.0")
 		pkgJson.Description = getParamOrDef("description", "")
 		pkgJson.MainSrc = getParamOrDef("source folder: (src/)", "src/")
@@ -55,11 +56,11 @@ func getParamOrDef(msg string, def string) string {
 
 func printHead() {
 	println(`
-This utility will walk you through creating a package.json file.
+This utility will walk you through creating a boss.json file.
 It only covers the most common items, and tries to guess sensible defaults.
 		 
 Use 'boss install <pkg>' afterwards to install a package and
-save it as a dependency in the package.json file.
+save it as a dependency in the boss.json file.
 
 Press ^C at any time to quit.
 {like npm @_@ }`)

@@ -94,34 +94,36 @@ func contains(a []string, x string) bool {
 }
 
 func processOthers() {
-	if len(processed) > processedOld {
-		processedOld = len(processed)
-		infos, e := ioutil.ReadDir(env.GetModulesDir())
-		if e != nil {
-			msg.Err("Error on try load dir of modules: %s", e)
+	infos, e := ioutil.ReadDir(env.GetModulesDir())
+	if e != nil {
+		msg.Err("Error on try load dir of modules: %s", e)
+	}
+
+	for _, info := range infos {
+		if !info.IsDir() {
+			continue
+		}
+		if contains(processed, info.Name()) {
+			continue
+		} else {
+			processed = append(processed, info.Name())
+		}
+		msg.Info("Processing module: %s", info.Name())
+
+		fileName := filepath.Join(env.GetModulesDir(), info.Name(), "boss.json")
+
+		_, i := os.Stat(fileName)
+		if os.IsNotExist(i) {
+			msg.Warn("\tboss.json not exists in %s", info.Name())
 		}
 
-		for _, info := range infos {
-			if !info.IsDir() {
+		if packageOther, e := models.LoadPackageOther(fileName); e != nil {
+			if os.IsNotExist(e) {
 				continue
 			}
-			if contains(processed, info.Name()) {
-				continue
-			}
-			msg.Info("Processing module: %s", info.Name())
-
-			fileName := filepath.Join(env.GetModulesDir(), info.Name(), "boss.json")
-
-			_, i := os.Stat(fileName)
-			if os.IsNotExist(i) {
-				msg.Warn("boss.json not exists in %s", info.Name())
-			}
-
-			if packageOther, e := models.LoadPackageOther(fileName); e != nil {
-				msg.Err("Error on try load package %s: %s", fileName, e)
-			} else {
-				EnsureDependencies(packageOther)
-			}
+			msg.Err("\tError on try load package %s: %s", fileName, e)
+		} else {
+			EnsureDependencies(packageOther)
 		}
 
 	}
