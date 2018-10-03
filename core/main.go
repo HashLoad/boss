@@ -85,7 +85,6 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 		if err != nil {
 			msg.Die("\tError on switch to needed version from dependency: %s", dep.Repository)
 		}
-		processed = append(processed, dep.GetName())
 	}
 }
 
@@ -130,6 +129,5 @@ func processOthers() {
 		} else {
 			EnsureDependencies(packageOther)
 		}
-
 	}
 }

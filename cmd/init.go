@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/hashload/boss/models"
 	"github.com/spf13/cobra"
@@ -47,7 +48,7 @@ func getParamOrDef(msg string, def string) string {
 		if res[0] == '\n' || res[0] == '\r' {
 			return def
 		} else {
-			return res[0 : len(res)-1]
+			return strings.Replace(res[0:len(res)-1], "\t", "", -1)
 		}
 
 	}

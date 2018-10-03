@@ -24,10 +24,10 @@ func CloneCache(dep models.Dependency) *git.Repository {
 		Tags: git.AllTags,
 		Auth: models.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
 	})
-	initSubmodules(dep, repository)
 	if e != nil {
 		msg.Die("Error to get repository of %s: %s", dep.Repository, e)
 	}
+	initSubmodules(dep, repository)
 	return repository
 }
 
