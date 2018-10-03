@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 	"regexp"
 )
 
@@ -18,9 +19,12 @@ var initCmd = &cobra.Command{
 		pkgJson, _ := models.LoadPackage(true)
 		s, _ := os.Getwd()
 
-		rxp, _ := regexp.Compile(`\\(\w+)$`)
-		allString := rxp.FindAllString(s, 1)
-		folderName := allString[0][1:len(allString[0])]
+		var folderName = ""
+		rxp, err := regexp.Compile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
+		if err == nil {
+			allString := rxp.FindAllStringSubmatch(s, -1)
+			folderName = allString[0][1]
+		}
 
 		pkgJson.Name = getParamOrDef("package name: ("+folderName+")", folderName)
 		pkgJson.Homepage = getParamOrDef("homepage:", "")

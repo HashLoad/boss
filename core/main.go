@@ -108,7 +108,7 @@ func processOthers() {
 			if contains(processed, info.Name()) {
 				continue
 			}
-			msg.Info("Proccessing module: %s", info.Name())
+			msg.Info("Processing module: %s", info.Name())
 
 			fileName := filepath.Join(env.GetModulesDir(), info.Name(), "boss.json")
 

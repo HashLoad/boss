@@ -5,6 +5,7 @@ import (
 	"github.com/beevik/etree"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,9 +16,15 @@ import (
 func UpdateLibraryPath() {
 	var dprojName = getDprojName()
 	doc := etree.NewDocument()
+	info, err := os.Stat(dprojName)
+	if os.IsNotExist(err) || info.IsDir() {
+		msg.Err(".dproj not found.")
+		return
+	}
 	e := doc.ReadFromFile(dprojName)
 	if e != nil {
-		panic(e)
+		msg.Err("Error on read dproj: %s", e)
+		return
 	}
 	root := doc.Root()
 
