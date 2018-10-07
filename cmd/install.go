@@ -19,9 +19,9 @@ var installCmd = &cobra.Command{
 	Short: "Install a dependency",
 	Long:  `Install a dependency`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loadPackage, e := models.LoadPackage(true)
+		loadPackage, e := models.LoadPackage(false)
 		if e != nil {
-			msg.Die("Fail on open boss.json: %s", e)
+			msg.Die("Fail on open dependencies file: %s", e)
 		}
 
 		for e := range args {
