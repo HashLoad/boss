@@ -1,12 +1,16 @@
 package cmd
 
 import (
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
-	"github.com/spf13/cobra"
+	"fmt"
 	"log"
 	"os/user"
 	"path/filepath"
+	"syscall"
+
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
+	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var removeLogin bool
@@ -46,11 +50,21 @@ var loginCmd = &cobra.Command{
 			auth.Path = getParamOrDef("Patch of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
 		} else {
 			auth.SetUser(getParamOrDef("Username", ""))
-			auth.SetPass(getParamOrDef("Password", ""))
+			auth.SetPass(getPass("Password"))
 		}
 		configuration.Auth[repo] = auth
 		configuration.SaveConfiguration()
 	},
+}
+
+func getPass(description string) string {
+	fmt.Print(description + ": ")
+
+	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		msg.Die("Error on get pass: %s", err)
+	}
+	return string(bytePassword)
 }
 
 func getSshKeyPath() string {
@@ -62,7 +76,7 @@ func getSshKeyPath() string {
 }
 
 func getParamBoolean(msgS string) bool {
-	msg.Print(msgS + "(y for yes): ")
+	msg.Print(msgS + "(y or n): ")
 
 	return msg.PromptUntilYorN()
 }
