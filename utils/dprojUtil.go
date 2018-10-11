@@ -113,10 +113,11 @@ func getNewPaths(paths []string) []string {
 		return nil
 	}
 	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-
+		curr, _ := os.Getwd()
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
+			dir, _ = filepath.Rel(curr, dir)
 			if !Contains(paths, dir) {
 
 				paths = append(paths, dir)
