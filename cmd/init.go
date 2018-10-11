@@ -14,8 +14,8 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize a new project or install dependencies",
-	Long:  `Initialize a new project or install dependencies`,
+	Short: "Initialize a new project",
+	Long:  `Initialize a new project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		printHead()
 		pkgJson, _ := models.LoadPackage(true)

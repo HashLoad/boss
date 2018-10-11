@@ -83,7 +83,7 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 			Hash:  bestMatch.Hash(),
 		})
 		if err != nil {
-			msg.Die("\tError on switch to needed version from dependency: %s", dep.Repository)
+			msg.Die("\tError on switch to needed version from dependency: %s\n%s", dep.Repository, err)
 		}
 	}
 }

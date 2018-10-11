@@ -1,10 +1,12 @@
 package cache
 
 import (
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
+	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
 )
 
 func HasCache(dep models.Dependency) bool {
@@ -16,5 +18,23 @@ func HasCache(dep models.Dependency) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	return info.IsDir()
+	if !info.IsDir() {
+		os.Remove(dir)
+		return false
+	}
+	return dirIsEmpty(dir)
+
+}
+
+func dirIsEmpty(dir string) bool {
+	f, err := os.Open(dir)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	_, err = f.Readdir(1)
+	if err == io.EOF {
+		return true
+	}
+	return false
 }
