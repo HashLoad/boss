@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="38165dd2-234c-4075-b8d7-c24f84940192" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/dprojUtil.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/dprojUtil.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/publish.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/update.go" afterDir="false" />
     </list>
     <ignored path=".idea/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -37,20 +37,20 @@
         <counts>
           <entry key="dproj" value="20" />
           <entry key="gitignore" value="14" />
-          <entry key="go" value="20306" />
+          <entry key="go" value="20344" />
           <entry key="json" value="294" />
           <entry key="md" value="3" />
           <entry key="regexp" value="9" />
           <entry key="toml" value="5" />
-          <entry key="txt" value="331" />
+          <entry key="txt" value="348" />
           <entry key="yaml" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Go" value="20306" />
+          <entry key="Go" value="20344" />
           <entry key="JSON" value="294" />
-          <entry key="PLAIN_TEXT" value="368" />
+          <entry key="PLAIN_TEXT" value="385" />
           <entry key="RegExp" value="9" />
           <entry key="TOML file" value="5" />
           <entry key="YAML" value="2" />
@@ -60,7 +60,7 @@
         <counts>
           <entry key="dproj" value="7" />
           <entry key="gitignore" value="3" />
-          <entry key="go" value="269" />
+          <entry key="go" value="270" />
           <entry key="json" value="9" />
           <entry key="lock" value="4" />
           <entry key="md" value="1" />
@@ -71,7 +71,7 @@
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Go" value="269" />
+          <entry key="Go" value="270" />
           <entry key="JSON" value="9" />
           <entry key="PLAIN_TEXT" value="14" />
           <entry key="TOML file" value="3" />
@@ -93,11 +93,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utils/dprojUtil.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="146">
               <caret line="128" column="1" lean-forward="true" selection-start-line="128" selection-start-column="1" selection-end-line="128" selection-end-column="1" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/cmd/update.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="255">
+              <caret line="17" selection-start-line="17" selection-end-line="17" />
             </state>
           </provider>
         </entry>
@@ -107,15 +116,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="167">
               <caret line="381" selection-start-line="381" selection-end-line="381" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://E:/tools/Scoop/apps/go/current/src/runtime/panic.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="11492">
-              <caret line="680" selection-start-line="680" selection-end-line="680" />
             </state>
           </provider>
         </entry>
@@ -290,6 +290,7 @@
         <option value="$PROJECT_DIR$/cmd/init.go" />
         <option value="$PROJECT_DIR$/core/main.go" />
         <option value="$PROJECT_DIR$/utils/dprojUtil.go" />
+        <option value="$PROJECT_DIR$/cmd/update.go" />
       </list>
     </option>
   </component>
@@ -581,14 +582,14 @@
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.20788912" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.20788912" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Inspection Results" order="0" weight="0.32936078" />
       <window_info anchor="bottom" id="Message" order="1" />
       <window_info anchor="bottom" id="Find" order="2" weight="0.32936078" />
       <window_info anchor="bottom" id="Run" order="3" sideWeight="0.4968017" weight="0.32936078" />
-      <window_info active="true" anchor="bottom" id="Debug" order="4" sideWeight="0.49626866" visible="true" weight="0.3997833" />
+      <window_info anchor="bottom" id="Debug" order="4" sideWeight="0.49626866" visible="true" weight="0.3997833" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="7" sideWeight="0.49946696" weight="0.32936078" />
@@ -626,7 +627,8 @@
     <MESSAGE value="v1.0" />
     <MESSAGE value="v1.3" />
     <MESSAGE value="'-'" />
-    <option name="LAST_COMMIT_MESSAGE" value="'-'" />
+    <MESSAGE value="relative paths" />
+    <option name="LAST_COMMIT_MESSAGE" value="relative paths" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -907,13 +909,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/publish.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="17" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tmp/boss.json" />
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider editor-type-id="text-editor">
@@ -1017,6 +1012,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="146">
           <caret line="128" column="1" lean-forward="true" selection-start-line="128" selection-start-column="1" selection-end-line="128" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/update.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
         </state>
       </provider>
     </entry>
