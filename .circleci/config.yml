@@ -26,11 +26,3 @@ jobs:
           path: ./boss
           destination: boss-linux64
           
-  publish-github-release:
-    requires:
-      - build
-      filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^\d+\.\d+\.\d+$/
