@@ -7,6 +7,8 @@ jobs:
     filters:
       tags:
         only: /^\d+\.\d+\.\d+$/
+      branches:
+        ignore: /.*/
     
     docker:
       - image: circleci/golang:1.9
