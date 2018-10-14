@@ -21,7 +21,7 @@ jobs:
       - run: go get -u github.com/tcnksm/ghr
       - run: glide install -v
       - run: go build -v -o dist/boss
-      - run: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME v1.0.$CIRCLE_BUILD_NUM /dist || true   
+      - run: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME v1.0.$CIRCLE_BUILD_NUM /go/src/github.com/HashLoad/boss/boss || true   
       - store_artifacts:
           path: ./boss
           destination: boss-linux64
