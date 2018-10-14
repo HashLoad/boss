@@ -24,7 +24,7 @@ jobs:
       # specify any bash command here prefixed with `run: `
       - run: go get -u -v -t github.com/Masterminds/glide
       - run: glide install -v
-      - run: go build -v .
+      - run: go build -v github.com/HashLoad/boss
       
       - store_artifacts:
           path: ./boss
