@@ -23,6 +23,7 @@ jobs:
 
       # specify any bash command here prefixed with `run: `
       - run: go get -u -v -t github.com/Masterminds/glide
+      - run: go get github.com/HashLoad/boss
       - run: glide install -v
       - run: go build -v
       
