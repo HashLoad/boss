@@ -3,14 +3,15 @@ package git
 import (
 	"github.com/hashload/boss/core/paths"
 	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/git/crazy"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"gopkg.in/src-d/go-billy.v4/memfs"
 	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	cache2 "gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/storage"
+	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 	"os"
 	"path/filepath"
 )
@@ -25,6 +26,7 @@ func CloneCache(dep models.Dependency) *git.Repository {
 		Auth: models.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
 	})
 	if e != nil {
+		os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
 		msg.Die("Error to get repository of %s: %s", dep.Repository, e)
 	}
 	initSubmodules(dep, repository)
@@ -66,12 +68,10 @@ func makeStorageCache(dep models.Dependency) storage.Storer {
 	paths.EnsureCacheDir(dep)
 	dir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
 	fs := osfs.New(dir)
-	if newStorage, e := crazy.NewStorage(fs); e != nil {
-		msg.Die("Error to make filesystem for cache", e)
-		return nil
-	} else {
-		return newStorage
-	}
+
+	newStorage := filesystem.NewStorage(fs, cache2.NewObjectLRUDefault())
+	return newStorage
+
 }
 
 func GetRepository(dep models.Dependency) *git.Repository {

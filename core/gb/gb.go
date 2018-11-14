@@ -28,8 +28,8 @@ func RunGB() {
 
 		lastUpdate := repoInfo.LastUpdate.AddDate(0, 0, models.GlobalConfiguration.PurgeTime)
 		if lastUpdate.Before(time.Now()) {
-			os.Remove(filepath.Join(env.GetCacheDir(), repoInfo.Key))
-			os.Remove(filepath.Join(env.GetCacheDir(), "info", info.Name()))
+			os.RemoveAll(filepath.Join(env.GetCacheDir(), repoInfo.Key))
+			os.RemoveAll(filepath.Join(env.GetCacheDir(), "info", info.Name()))
 		}
 
 		return nil

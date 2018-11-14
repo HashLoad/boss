@@ -12,3 +12,5 @@ import:
   version: ^1.4.2
 - package: github.com/denisbrodbeck/machineid
   version: ^1.0.0
+- package: gopkg.in/cheggaaa/pb.v2
+  version: ^2.0.6

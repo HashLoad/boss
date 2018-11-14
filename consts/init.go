@@ -9,3 +9,5 @@ const XML_TAG_NAME_PROPERTY_ATTRIBUTE string = "Condition"
 const XML_TAG_NAME_PROPERTY_ATTRIBUTE_VALUE string = "'$(Base)'!=''"
 
 const XML_TAG_NAME_LIBRARY_PATH string = "DCC_UnitSearchPath"
+
+const VERSION string = "v1.1.0"
