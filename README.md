@@ -30,3 +30,5 @@ Use "boss [command] --help" for more information about a command.
 
 
 ### For use yor project in boss create a tag with [semantic version](https://semver.org/) 
+
+### Getting started [getting_started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13) 
