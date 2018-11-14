@@ -2,28 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="38165dd2-234c-4075-b8d7-c24f84940192" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/cmd/version.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/update.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/update.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/consts/init.go" beforeDir="false" afterPath="$PROJECT_DIR$/consts/init.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/cache/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/core/cache/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/gb/gb.go" beforeDir="false" afterPath="$PROJECT_DIR$/core/gb/gb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/git/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/core/git/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/config.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/deltaobject.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/dotgit/dotgit.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/dotgit/dotgit_rewrite_packed_refs.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/dotgit/dotgit_setref.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/dotgit/dotgit_setref_norwfs.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/dotgit/writers.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/index.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/module.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/object.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/reference.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/shallow.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/git/crazy/storage.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/glide.lock" beforeDir="false" afterPath="$PROJECT_DIR$/glide.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glide.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/glide.yaml" afterDir="false" />
     </list>
     <ignored path=".idea/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -58,20 +37,20 @@
         <counts>
           <entry key="dproj" value="20" />
           <entry key="gitignore" value="14" />
-          <entry key="go" value="21937" />
+          <entry key="go" value="21987" />
           <entry key="json" value="294" />
           <entry key="md" value="3" />
           <entry key="regexp" value="9" />
           <entry key="toml" value="5" />
-          <entry key="txt" value="381" />
+          <entry key="txt" value="435" />
           <entry key="yaml" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Go" value="21937" />
+          <entry key="Go" value="21987" />
           <entry key="JSON" value="294" />
-          <entry key="PLAIN_TEXT" value="418" />
+          <entry key="PLAIN_TEXT" value="472" />
           <entry key="RegExp" value="9" />
           <entry key="TOML file" value="5" />
           <entry key="YAML" value="2" />
@@ -117,8 +96,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/cmd/update.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="133">
-              <caret line="103" column="4" selection-start-line="103" selection-start-column="4" selection-end-line="103" selection-end-column="4" />
+            <state relative-caret-position="340">
+              <caret line="41" column="45" selection-start-line="41" selection-start-column="45" selection-end-line="41" selection-end-column="45" />
               <folding>
                 <element signature="e#13#49#0" expanded="true" />
               </folding>
@@ -655,7 +634,8 @@
     <MESSAGE value="v1.3" />
     <MESSAGE value="'-'" />
     <MESSAGE value="relative paths" />
-    <option name="LAST_COMMIT_MESSAGE" value="relative paths" />
+    <MESSAGE value="Update gerbage and removed storage system mod" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update gerbage and removed storage system mod" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -669,12 +649,6 @@
           <url>file://$PROJECT_DIR$/cmd/init.go</url>
           <line>26</line>
           <option name="timeStamp" value="81" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/cmd/update.go</url>
-          <line>24</line>
-          <properties />
-          <option name="timeStamp" value="87" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -1086,8 +1060,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/cmd/update.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="103" column="4" selection-start-line="103" selection-start-column="4" selection-end-line="103" selection-end-column="4" />
+        <state relative-caret-position="340">
+          <caret line="41" column="45" selection-start-line="41" selection-start-column="45" selection-end-line="41" selection-end-column="45" />
           <folding>
             <element signature="e#13#49#0" expanded="true" />
           </folding>

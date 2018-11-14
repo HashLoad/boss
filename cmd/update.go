@@ -12,7 +12,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
@@ -21,10 +20,6 @@ var publishCmd = &cobra.Command{
 	Short: "update a cli",
 	Long:  `update a cli`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := rerunDetached()
-		if err != nil {
-			err.Error()
-		}
 		err, link, size, version := getLink()
 		if err != nil {
 			err.Error()
@@ -38,38 +33,15 @@ var publishCmd = &cobra.Command{
 		if err != nil {
 			err.Error()
 		}
-		if err := downloadFile(exePath /*+ "_o"*/, link, size); err != nil {
-			os.Remove(exePath + "_o")
+		os.Remove(exePath + "_o")
+		os.Rename(exePath, exePath+"_o")
+		if err := downloadFile(exePath + "_n", link, size); err != nil {
+			os.Rename(exePath + "_o", exePath)
 			err.Error()
-		} else {
-			os.Remove(exePath)
-			os.Rename(exePath+"_o", exePath)
+		}else{
+			os.Rename(exePath + "_n", exePath)
 		}
 	},
-}
-
-func rerunDetached() error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	for _, arg := range os.Args {
-		if arg == "--detached" {
-			println("LOL")
-			return nil
-		}
-	}
-
-	args := append(os.Args, "--detached")
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Dir = cwd
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-	cmd.Process.Release()
-	return nil
 }
 
 func checkVersion(newVersion string) bool {
@@ -130,5 +102,5 @@ func downloadFile(filepath string, url string, size float64) (err error) {
 }
 
 func init() {
-	//RootCmd.AddCommand(publishCmd)
+	RootCmd.AddCommand(publishCmd)
 }
