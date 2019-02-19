@@ -1,4 +1,4 @@
-package gb
+package gc
 
 import (
 	"github.com/hashload/boss/env"
@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-func RunGB() {
-	msg.Info("Running GB...")
-	filepath.Walk(filepath.Join(env.GetCacheDir(), "info"), func(path string, info os.FileInfo, err error) error {
+func RunGC() {
+	msg.Info("Running GC...")
+	_ = filepath.Walk(filepath.Join(env.GetCacheDir(), "info"), func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
@@ -22,18 +22,18 @@ func RunGB() {
 		var name = strings.TrimRight(base, extension)
 		repoInfo, e := models.RepoData(name)
 		if e != nil {
-			msg.Warn("Fail to parse repo info in GB: ", e)
+			msg.Warn("Fail to parse repo info in GC: ", e)
 			return nil
 		}
 
 		lastUpdate := repoInfo.LastUpdate.AddDate(0, 0, models.GlobalConfiguration.PurgeTime)
 		if lastUpdate.Before(time.Now()) {
-			os.RemoveAll(filepath.Join(env.GetCacheDir(), repoInfo.Key))
-			os.RemoveAll(filepath.Join(env.GetCacheDir(), "info", info.Name()))
+			_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), repoInfo.Key))
+			_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), "info", info.Name()))
 		}
 
 		return nil
 	})
 	models.GlobalConfiguration.LastPurge = time.Now().String()
-	models.GlobalConfiguration.SaveConfiguration()
+	_ = models.GlobalConfiguration.SaveConfiguration()
 }

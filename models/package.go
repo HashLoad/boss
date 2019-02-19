@@ -25,7 +25,7 @@ type Package struct {
 
 func (p *Package) Save() {
 	marshal, _ := json.MarshalIndent(p, "", "\t")
-	WriteFile(p.fileName, marshal, 664)
+	_ = WriteFile(p.fileName, marshal, 664)
 }
 
 func (p *Package) AddDependency(dep string, ver string) {

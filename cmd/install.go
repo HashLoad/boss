@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/hashload/boss/core"
-	"github.com/hashload/boss/core/gb"
+	"github.com/hashload/boss/core/gc"
 	"github.com/hashload/boss/core/paths"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
@@ -48,7 +48,7 @@ var installCmd = &cobra.Command{
 		core.EnsureDependencies(loadPackage)
 		utils.UpdateLibraryPath()
 		loadPackage.Save()
-		gb.RunGB()
+		gc.RunGC()
 	},
 }
 
