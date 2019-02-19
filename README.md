@@ -11,19 +11,20 @@ Usage:
   boss [command]
 
 Available Commands:
+  gc          Garbage collector
   help        Help about any command
   init        Initialize a new project
   install     Install a dependency
   login       Register login to repo
+  publish     Publish package to registry
   remove      Remove a dependency
   run         Run cmd script
-  update      update a cli
+  update      update dependencies
+  upgrade     upgrade a cli
   version     show cli version
 
-Flags:
-  -h, --help   help for boss
-
 Use "boss [command] --help" for more information about a command.
+
 ```
 + Sample: 
 	+ `boss install github.com/HashLoad/horse`
