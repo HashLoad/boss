@@ -15,9 +15,10 @@ Available Commands:
   init        Initialize a new project
   install     Install a dependency
   login       Register login to repo
-  publish     publish a dependency
   remove      Remove a dependency
   run         Run cmd script
+  update      update a cli
+  version     show cli version
 
 Flags:
   -h, --help   help for boss
