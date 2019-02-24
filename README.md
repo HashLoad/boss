@@ -5,7 +5,6 @@
 
 Instalation: 
  * Download [setup](https://github.com/HashLoad/boss/releases/download/v1.5.3/setup.exe)
- * Put in your path
  * Just type `boss` in cmd
 ```
 
