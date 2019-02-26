@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/hashload/boss/core/compiler"
 	"strings"
 
 	"github.com/hashload/boss/core"
@@ -47,6 +48,8 @@ var installCmd = &cobra.Command{
 		msg.Info("Installing modules in project patch")
 		core.EnsureDependencies(loadPackage)
 		utils.UpdateLibraryPath()
+		msg.Info("Compiling units")
+		compiler.BuildDucs()
 		loadPackage.Save()
 		gc.RunGC()
 	},

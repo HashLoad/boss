@@ -3,7 +3,6 @@ package cmd
 import (
 	"archive/tar"
 	"bytes"
-	"github.com/hashload/boss/core/git"
 	"github.com/hashload/boss/models"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4/plumbing/format/gitignore"
@@ -33,7 +32,7 @@ var publisCmd = &cobra.Command{
 		var buff bytes.Buffer
 		tw := tar.NewWriter(&buff)
 
-		patternsString := strings.Split(git.Gitignore, "\n")
+		patternsString := strings.Split("git.Gitignore", "\n")
 		patterns := []gitignore.Pattern{}
 
 		for _, value := range patternsString {

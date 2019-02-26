@@ -129,7 +129,7 @@ func (m *Messenger) Print(msg string) {
 	m.Lock()
 	defer m.Unlock()
 
-	fmt.Fprint(m.Stdout, msg)
+	fmt.Fprintln(m.Stdout, msg)
 }
 
 func Print(msg string) {

@@ -105,21 +105,20 @@ func Contains(a []string, x string) bool {
 	return false
 }
 
-func getNewPaths(paths []string) []string {
+func GetNewPaths(paths []string) []string {
 	dir, _ := os.Getwd()
 	path := filepath.Join(dir, consts.FOLDER_DEPENDENCIES)
 	_, e := os.Stat(path)
 	if os.IsNotExist(e) {
 		return nil
 	}
-	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		curr, _ := os.Getwd()
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
 			dir, _ = filepath.Rel(curr, dir)
 			if !Contains(paths, dir) {
-
 				paths = append(paths, dir)
 			}
 		}
@@ -136,7 +135,7 @@ func processCurrentPathpaths(node *etree.Element) {
 		}
 	}
 
-	currentPaths = getNewPaths(currentPaths)
+	currentPaths = GetNewPaths(currentPaths)
 
 	node.SetText(strings.Join(currentPaths, ";"))
 
