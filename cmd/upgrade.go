@@ -35,19 +35,18 @@ var upgradeCmd = &cobra.Command{
 			err.Error()
 		}
 		if err := os.Remove(exePath + "_o"); err != nil {
-			msg.Err("Failed to remove old file "+exePath+"_0", err)
+			msg.Warn("Failed to remove old file " + exePath + "_0")
 		}
 		if err := os.Rename(exePath, exePath+"_o"); err != nil {
-			msg.Err("Failed on rename "+exePath+" to "+exePath+"_0", err)
+			msg.Warn("Failed on rename " + exePath + " to " + exePath + "_0")
 		}
 		if err := downloadFile(exePath+"_n", link, size); err != nil {
 			if err := os.Rename(exePath+"_o", exePath); err != nil {
-				msg.Err("Failed on rename "+exePath+"_o"+" to "+exePath, err)
+				msg.Err("Failed on rename "+exePath+"_o"+" to "+exePath, err.Error())
 			}
-			err.Error()
 		} else {
 			if err := os.Rename(exePath+"_n", exePath); err != nil {
-				msg.Err("Failed on rename "+exePath+"_n"+" to "+exePath, err)
+				msg.Err("Failed on rename "+exePath+"_n"+" to "+exePath, err.Error())
 			}
 		}
 	},
