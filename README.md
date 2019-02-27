@@ -4,7 +4,7 @@
 ### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13) 
 
 Instalation: 
- * Download [setup](https://github.com/HashLoad/boss/releases/download/v1.5.3/setup.exe)
+ * Download [setup](https://github.com/HashLoad/boss/releases/download/v1.5.4/setup.exe)
  * Just type `boss` in cmd
 ```
 
