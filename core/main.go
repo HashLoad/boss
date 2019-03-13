@@ -45,7 +45,7 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 		versions := git.GetVersions(repository)
 		constraints, e := semver.NewConstraint(dep.GetVersion())
 		if e != nil {
-			msg.Err("\tVersion type not supported! %s", e)
+			msg.Err("  Version type not supported! %s", e)
 		}
 		var bestMatch *plumbing.Reference
 		var bestVersion *semver.Version
@@ -54,7 +54,7 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 			short := version.Name().Short()
 			newVersion, err := semver.NewVersion(short)
 			if err != nil {
-				msg.Warn("\tInvalid semantic version: %s", short)
+				msg.Warn("  Invalid semantic version: %s", short)
 				continue
 			}
 			if constraints.Check(newVersion) {
@@ -66,9 +66,9 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 			}
 		}
 		if !hasMatch {
-			msg.Die("\tNo candidate to version %s", dep.GetVersion())
+			msg.Die("  No candidate to version %s", dep.GetVersion())
 		} else {
-			msg.Info("\tFor %s using version %s", dep.Repository, bestMatch.Name().Short())
+			msg.Info("  For %s using version %s", dep.Repository, bestMatch.Name().Short())
 		}
 		if dep.GetVersion() == "> 0.0.0" {
 			pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + bestMatch.Name().Short()
@@ -81,7 +81,7 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 			Branch: bestMatch.Name(),
 		})
 		if err != nil {
-			msg.Die("\tError on switch to needed version from dependency: %s\n%s", dep.Repository, err)
+			msg.Die("  Error on switch to needed version from dependency: %s\n%s", dep.Repository, err)
 		}
 	}
 }
@@ -116,14 +116,14 @@ func processOthers() {
 
 		_, i := os.Stat(fileName)
 		if os.IsNotExist(i) {
-			msg.Warn("\tboss.json not exists in %s", info.Name())
+			msg.Warn("  boss.json not exists in %s", info.Name())
 		}
 
 		if packageOther, e := models.LoadPackageOther(fileName); e != nil {
 			if os.IsNotExist(e) {
 				continue
 			}
-			msg.Err("\tError on try load package %s: %s", fileName, e)
+			msg.Err("  Error on try load package %s: %s", fileName, e)
 		} else {
 			EnsureDependencies(packageOther)
 		}

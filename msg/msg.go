@@ -39,7 +39,7 @@ func NewMessenger() *Messenger {
 var Default = NewMessenger()
 
 func (m *Messenger) Info(msg string, args ...interface{}) {
-	m.Msg("[INFO]\t"+msg, args...)
+	m.Msg("[INFO ]\t"+msg, args...)
 }
 
 func Info(msg string, args ...interface{}) {
@@ -55,7 +55,7 @@ func Debug(msg string, args ...interface{}) {
 }
 
 func (m *Messenger) Warn(msg string, args ...interface{}) {
-	m.Msg("[WARN]\t"+msg, args...)
+	m.Msg("[WARN ]\t"+msg, args...)
 }
 
 func Warn(msg string, args ...interface{}) {

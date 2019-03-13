@@ -1,6 +1,10 @@
 package consts
 
+import "path/filepath"
+
 const FILE_PACKAGE = "boss.json"
+
+const SEPARATOR = string(filepath.Separator)
 
 const FOLDER_DEPENDENCIES = "modules"
 
