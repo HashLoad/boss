@@ -15,8 +15,6 @@ import (
 
 var processed = make([]string, 0)
 
-var processedOld = 0
-
 func EnsureDependencies(pkg *models.Package) {
 	if pkg.Dependencies == nil {
 		return
@@ -56,11 +54,10 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 			short := version.Name().Short()
 			newVersion, err := semver.NewVersion(short)
 			if err != nil {
-				msg.Warn("\tErro to parse version %s: '%s' in dependency %s", short, err, dep.Repository)
+				msg.Warn("\tInvalid semantic version: %s", short)
 				continue
 			}
 			if constraints.Check(newVersion) {
-				//msg.Info("Dependency %s with version %s", dep.Repository, newVersion.String())
 				hasMatch = true
 				if bestVersion == nil || newVersion.GreaterThan(bestVersion) {
 					bestMatch = version
@@ -80,7 +77,8 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 		worktree.Filesystem.TempFile(filepath.Join(env.GetCacheDir(), "tmp"), "tpt")
 		err := worktree.Checkout(&git2.CheckoutOptions{
 			Force: true,
-			Hash:  bestMatch.Hash(),
+			//Hash:  bestMatch.Hash(),
+			Branch: bestMatch.Name(),
 		})
 		if err != nil {
 			msg.Die("\tError on switch to needed version from dependency: %s\n%s", dep.Repository, err)

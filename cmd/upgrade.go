@@ -59,7 +59,7 @@ func checkVersion(newVersion string) bool {
 	if needUpdate {
 		println(consts.VERSION, " -> ", newVersion)
 	} else {
-		println(consts.VERSION, " <= ", newVersion)
+		println(newVersion)
 		println("already up to date!")
 	}
 	return needUpdate
@@ -79,8 +79,13 @@ func getLink() (err error, link string, size float64, version string) {
 	if err := json.Unmarshal(contents, &obj); err != nil {
 		msg.Die("failed in parse version JSON")
 	}
-	bossExe := obj["assets"].([]interface{})[0].(map[string]interface{})
-	return nil, bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string)
+	for _, value := range obj["assets"].([]interface{}) {
+		bossExe := value.(map[string]interface{})
+		if bossExe["name"].(string) == "boss.exe" {
+			return nil, bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string)
+		}
+	}
+	return fmt.Errorf("not found"), "", 0, ""
 }
 
 func closeFile(out *os.File) {

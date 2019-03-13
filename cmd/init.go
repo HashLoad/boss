@@ -33,7 +33,7 @@ var initCmd = &cobra.Command{
 		pkgJson.Version = getParamOrDef("version: (1.0.0)", "1.0.0")
 		pkgJson.Description = getParamOrDef("description", "")
 		pkgJson.MainSrc = getParamOrDef("source folder: (src/)", "src/")
-		pkgJson.Supported = getParamOrDef("supported version: (xe+)", "xe+")
+		pkgJson.Supported = getParamOrDef("supported version: (26 'Delphi XE / C++Builder XE')", "26")
 
 		pkgJson.Private = false
 

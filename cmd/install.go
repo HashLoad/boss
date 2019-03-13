@@ -35,7 +35,6 @@ var installCmd = &cobra.Command{
 				ver = split[1]
 			}
 			if dev {
-
 				loadPackage.AddDevDependency(split[0], ver)
 			} else {
 				loadPackage.AddDependency(split[0], ver)

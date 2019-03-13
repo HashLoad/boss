@@ -42,13 +42,14 @@ func UpdateCache(dep models.Dependency) *git.Repository {
 		repository = refreshCopy(dep)
 	} else {
 		worktree, _ := repository.Worktree()
-		worktree.Reset(&git.ResetOptions{
+		_ = worktree.Reset(&git.ResetOptions{
 			Mode: git.HardReset,
 		})
 	}
-	repository.Fetch(&git.FetchOptions{
-		Force: true,
-		Auth:  models.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
+	_ = repository.Fetch(&git.FetchOptions{
+		Force:    true,
+		Progress: os.Stdout,
+		Auth:     models.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
 	initSubmodules(dep, repository)
 	return repository
 }

@@ -105,7 +105,7 @@ func Contains(a []string, x string) bool {
 	return false
 }
 
-func GetNewPaths(paths []string) []string {
+func getNewPaths(paths []string) []string {
 	dir, _ := os.Getwd()
 	path := filepath.Join(dir, consts.FOLDER_DEPENDENCIES)
 	_, e := os.Stat(path)
@@ -135,7 +135,7 @@ func processCurrentPathpaths(node *etree.Element) {
 		}
 	}
 
-	currentPaths = GetNewPaths(currentPaths)
+	currentPaths = getNewPaths(currentPaths)
 
 	node.SetText(strings.Join(currentPaths, ";"))
 

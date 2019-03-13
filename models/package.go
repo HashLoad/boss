@@ -62,12 +62,6 @@ func (p *Package) RemoveDependency(dep string) {
 
 func getNew(file string) *Package {
 	res := new(Package)
-	/*
-		    ALL PROPS CREATION
-			res.DevDependencies = make(map[string]interface{})
-			res.Dependencies = make(map[string]interface{})
-			res.Scripts = make(map[string]interface{})
-	*/
 	res.fileName = file
 	res.IsNew = true
 
