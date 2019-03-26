@@ -34,11 +34,7 @@ var installCmd = &cobra.Command{
 			} else {
 				ver = split[1]
 			}
-			if dev {
-				loadPackage.AddDevDependency(split[0], ver)
-			} else {
-				loadPackage.AddDependency(split[0], ver)
-			}
+			loadPackage.AddDependency(split[0], ver)
 		}
 		if loadPackage.IsNew && len(args) == 0 {
 			return

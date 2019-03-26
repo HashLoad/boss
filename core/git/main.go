@@ -47,9 +47,8 @@ func UpdateCache(dep models.Dependency) *git.Repository {
 		})
 	}
 	_ = repository.Fetch(&git.FetchOptions{
-		Force:    true,
-		Progress: os.Stdout,
-		Auth:     models.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
+		Force: true,
+		Auth:  models.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
 	initSubmodules(dep, repository)
 	return repository
 }

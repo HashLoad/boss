@@ -1,10 +1,12 @@
-hash: 33d0947b80ce005971be9f863e8f9285a4722ab2732e4cc5773f6082b81fd4c6
-updated: 2018-11-14T02:49:15.1129184-02:00
+hash: ea90d9653c1ac06d3faba055c6f8741903370a12de56ed4907c481900a0d6d94
+updated: 2019-03-26T16:17:39.2952383-03:00
 imports:
+- name: github.com/bclicn/color
+  version: 108f2023dc84f1f9e64f246fa3997993971b2706
 - name: github.com/beevik/etree
-  version: 9d7e8feddccb4ed1b8afb54e368bd323d2ff652c
+  version: 8aee6516be3b1163bb6450c35c50e4969e3a3aa8
 - name: github.com/denisbrodbeck/machineid
-  version: e2e48f90c87f1f77286682531a46ff99e95d8089
+  version: f07179bb15a0bec252453468aa607c670f5c12b5
 - name: github.com/emirpasic/gods
   version: 1615341f118ae12f353cc8a983f35b584342c9b3
   subpackages:
@@ -22,6 +24,8 @@ imports:
   - io
 - name: github.com/kevinburke/ssh_config
   version: 81db2a75821ed34e682567d48be488a1c3121088
+- name: github.com/lxn/win
+  version: 0040366d745006bbf7528ac96de2de375846aa79
 - name: github.com/masterminds/glide
   version: 9ef6ca313b3200079861f2de4e567b1d22081d19
   subpackages:
@@ -29,19 +33,25 @@ imports:
 - name: github.com/Masterminds/semver
   version: c7af12943936e8c39859482e61f0574c2fd7fc75
 - name: github.com/Masterminds/vcs
-  version: 6f1c6d150500e452704e9863f68c2559f58616bf
+  version: b4f55832432b95a611cf1495272b5c8e24952a1a
 - name: github.com/mattn/go-colorable
   version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
 - name: github.com/mattn/go-isatty
   version: 3fb116b820352b7f0c281308a4d6250c22d94e27
 - name: github.com/mitchellh/go-homedir
-  version: ae18d6b8b3205b561c79e8e5f69bff09736185f4
+  version: af06845cf3004701891bf4fdb884bfe4920b3727
+- name: github.com/mitchellh/go-ps
+  version: 4fdf99ab29366514c69ccccddab5dc58b8d84062
 - name: github.com/pelletier/go-buffruneio
   version: de1592c34d9c6055a32fc9ebe2b3ee50ca468ebe
 - name: github.com/sergi/go-diff
   version: da645544ed44df016359bd4c0e3dc60ee3a0da43
   subpackages:
   - diffmatchpatch
+- name: github.com/snakeice/penv
+  version: 4eb344cfbb6b574d806d11fbfd67bbc201a84904
+- name: github.com/snakeice/penv.git
+  version: 4eb344cfbb6b574d806d11fbfd67bbc201a84904
 - name: github.com/spf13/cobra
   version: ef82de70bb3f60c65fb8eebacbb2d122ef517385
 - name: github.com/spf13/pflag
@@ -84,13 +94,6 @@ imports:
   - unix
   - windows
   - windows/registry
-- name: golang.org/x/text
-  version: 905a57155faa8230500121607930ebb9dd8e139c
-  subpackages:
-  - transform
-  - unicode/norm
-- name: gopkg.in/cheggaaa/pb.v1
-  version: c112833d014c77e8bde723fd0158e3156951639f
 - name: gopkg.in/cheggaaa/pb.v2
   version: c112833d014c77e8bde723fd0158e3156951639f
   subpackages:
@@ -112,10 +115,11 @@ imports:
   - osfs
   - util
 - name: gopkg.in/src-d/go-git.v4
-  version: cd64b4d630b6c2d2b3d72e9615e14f9d58bb5787
+  version: db6c41c156481962abf9a55a324858674c25ab08
   subpackages:
   - config
   - internal/revision
+  - internal/url
   - plumbing
   - plumbing/cache
   - plumbing/filemode

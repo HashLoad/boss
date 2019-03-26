@@ -31,6 +31,7 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		exePath, err := filepath.Abs(os.Args[0])
+		msg.Debug("Exe path %s", exePath)
 		if err != nil {
 			err.Error()
 		}
