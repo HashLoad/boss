@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/compiler"
 	"strings"
 
@@ -30,7 +31,7 @@ var installCmd = &cobra.Command{
 			split := strings.Split(dependency, ":")
 			var ver string
 			if len(split) == 1 {
-				ver = "x"
+				ver = consts.MINIMAL_DEPENDENCY_VERSION
 			} else {
 				ver = split[1]
 			}

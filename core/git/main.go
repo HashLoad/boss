@@ -8,6 +8,7 @@ import (
 	"gopkg.in/src-d/go-billy.v4/memfs"
 	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	cache2 "gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/storage"
@@ -94,13 +95,23 @@ func initSubmodules(dep models.Dependency, repository *git.Repository) {
 	if e != nil {
 		msg.Err("On get submodules... %s", e)
 	}
-	submodules.Update(&git.SubmoduleUpdateOptions{
+	_ = submodules.Update(&git.SubmoduleUpdateOptions{
 		Init:              true,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 		Auth:              models.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
 	})
 
 }
+
+func GetMaster(repository *git.Repository) *config.Branch {
+
+	if branch, err := repository.Branch("master"); err != nil {
+		return nil
+	} else {
+		return branch
+	}
+}
+
 func GetVersions(repository *git.Repository) []*plumbing.Reference {
 	tags, err := repository.Tags()
 	if err != nil {

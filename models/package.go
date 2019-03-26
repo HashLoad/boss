@@ -17,7 +17,7 @@ type Package struct {
 	MainSrc      string      `json:"mainsrc"`
 	Projects     []string    `json:"projects"`
 	Scripts      interface{} `json:"scripts,omitempty"`
-	Dependencies interface{} `json:"dependencies,omitempty"`
+	Dependencies interface{} `json:"dependencies"`
 }
 
 func (p *Package) Save() {

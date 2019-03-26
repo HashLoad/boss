@@ -39,6 +39,7 @@ func getCompilerParameters(rootPath string) string {
 	return " /p:DCC_BplOutput=\"" + rootPath + consts.SEPARATOR + ".bpl\" " +
 		"/p:DCC_DcpOutput=\"" + rootPath + consts.SEPARATOR + ".dcp\" " +
 		"/p:DCC_DcuOutput=\"" + rootPath + consts.SEPARATOR + ".dcu\" " +
+		"/p:DCC_ExeOutput=\"" + rootPath + consts.SEPARATOR + consts.BIN_FOLDER + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
 		"/P:platform=Win32 "
@@ -109,15 +110,10 @@ func BuildDucs() {
 				return
 			}
 
-			if len(modulePkg.Projects) == 0 {
-				msg.Warn("Dependency " + dep.GetName() + " has no seted dproj for compile, assuming compilation for all dproj")
-				buildAllDproj(rootPath + consts.SEPARATOR + dep.GetName())
-			} else {
-				dprojs := modulePkg.Projects
-				for _, dproj := range dprojs {
-					s, _ := filepath.Abs(rootPath + consts.SEPARATOR + dep.GetName() + "/" + dproj)
-					compile(s, rootPath)
-				}
+			dprojs := modulePkg.Projects
+			for _, dproj := range dprojs {
+				s, _ := filepath.Abs(rootPath + consts.SEPARATOR + dep.GetName() + "/" + dproj)
+				compile(s, rootPath)
 			}
 		}
 	}
