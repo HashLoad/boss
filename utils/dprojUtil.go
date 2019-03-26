@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"github.com/beevik/etree"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/models"
@@ -14,7 +13,13 @@ import (
 )
 
 func UpdateLibraryPath() {
-	var dprojName = getDprojName()
+	var dprojsNames = getDprojName()
+	for _, dprojName := range dprojsNames {
+		updateLibraryPathProject(dprojName)
+	}
+}
+
+func updateLibraryPathProject(dprojName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(dprojName)
 	if os.IsNotExist(err) || info.IsDir() {
@@ -52,13 +57,12 @@ func UpdateLibraryPath() {
 
 func createTag(node *etree.Element) *etree.Element {
 	child := node.CreateElement(consts.XML_TAG_NAME_LIBRARY_PATH)
-	//node.AppendChild(child)
 	return child
 }
 
-func getDprojName() string {
+func getDprojName() []string {
 
-	var result string
+	var result []string
 	var matches = 0
 	dir, err := os.Getwd()
 	if err != nil {
@@ -68,8 +72,12 @@ func getDprojName() string {
 	if packageJson, e := models.LoadPackage(false); e != nil {
 		panic(e)
 	} else {
-		if packageJson.DprojName != "" {
-			result = packageJson.DprojName
+		if len(packageJson.Projects) > 0 {
+			for _, project := range packageJson.Projects {
+				result = append(result, dir+string(filepath.Separator)+project)
+			}
+
+			result = packageJson.Projects
 		} else {
 			files, err := ioutil.ReadDir(dir)
 			if err != nil {
@@ -78,18 +86,13 @@ func getDprojName() string {
 			for _, file := range files {
 				matched, e := regexp.MatchString(".*.dproj$", file.Name())
 				if e == nil && matched {
-					result = file.Name()
+					result = append(result, dir+string(filepath.Separator)+file.Name())
 					matches++
 				}
 			}
 		}
 	}
-
-	if matches > 1 {
-		panic(errors.New("ambiguous projects in same folder!"))
-	}
-
-	return dir + string(filepath.Separator) + result
+	return result
 }
 
 func removeIndex(array []string, index int) []string {

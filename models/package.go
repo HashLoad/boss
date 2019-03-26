@@ -8,19 +8,16 @@ import (
 )
 
 type Package struct {
-	fileName        string
-	IsNew           bool        `json:"-"`
-	Name            string      `json:"name"`
-	Description     string      `json:"description"`
-	Version         string      `json:"version"`
-	Private         bool        `json:"private"`
-	Homepage        string      `json:"homepage"`
-	MainSrc         string      `json:"mainsrc"`
-	Supported       string      `json:"supported"`
-	DprojName       string      `json:"dprojFile"`
-	Scripts         interface{} `json:"scripts,omitempty"`
-	Dependencies    interface{} `json:"dependencies,omitempty"`
-	DevDependencies interface{} `json:"devDependencies,omitempty"`
+	fileName     string
+	IsNew        bool        `json:"-"`
+	Name         string      `json:"name"`
+	Description  string      `json:"description"`
+	Version      string      `json:"version"`
+	Homepage     string      `json:"homepage"`
+	MainSrc      string      `json:"mainsrc"`
+	Projects     []string    `json:"projects"`
+	Scripts      interface{} `json:"scripts,omitempty"`
+	Dependencies interface{} `json:"dependencies,omitempty"`
 }
 
 func (p *Package) Save() {
@@ -36,12 +33,8 @@ func (p *Package) AddDependency(dep string, ver string) {
 	deps[dep] = ver
 }
 
-func (p *Package) AddDevDependency(dep string, ver string) {
-	if p.DevDependencies == nil {
-		p.DevDependencies = make(map[string]interface{})
-	}
-	deps := p.DevDependencies.(map[string]interface{})
-	deps[dep] = ver
+func (p *Package) AddProject(project string) {
+	p.Projects = append(p.Projects, project)
 }
 
 func (p *Package) RemoveDependency(dep string) {
@@ -49,13 +42,6 @@ func (p *Package) RemoveDependency(dep string) {
 		deps := p.Dependencies.(map[string]interface{})
 		if i := deps[dep]; i != nil {
 			delete(deps, dep)
-		}
-	}
-
-	if p.DevDependencies != nil {
-		depsDev := p.DevDependencies.(map[string]interface{})
-		if i := depsDev[dep]; i != nil {
-			delete(depsDev, dep)
 		}
 	}
 }

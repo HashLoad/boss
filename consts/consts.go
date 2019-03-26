@@ -7,6 +7,7 @@ const FILE_PACKAGE = "boss.json"
 const SEPARATOR = string(filepath.Separator)
 
 const FOLDER_DEPENDENCIES = "modules"
+const ENV_BOSS_BIN = "." + SEPARATOR + FOLDER_DEPENDENCIES + SEPARATOR + ".bin"
 
 const XML_TAG_NAME_PROPERTY string = "PropertyGroup"
 const XML_TAG_NAME_PROPERTY_ATTRIBUTE string = "Condition"

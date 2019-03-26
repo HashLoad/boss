@@ -32,10 +32,7 @@ var initCmd = &cobra.Command{
 		pkgJson.Homepage = getParamOrDef("homepage", "")
 		pkgJson.Version = getParamOrDef("version: (1.0.0)", "1.0.0")
 		pkgJson.Description = getParamOrDef("description", "")
-		pkgJson.MainSrc = getParamOrDef("source folder: (src/)", "src/")
-		pkgJson.Supported = getParamOrDef("supported version: (26 'Delphi XE / C++Builder XE')", "26")
-
-		pkgJson.Private = false
+		pkgJson.MainSrc = getParamOrDef("source folder: (./)", "./")
 
 		pkgJson.Save()
 	},
@@ -45,12 +42,10 @@ func getParamOrDef(msg string, def string) string {
 	fmt.Print(msg + ": ")
 	rr := bufio.NewReader(os.Stdin)
 	if res, e := rr.ReadString('\n'); e == nil {
-		if res[0] == '\n' || res[0] == '\r' {
-			return def
-		} else {
-			return strings.Replace(res[0:len(res)-1], "\t", "", -1)
-		}
-
+		res = strings.ReplaceAll(res, "\t", "")
+		res = strings.ReplaceAll(res, "\n", "")
+		res = strings.ReplaceAll(res, "\r", "")
+		return res
 	}
 	return def
 }

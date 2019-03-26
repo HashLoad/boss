@@ -35,8 +35,17 @@ func getDcc32Dir() string {
 	return outputStr
 }
 
+func getCompilerParameters(rootPath string) string {
+	return " /p:DCC_BplOutput=\"" + rootPath + consts.SEPARATOR + ".bpl\" " +
+		"/p:DCC_DcpOutput=\"" + rootPath + consts.SEPARATOR + ".dcp\" " +
+		"/p:DCC_DcuOutput=\"" + rootPath + consts.SEPARATOR + ".dcu\" " +
+		"/target:Build " +
+		"/p:config=Debug " +
+		"/P:platform=Win32 "
+}
+
 //noinspection GoUnhandledErrorResult
-func compile(path string) {
+func compile(path string, rootPath string) {
 	msg.Info("  Building " + filepath.Base(path))
 	dccDir := getDcc32Dir()
 	rsvars := dccDir + consts.SEPARATOR + "rsvars.bat"
@@ -51,7 +60,7 @@ func compile(path string) {
 	readFileStr := string(readFile)
 	project, _ := filepath.Abs(path)
 
-	readFileStr += " \n msbuild " + project + " /t:Build /p:Configuration=Debug /p:OutputPath=./teste"
+	readFileStr += " \n msbuild " + project + " /t:Build /p:Configuration=Debug " + getCompilerParameters(rootPath)
 	readFileStr += " > " + buildLog
 
 	err = ioutil.WriteFile(buildBat, []byte(readFileStr), os.ModePerm)
@@ -88,21 +97,26 @@ func BuildDucs() {
 
 	buildAllPas()
 
-	if pkg, err := models.LoadPackage(false); err != nil {
+	if pkg, err := models.LoadPackage(false); err != nil || pkg.Dependencies == nil {
 		buildAllDproj(rootPath)
 	} else {
+
 		rawDeps := pkg.Dependencies.(map[string]interface{})
 		deps := models.GetDependencies(rawDeps)
 		for _, dep := range deps {
-			modulePkg, _ := models.LoadPackageOther(rootPath + consts.SEPARATOR + dep.GetName() + consts.SEPARATOR + consts.FILE_PACKAGE)
-			if modulePkg.DprojName == "" {
+			modulePkg, err := models.LoadPackageOther(rootPath + consts.SEPARATOR + dep.GetName() + consts.SEPARATOR + consts.FILE_PACKAGE)
+			if err != nil {
+				return
+			}
+
+			if len(modulePkg.Projects) == 0 {
 				msg.Warn("Dependency " + dep.GetName() + " has no seted dproj for compile, assuming compilation for all dproj")
 				buildAllDproj(rootPath + consts.SEPARATOR + dep.GetName())
 			} else {
-				dprojs := strings.Split(modulePkg.DprojName, ";")
+				dprojs := modulePkg.Projects
 				for _, dproj := range dprojs {
 					s, _ := filepath.Abs(rootPath + consts.SEPARATOR + dep.GetName() + "/" + dproj)
-					compile(s)
+					compile(s, rootPath)
 				}
 			}
 		}
@@ -145,13 +159,13 @@ func buildAllDproj(rootPath string) {
 			if filepath.Ext(path) != ".dproj" {
 				return nil
 			}
-			compile(path)
+			compile(path, rootPath)
 			return nil
 		})
 }
 
 func getNewPaths(path string) string {
-	paths := []string{}
+	var paths []string
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
 		dir := filepath.Dir(path)

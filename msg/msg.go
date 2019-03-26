@@ -38,28 +38,44 @@ func NewMessenger() *Messenger {
 
 var Default = NewMessenger()
 
-func (m *Messenger) Info(msg string, args ...interface{}) {
-	m.Msg("[INFO ]\t"+msg, args...)
+func Die(msg string, args ...interface{}) {
+	Default.Die(msg, args...)
+}
+
+func Msg(msg string, args ...interface{}) {
+	Default.Msg(msg, args...)
+}
+
+func Puts(msg string, args ...interface{}) {
+	Default.Puts(msg, args...)
+}
+
+func Print(msg string) {
+	Default.Print(msg)
+}
+
+func PromptUntil(opts []string) (string, error) {
+	return Default.PromptUntil(opts)
+}
+
+func PromptUntilYorN() bool {
+	return Default.PromptUntilYorN()
 }
 
 func Info(msg string, args ...interface{}) {
 	Default.Info(msg, args...)
 }
 
-func (m *Messenger) Debug(msg string, args ...interface{}) {
-	m.Msg("[DEBUG]\t"+msg, args...)
-}
-
 func Debug(msg string, args ...interface{}) {
 	Default.Debug(msg, args...)
 }
 
-func (m *Messenger) Warn(msg string, args ...interface{}) {
-	m.Msg("[WARN ]\t"+msg, args...)
-}
-
 func Warn(msg string, args ...interface{}) {
 	Default.Warn(msg, args...)
+}
+
+func Err(msg string, args ...interface{}) {
+	Default.Err(msg, args...)
 }
 
 func (m *Messenger) Err(msg string, args ...interface{}) {
@@ -67,8 +83,16 @@ func (m *Messenger) Err(msg string, args ...interface{}) {
 	m.hasErrored = true
 }
 
-func Err(msg string, args ...interface{}) {
-	Default.Err(msg, args...)
+func (m *Messenger) Warn(msg string, args ...interface{}) {
+	m.Msg("[WARN ]\t"+msg, args...)
+}
+
+func (m *Messenger) Info(msg string, args ...interface{}) {
+	m.Msg("[INFO ]\t"+msg, args...)
+}
+
+func (m *Messenger) Debug(msg string, args ...interface{}) {
+	m.Msg("[DEBUG]\t"+msg, args...)
 }
 
 func (m *Messenger) Die(msg string, args ...interface{}) {
@@ -77,10 +101,6 @@ func (m *Messenger) Die(msg string, args ...interface{}) {
 		panic("trapped a Die() call")
 	}
 	os.Exit(m.ecode)
-}
-
-func Die(msg string, args ...interface{}) {
-	Default.Die(msg, args...)
 }
 
 func (m *Messenger) ExitCode(e int) int {
@@ -109,10 +129,6 @@ func (m *Messenger) Msg(msg string, args ...interface{}) {
 	}
 }
 
-func Msg(msg string, args ...interface{}) {
-	Default.Msg(msg, args...)
-}
-
 func (m *Messenger) Puts(msg string, args ...interface{}) {
 	m.Lock()
 	defer m.Unlock()
@@ -121,19 +137,11 @@ func (m *Messenger) Puts(msg string, args ...interface{}) {
 	fmt.Fprintln(m.Stdout)
 }
 
-func Puts(msg string, args ...interface{}) {
-	Default.Puts(msg, args...)
-}
-
 func (m *Messenger) Print(msg string) {
 	m.Lock()
 	defer m.Unlock()
 
 	fmt.Fprintln(m.Stdout, msg)
-}
-
-func Print(msg string) {
-	Default.Print(msg)
 }
 
 func (m *Messenger) HasErrored() bool {
@@ -156,10 +164,6 @@ func (m *Messenger) PromptUntil(opts []string) (string, error) {
 	}
 }
 
-func PromptUntil(opts []string) (string, error) {
-	return Default.PromptUntil(opts)
-}
-
 func (m *Messenger) PromptUntilYorN() bool {
 	res, err := m.PromptUntil([]string{"y", "yes", "n", "no"})
 	if err != nil {
@@ -171,8 +175,4 @@ func (m *Messenger) PromptUntilYorN() bool {
 	}
 
 	return false
-}
-
-func PromptUntilYorN() bool {
-	return Default.PromptUntilYorN()
 }
