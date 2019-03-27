@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/Masterminds/semver"
+	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/git"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
@@ -65,20 +66,27 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 				}
 			}
 		}
+
+		var referenceName plumbing.ReferenceName
+
 		if !hasMatch {
-			msg.Die("  No candidate to version %s", dep.GetVersion())
+			msg.Warn("  No candidate to version %s", dep.GetVersion())
+			msg.Warn("  Using master branch")
+			if masterReference := git.GetMaster(repository); masterReference != nil {
+				referenceName = plumbing.NewBranchReferenceName(masterReference.Name)
+			}
 		} else {
 			msg.Info("  For %s using version %s", dep.Repository, bestMatch.Name().Short())
-		}
-		if dep.GetVersion() == "> 0.0.0" {
-			pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + bestMatch.Name().Short()
+			referenceName = bestMatch.Name()
+			if dep.GetVersion() == consts.MINIMAL_DEPENDENCY_VERSION {
+				pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + bestMatch.Name().Short()
+			}
 		}
 		worktree, _ := repository.Worktree()
-		worktree.Filesystem.TempFile(filepath.Join(env.GetCacheDir(), "tmp"), "tpt")
+
 		err := worktree.Checkout(&git2.CheckoutOptions{
-			Force: true,
-			//Hash:  bestMatch.Hash(),
-			Branch: bestMatch.Name(),
+			Force:  true,
+			Branch: referenceName,
 		})
 		if err != nil {
 			msg.Die("  Error on switch to needed version from dependency: %s\n%s", dep.Repository, err)
