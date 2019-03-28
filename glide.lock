@@ -1,8 +1,6 @@
-hash: ea90d9653c1ac06d3faba055c6f8741903370a12de56ed4907c481900a0d6d94
-updated: 2019-03-26T16:17:39.2952383-03:00
+hash: 9d857d0abc0bb6fd5b12e66cbcf4b8af90210fc7de6e78244f28446d3c99ddba
+updated: 2019-03-28T09:52:49.2069158-03:00
 imports:
-- name: github.com/bclicn/color
-  version: 108f2023dc84f1f9e64f246fa3997993971b2706
 - name: github.com/beevik/etree
   version: 8aee6516be3b1163bb6450c35c50e4969e3a3aa8
 - name: github.com/denisbrodbeck/machineid
@@ -94,6 +92,8 @@ imports:
   - unix
   - windows
   - windows/registry
+- name: gopkg.in/AlecAivazis/survey.v1
+  version: ee72c28b95a5ff3e227cfd403f556f0ef4b07ca5
 - name: gopkg.in/cheggaaa/pb.v2
   version: c112833d014c77e8bde723fd0158e3156951639f
   subpackages:

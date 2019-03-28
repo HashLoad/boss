@@ -3,12 +3,12 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/hashload/boss/models"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/hashload/boss/models"
 	"github.com/spf13/cobra"
 )
 
@@ -41,11 +41,15 @@ var initCmd = &cobra.Command{
 func getParamOrDef(msg string, def string) string {
 	fmt.Print(msg + ": ")
 	rr := bufio.NewReader(os.Stdin)
-	if res, e := rr.ReadString('\n'); e == nil {
+	if res, e := rr.ReadString('\n'); e == nil && res != "\n" {
 		res = strings.ReplaceAll(res, "\t", "")
 		res = strings.ReplaceAll(res, "\n", "")
 		res = strings.ReplaceAll(res, "\r", "")
-		return res
+		if res == "" {
+			return def
+		} else {
+			return res
+		}
 	}
 	return def
 }
