@@ -17,9 +17,10 @@ import (
 var dev bool
 
 var installCmd = &cobra.Command{
-	Use:   "install",
-	Short: "Install a dependency",
-	Long:  `Install a dependency`,
+	Use:     "install",
+	Short:   "Install a dependency",
+	Long:    `Install a dependency`,
+	Aliases: []string{"i"},
 	Run: func(cmd *cobra.Command, args []string) {
 		loadPackage, e := models.LoadPackage(false)
 		if e != nil {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	. "io/ioutil"
 
@@ -20,8 +21,20 @@ type Package struct {
 	Dependencies interface{} `json:"dependencies"`
 }
 
+func JSONMarshal(v interface{}, safeEncoding bool) ([]byte, error) {
+	b, err := json.MarshalIndent(v, "", "\t")
+
+	if safeEncoding {
+		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
+		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
+		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
+	}
+	return b, err
+}
+
 func (p *Package) Save() {
-	marshal, _ := json.MarshalIndent(p, "", "\t")
+	marshal, _ := JSONMarshal(p, true)
+
 	_ = WriteFile(p.fileName, marshal, 664)
 }
 
@@ -51,7 +64,7 @@ func getNew(file string) *Package {
 	res.fileName = file
 	res.IsNew = true
 
-	res.Dependencies = &[]string{}
+	res.Dependencies = make(map[string]interface{})
 	res.Projects = []string{}
 
 	return res

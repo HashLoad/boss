@@ -65,7 +65,7 @@ func ParseDependency(repo string, info string) Dependency {
 	}
 	if re2.MatchString(dependency.version) {
 		msg.Warn("Current version for %s is not semantic (x.y.z), for comparation using %s -> %s",
-			dependency.Repository, dependency.version, dependency.version+".0.0/")
+			dependency.Repository, dependency.version, dependency.version+".0.0")
 		dependency.version = dependency.version + ".0.0"
 	}
 	if len(parsed) > 1 {

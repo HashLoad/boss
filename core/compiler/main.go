@@ -23,6 +23,10 @@ func isCommandAvailable(name string) bool {
 }
 
 func getDcc32Dir() string {
+	if models.GlobalConfiguration.DelphiPath != "" {
+		return models.GlobalConfiguration.DelphiPath
+	}
+
 	command := exec.Command("where", "dcc32")
 	output, err := command.Output()
 	if err != nil {
