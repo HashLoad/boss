@@ -18,10 +18,11 @@ import (
 var machineID = []byte(crypto.GetMachineID()[:16])
 
 type Configuration struct {
-	Key       string           `json:"id"`
-	Auth      map[string]*Auth `json:"auth"`
-	PurgeTime int              `json:"purgeAfter"`
-	LastPurge string           `json:"last_purge"`
+	Key        string           `json:"id"`
+	Auth       map[string]*Auth `json:"auth"`
+	PurgeTime  int              `json:"purgeAfter"`
+	LastPurge  string           `json:"last_purge"`
+	DelphiPath string           `json:"delphi_path,omitempty"`
 }
 
 type Auth struct {

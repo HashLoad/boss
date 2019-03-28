@@ -51,6 +51,9 @@ func getNew(file string) *Package {
 	res.fileName = file
 	res.IsNew = true
 
+	res.Dependencies = &[]string{}
+	res.Projects = []string{}
+
 	return res
 }
 
