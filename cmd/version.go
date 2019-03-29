@@ -10,7 +10,7 @@ var versionCmd = &cobra.Command{
 	Short:   "show cli version",
 	Aliases: []string{"v"},
 	Run: func(cmd *cobra.Command, args []string) {
-		println(consts.VERSION)
+		println(consts.Version)
 	},
 }
 

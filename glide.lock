@@ -1,5 +1,5 @@
-hash: 9d857d0abc0bb6fd5b12e66cbcf4b8af90210fc7de6e78244f28446d3c99ddba
-updated: 2019-03-28T09:52:49.2069158-03:00
+hash: 21a25f1ef11e6cfbf7202fc881113b3c4c680fc82ee10567824a5a47388564ab
+updated: 2019-03-29T16:37:08.1516278-03:00
 imports:
 - name: github.com/beevik/etree
   version: 8aee6516be3b1163bb6450c35c50e4969e3a3aa8
@@ -92,8 +92,6 @@ imports:
   - unix
   - windows
   - windows/registry
-- name: gopkg.in/AlecAivazis/survey.v1
-  version: ee72c28b95a5ff3e227cfd403f556f0ef4b07ca5
 - name: gopkg.in/cheggaaa/pb.v2
   version: c112833d014c77e8bde723fd0158e3156951639f
   subpackages:

@@ -123,25 +123,29 @@ func (m *Messenger) Msg(msg string, args ...interface{}) {
 	}
 
 	if len(args) == 0 {
-		fmt.Fprint(m.Stderr, msg)
+		if _, err := fmt.Fprint(m.Stderr, msg); err != nil {
+			println("[Fault] %s", err.Error())
+		}
 	} else {
-		fmt.Fprintf(m.Stderr, msg, args...)
+		if _, err := fmt.Fprintf(m.Stderr, msg, args...); err != nil {
+			println("[Fault] %s", err.Error())
+		}
 	}
 }
 
 func (m *Messenger) Puts(msg string, args ...interface{}) {
 	m.Lock()
 	defer m.Unlock()
-
-	fmt.Fprintf(m.Stdout, msg, args...)
-	fmt.Fprintln(m.Stdout)
+	if _, err := fmt.Fprintf(m.Stderr, msg, args...); err != nil {
+		println("[Fault] %s", err.Error())
+	}
+	if _, err := fmt.Fprintln(m.Stderr); err != nil {
+		println("[Fault] %s", err.Error())
+	}
 }
 
 func (m *Messenger) Print(msg string) {
-	m.Lock()
-	defer m.Unlock()
-
-	fmt.Fprintln(m.Stdout, msg)
+	m.Puts(msg)
 }
 
 func (m *Messenger) HasErrored() bool {

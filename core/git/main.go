@@ -18,16 +18,16 @@ import (
 )
 
 func CloneCache(dep models.Dependency) *git.Repository {
-	msg.Info("Downloading dependency: " + dep.Repository)
-	storer := makeStorageCache(dep)
+	msg.Info("Downloading dependency %s", dep.Repository)
+	storageCache := makeStorageCache(dep)
 	url := dep.GetURL()
-	repository, e := git.Clone(storer, memfs.New(), &git.CloneOptions{
+	repository, e := git.Clone(storageCache, memfs.New(), &git.CloneOptions{
 		URL:  url,
 		Tags: git.AllTags,
 		Auth: models.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
 	})
 	if e != nil {
-		os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
+		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
 		msg.Die("Error to get repository of %s: %s", dep.Repository, e)
 	}
 	initSubmodules(dep, repository)
@@ -35,9 +35,9 @@ func CloneCache(dep models.Dependency) *git.Repository {
 }
 
 func UpdateCache(dep models.Dependency) *git.Repository {
-	msg.Info("Updating dependency: " + dep.Repository)
-	storer := makeStorageCache(dep)
-	repository, e := git.Open(storer, memfs.New())
+	msg.Info("Updating dependency %s", dep.Repository)
+	storageCache := makeStorageCache(dep)
+	repository, e := git.Open(storageCache, memfs.New())
 	if e != nil {
 		msg.Warn("Error to open cache of %s: %s", dep.Repository, e)
 		repository = refreshCopy(dep)

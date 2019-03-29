@@ -32,7 +32,7 @@ var installCmd = &cobra.Command{
 			split := strings.Split(dependency, ":")
 			var ver string
 			if len(split) == 1 {
-				ver = consts.MINIMAL_DEPENDENCY_VERSION
+				ver = consts.MinimalDependencyVersion
 			} else {
 				ver = split[1]
 			}

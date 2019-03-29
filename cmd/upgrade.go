@@ -31,7 +31,6 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		exePath, err := filepath.Abs(os.Args[0])
-		msg.Debug("Exe path %s", exePath)
 		if err != nil {
 			err.Error()
 		}
@@ -55,10 +54,10 @@ var upgradeCmd = &cobra.Command{
 
 func checkVersion(newVersion string) bool {
 	version, _ := semver.NewVersion(newVersion)
-	current, _ := semver.NewVersion(consts.VERSION)
+	current, _ := semver.NewVersion(consts.Version)
 	needUpdate := version.GreaterThan(current)
 	if needUpdate {
-		println(consts.VERSION, " -> ", newVersion)
+		println(consts.Version, " -> ", newVersion)
 	} else {
 		println(newVersion)
 		println("already up to date!")

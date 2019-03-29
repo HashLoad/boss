@@ -18,7 +18,9 @@ type Dependency struct {
 
 func (d *Dependency) GetHashName() string {
 	hash := md5.New()
-	io.WriteString(hash, d.Repository)
+	if _, err := io.WriteString(hash, d.Repository); err != nil {
+		msg.Warn("Failed on write dependency hash")
+	}
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
@@ -27,7 +29,7 @@ func (d *Dependency) GetVersion() string {
 }
 
 func (d *Dependency) makeSshUrl() string {
-	re = regexp.MustCompile(`(?m)([\w\d.]*)(?:\/)(.*)`)
+	re = regexp.MustCompile(`(?m)([\w\d.]*)(?:/)(.*)`)
 	submatch := re.FindStringSubmatch(d.Repository)
 	provider := submatch[1]
 	repo := submatch[2]
@@ -59,12 +61,12 @@ func ParseDependency(repo string, info string) Dependency {
 	dependency.Repository = repo
 	dependency.version = parsed[0]
 	if re.MatchString(dependency.version) {
-		msg.Warn("Current version for %s is not semantic (x.y.z), for comparation using %s -> %s",
+		msg.Warn("Current version for %s is not semantic (x.y.z), for comparison using %s -> %s",
 			dependency.Repository, dependency.version, dependency.version+".0")
 		dependency.version = dependency.version + ".0"
 	}
 	if re2.MatchString(dependency.version) {
-		msg.Warn("Current version for %s is not semantic (x.y.z), for comparation using %s -> %s",
+		msg.Warn("Current version for %s is not semantic (x.y.z), for comparison using %s -> %s",
 			dependency.Repository, dependency.version, dependency.version+".0.0")
 		dependency.version = dependency.version + ".0.0"
 	}
@@ -83,6 +85,6 @@ func GetDependencies(deps map[string]interface{}) []Dependency {
 }
 
 func (d *Dependency) GetName() string {
-	var re = regexp.MustCompile(`[^\/]+(:?\/$|$)`)
+	var re = regexp.MustCompile(`[^/]+(:?/$|$)`)
 	return re.FindString(d.Repository)
 }

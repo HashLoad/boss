@@ -13,7 +13,7 @@ import (
 	"io"
 )
 
-func Encrypt(key []byte, message string) (crypted string, err error) {
+func Encrypt(key []byte, message string) (cyphred string, err error) {
 	plainText := []byte(message)
 
 	block, err := aes.NewCipher(key)
@@ -30,7 +30,7 @@ func Encrypt(key []byte, message string) (crypted string, err error) {
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(cipherText[aes.BlockSize:], plainText)
 
-	crypted = base64.URLEncoding.EncodeToString(cipherText)
+	cyphred = base64.URLEncoding.EncodeToString(cipherText)
 	return
 }
 
@@ -47,7 +47,7 @@ func Decrypt(key []byte, securemess string) (decrypted string, err error) {
 	}
 
 	if len(cipherText) < aes.BlockSize {
-		err = errors.New("Ciphertext block size is too short!")
+		err = errors.New("cipher text block size is too short")
 		return
 	}
 
@@ -71,6 +71,8 @@ func GetMachineID() string {
 
 func Md5MachineID() string {
 	hash := md5.New()
-	io.WriteString(hash, GetMachineID())
+	if _, err := io.WriteString(hash, GetMachineID()); err != nil {
+		msg.Warn("Failed on  write machine id to hash")
+	}
 	return hex.EncodeToString(hash.Sum(nil))
 }

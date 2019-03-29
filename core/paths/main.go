@@ -33,7 +33,9 @@ func EnsureModulesDir() {
 	} else if !fi.IsDir() {
 		msg.Die("modules is not a directory")
 	} else {
-		os.RemoveAll(cacheDir)
+		if err = os.RemoveAll(cacheDir); err != nil {
+			msg.Warn("Failed to remove old cache")
+		}
 		EnsureModulesDir()
 	}
 }

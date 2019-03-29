@@ -100,26 +100,28 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	}
 }
 
-func (c *Configuration) SaveConfiguration() error {
+func (c *Configuration) SaveConfiguration() {
 	d, err := json.Marshal(c)
 	if err != nil {
-		return err
+		msg.Die(err.Error())
 	}
 
 	err = os.MkdirAll(env.GetBossHome(), 0755)
 	if err != nil {
-		return err
+		msg.Die(err.Error())
 	}
 
 	p := filepath.Join(env.GetBossHome(), "boss.cfg.json")
 	f, err := os.Create(p)
 	if err != nil {
-		return err
+		msg.Die(err.Error())
 	}
 	defer f.Close()
 
 	_, err = f.Write(d)
-	return err
+	if err != nil {
+		msg.Die(err.Error())
+	}
 }
 
 func defaultCreate() *Configuration {
@@ -148,7 +150,7 @@ func loadConfiguration() (*Configuration, error) {
 		return defaultCreate(), err
 	}
 	if c.Key != crypto.Md5MachineID() {
-		msg.Err("Falied to load auths... recreate logins")
+		msg.Err("Failed to load auth... recreate login accounts")
 		c.Key = crypto.Md5MachineID()
 		c.Auth = make(map[string]*Auth)
 	}

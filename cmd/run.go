@@ -8,7 +8,6 @@ import (
 	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -23,20 +22,20 @@ var runScript = &cobra.Command{
 		} else {
 			scripts := pkgJson.Scripts.(map[string]interface{})
 			if command, ok := scripts[args[0]]; !ok {
-				errors.New("Script not exists!").Error()
+				errors.New("script not exists").Error()
 			} else {
-				runCmd(command.(string))
+				runCmd(command.(string) + " " + strings.Join(args[1:], " "))
 			}
 		}
 	},
 }
 
 func runCmd(cmdName string) {
-	cmdName = "cmd /c " + cmdName
-	cmdArgs := strings.Fields(cmdName)
+	//cmdName = "cmd /c " + cmdName
 
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
-	cmd.Stdin = os.Stdin
+	fields := strings.Fields(cmdName)
+
+	cmd := exec.Command(fields[0], fields[1:]...)
 	cmdReader, err := cmd.StdoutPipe()
 	cmdErr, _ := cmd.StderrPipe()
 	if err != nil {

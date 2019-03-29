@@ -33,7 +33,7 @@ var publisCmd = &cobra.Command{
 		tw := tar.NewWriter(&buff)
 
 		patternsString := strings.Split("git.Gitignore", "\n")
-		patterns := []gitignore.Pattern{}
+		var patterns []gitignore.Pattern
 
 		for _, value := range patternsString {
 			patterns = append(patterns, gitignore.ParsePattern(value, nil))

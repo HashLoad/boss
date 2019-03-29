@@ -71,14 +71,14 @@ func getNew(file string) *Package {
 }
 
 func LoadPackage(createNew bool) (*Package, error) {
-	if bytes, e := ReadFile(consts.FILE_PACKAGE); e != nil {
+	if fileBytes, e := ReadFile(consts.FilePackage); e != nil {
 		if createNew {
 			e = nil
 		}
-		return getNew(consts.FILE_PACKAGE), e
+		return getNew(consts.FilePackage), e
 	} else {
-		result := getNew(consts.FILE_PACKAGE)
-		if err := json.Unmarshal(bytes, result); err != nil {
+		result := getNew(consts.FilePackage)
+		if err := json.Unmarshal(fileBytes, result); err != nil {
 			return nil, e
 		}
 		result.IsNew = false
@@ -87,11 +87,11 @@ func LoadPackage(createNew bool) (*Package, error) {
 }
 
 func LoadPackageOther(path string) (*Package, error) {
-	if bytes, e := ReadFile(path); e != nil {
+	if fileBytes, e := ReadFile(path); e != nil {
 		return nil, e
 	} else {
 		result := getNew(path)
-		if err := json.Unmarshal(bytes, result); err != nil {
+		if err := json.Unmarshal(fileBytes, result); err != nil {
 			return nil, e
 		}
 		return result, nil

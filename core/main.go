@@ -55,7 +55,6 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 			short := version.Name().Short()
 			newVersion, err := semver.NewVersion(short)
 			if err != nil {
-				msg.Warn("  Invalid semantic version: %s", short)
 				continue
 			}
 			if constraints.Check(newVersion) {
@@ -70,15 +69,14 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 		var referenceName plumbing.ReferenceName
 
 		if !hasMatch {
-			msg.Warn("  No candidate to version %s", dep.GetVersion())
-			msg.Warn("  Using master branch")
+			msg.Warn("  No candidate to version for %s. Using master branch", dep.GetVersion())
 			if masterReference := git.GetMaster(repository); masterReference != nil {
 				referenceName = plumbing.NewBranchReferenceName(masterReference.Name)
 			}
 		} else {
-			msg.Info("  For %s using version %s", dep.Repository, bestMatch.Name().Short())
+			msg.Info("  Detected semantic version. For %s using version %s", dep.Repository, bestMatch.Name().Short())
 			referenceName = bestMatch.Name()
-			if dep.GetVersion() == consts.MINIMAL_DEPENDENCY_VERSION {
+			if dep.GetVersion() == consts.MinimalDependencyVersion {
 				pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + bestMatch.Name().Short()
 			}
 		}

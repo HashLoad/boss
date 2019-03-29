@@ -40,10 +40,10 @@ func getDcc32Dir() string {
 }
 
 func getCompilerParameters(rootPath string) string {
-	return " /p:DCC_BplOutput=\"" + rootPath + consts.SEPARATOR + ".bpl\" " +
-		"/p:DCC_DcpOutput=\"" + rootPath + consts.SEPARATOR + ".dcp\" " +
-		"/p:DCC_DcuOutput=\"" + rootPath + consts.SEPARATOR + ".dcu\" " +
-		"/p:DCC_ExeOutput=\"" + rootPath + consts.SEPARATOR + consts.BIN_FOLDER + "\" " +
+	return " /p:DCC_BplOutput=\"" + rootPath + consts.Separator + ".bpl\" " +
+		"/p:DCC_DcpOutput=\"" + rootPath + consts.Separator + ".dcp\" " +
+		"/p:DCC_DcuOutput=\"" + rootPath + consts.Separator + ".dcu\" " +
+		"/p:DCC_ExeOutput=\"" + rootPath + consts.Separator + consts.BinFolder + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
 		"/P:platform=Win32 "
@@ -53,11 +53,11 @@ func getCompilerParameters(rootPath string) string {
 func compile(path string, rootPath string) {
 	msg.Info("  Building " + filepath.Base(path))
 	dccDir := getDcc32Dir()
-	rsvars := dccDir + consts.SEPARATOR + "rsvars.bat"
+	rsvars := dccDir + consts.Separator + "rsvars.bat"
 	fileRes := "build_boss_" + strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	abs, _ := filepath.Abs(filepath.Dir(path))
-	buildLog := abs + consts.SEPARATOR + fileRes + ".log"
-	buildBat := abs + consts.SEPARATOR + fileRes + ".bat"
+	buildLog := abs + consts.Separator + fileRes + ".log"
+	buildBat := abs + consts.Separator + fileRes + ".bat"
 	readFile, err := ioutil.ReadFile(rsvars)
 	if err != nil {
 		msg.Err("    error on read rsvars.bat")
@@ -94,7 +94,7 @@ func compilePas(path string, additionalPaths string) {
 
 func BuildDucs() {
 	curr, _ := os.Getwd()
-	rootPath := curr + consts.SEPARATOR + "modules"
+	rootPath := curr + consts.Separator + "modules"
 	if !isCommandAvailable("dcc32.exe") {
 		msg.Warn("dcc32 not found in path")
 		return
@@ -109,14 +109,14 @@ func BuildDucs() {
 		rawDeps := pkg.Dependencies.(map[string]interface{})
 		deps := models.GetDependencies(rawDeps)
 		for _, dep := range deps {
-			modulePkg, err := models.LoadPackageOther(rootPath + consts.SEPARATOR + dep.GetName() + consts.SEPARATOR + consts.FILE_PACKAGE)
+			modulePkg, err := models.LoadPackageOther(rootPath + consts.Separator + dep.GetName() + consts.Separator + consts.FilePackage)
 			if err != nil {
 				return
 			}
 
 			dprojs := modulePkg.Projects
 			for _, dproj := range dprojs {
-				s, _ := filepath.Abs(rootPath + consts.SEPARATOR + dep.GetName() + "/" + dproj)
+				s, _ := filepath.Abs(rootPath + consts.Separator + dep.GetName() + "/" + dproj)
 				compile(s, rootPath)
 			}
 		}

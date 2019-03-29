@@ -20,12 +20,11 @@ func OpenRepository(dep models.Dependency) *git2.Repository {
 	return git.GetRepository(dep)
 }
 
-func EnsureVersionModule(repository *git2.Repository, dependency models.Dependency) *git2.Repository {
-	gotoMaxVersion(repository, dependency)
-
-	return repository
-}
-
-func gotoMaxVersion(repository *git2.Repository, dependency models.Dependency) {
-
-}
+//func EnsureVersionModule(repository *git2.Repository, dependency models.Dependency) *git2.Repository {
+//	gotoMaxVersion(repository, dependency)
+//
+//	return repository
+//}
+//
+//func gotoMaxVersion(repository *git2.Repository, dependency models.Dependency) {
+//}

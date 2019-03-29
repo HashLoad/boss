@@ -33,11 +33,11 @@ func updateLibraryPathProject(dprojName string) {
 	}
 	root := doc.Root()
 
-	childrens := root.FindElements(consts.XML_TAG_NAME_PROPERTY)
+	childrens := root.FindElements(consts.XmlTagNameProperty)
 	for _, children := range childrens {
-		attribute := children.SelectAttr(consts.XML_TAG_NAME_PROPERTY_ATTRIBUTE)
-		if attribute != nil && attribute.Value == consts.XML_TAG_NAME_PROPERTY_ATTRIBUTE_VALUE {
-			child := children.SelectElement(consts.XML_TAG_NAME_LIBRARY_PATH)
+		attribute := children.SelectAttr(consts.XmlTagNamePropertyAttribute)
+		if attribute != nil && attribute.Value == consts.XmlTagNamePropertyAttributeValue {
+			child := children.SelectElement(consts.XmlTagNameLibraryPath)
 			if child == nil {
 				child = createTag(children)
 			}
@@ -56,7 +56,7 @@ func updateLibraryPathProject(dprojName string) {
 }
 
 func createTag(node *etree.Element) *etree.Element {
-	child := node.CreateElement(consts.XML_TAG_NAME_LIBRARY_PATH)
+	child := node.CreateElement(consts.XmlTagNameLibraryPath)
 	return child
 }
 
@@ -110,7 +110,7 @@ func Contains(a []string, x string) bool {
 
 func getNewPaths(paths []string) []string {
 	dir, _ := os.Getwd()
-	path := filepath.Join(dir, consts.FOLDER_DEPENDENCIES)
+	path := filepath.Join(dir, consts.FolderDependencies)
 	_, e := os.Stat(path)
 	if os.IsNotExist(e) {
 		return nil
@@ -133,7 +133,7 @@ func getNewPaths(paths []string) []string {
 func processCurrentPathpaths(node *etree.Element) {
 	currentPaths := strings.Split(node.Text(), ";")
 	for index, path := range currentPaths {
-		if strings.HasPrefix(strings.Trim(path, ""), consts.FOLDER_DEPENDENCIES) {
+		if strings.HasPrefix(strings.Trim(path, ""), consts.FolderDependencies) {
 			removeIndex(currentPaths, index)
 		}
 	}

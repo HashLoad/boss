@@ -19,7 +19,7 @@ func HasCache(dep models.Dependency) bool {
 		return false
 	}
 	if !info.IsDir() {
-		os.RemoveAll(dir)
+		_ = os.RemoveAll(dir)
 		return false
 	}
 	return dirIsEmpty(dir)

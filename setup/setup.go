@@ -25,9 +25,9 @@ func Initialize() {
 	}
 
 	currentPath := getPath(environment.Setters)
-	if !strings.Contains(currentPath, consts.ENV_BOSS_BIN) {
+	if !strings.Contains(currentPath, consts.EnvBossBin) {
 		msg.Info("Initializing boss in your system...")
-		pathEnv := consts.ENV_BOSS_BIN + ";"
+		pathEnv := consts.EnvBossBin + ";"
 		if !strings.HasSuffix(currentPath, ";") {
 			pathEnv = ";" + pathEnv
 		}

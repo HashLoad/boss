@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/msg"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,31 +15,33 @@ type RepoInfo struct {
 	LastUpdate time.Time `json:"last_update"`
 }
 
-func SaveRepoData(key string) error {
+func SaveRepoData(key string) {
 	location := env.GetCacheDir()
 	data := &RepoInfo{}
 	data.Key = key
 	data.LastUpdate = time.Now()
 	d, err := json.Marshal(data)
 	if err != nil {
-		return err
+		msg.Err(err.Error())
 	}
 
 	pp := filepath.Join(location, "info")
 	err = os.MkdirAll(pp, 0755)
 	if err != nil {
-		return err
+		msg.Err(err.Error())
 	}
 
 	p := filepath.Join(pp, key+".json")
 	f, err := os.Create(p)
 	if err != nil {
-		return err
+		msg.Err(err.Error())
 	}
 	defer f.Close()
 
 	_, err = f.Write(d)
-	return err
+	if err != nil {
+		msg.Err(err.Error())
+	}
 }
 
 // RepoData retrieves cached information about a repo.

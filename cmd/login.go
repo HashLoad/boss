@@ -34,7 +34,7 @@ var loginCmd = &cobra.Command{
 			repo = args[0]
 			auth = configuration.Auth[args[0]]
 		} else {
-			repo = getParamOrDef("Url to logun (ex: github.com)", "")
+			repo = getParamOrDef("Url to login (ex: github.com)", "")
 			if repo == "" {
 				msg.Die("Empty is not valid!!")
 			}

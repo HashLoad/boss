@@ -70,6 +70,9 @@ begin
     (Pos(';' + UpperCase(Param) + '\;', ';' + UpperCase(OrigPath) + ';') = 0); 
 end;
 
+[Dirs]
+Name: "{app}"; Permissions: users-full
+
 [Files]
 Source: "..\boss.exe"; DestDir: "{app}"; Flags: ignoreversion
 

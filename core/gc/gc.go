@@ -34,5 +34,5 @@ func RunGC() {
 		return nil
 	})
 	models.GlobalConfiguration.LastPurge = time.Now().String()
-	_ = models.GlobalConfiguration.SaveConfiguration()
+	models.GlobalConfiguration.SaveConfiguration()
 }

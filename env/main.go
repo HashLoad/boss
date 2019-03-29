@@ -30,5 +30,5 @@ func GetModulesDir() string {
 	if err != nil {
 		msg.Err("Error to get module paths", err)
 	}
-	return filepath.Join(dir, consts.FOLDER_DEPENDENCIES)
+	return filepath.Join(dir, consts.FolderDependencies)
 }
