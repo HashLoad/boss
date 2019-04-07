@@ -2,9 +2,10 @@ package compiler
 
 import (
 	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
-	"github.com/hashload/boss/utils"
+	"github.com/hashload/boss/utils/librarypath"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -23,8 +24,8 @@ func isCommandAvailable(name string) bool {
 }
 
 func getDcc32Dir() string {
-	if models.GlobalConfiguration.DelphiPath != "" {
-		return models.GlobalConfiguration.DelphiPath
+	if env.GlobalConfiguration.DelphiPath != "" {
+		return env.GlobalConfiguration.DelphiPath
 	}
 
 	command := exec.Command("where", "dcc32")
@@ -40,10 +41,17 @@ func getDcc32Dir() string {
 }
 
 func getCompilerParameters(rootPath string) string {
+	var binPath string
+	if !env.Global {
+		binPath = rootPath + consts.Separator + consts.BinFolder
+	} else {
+		binPath = env.GetGlobalBinPath()
+	}
+
 	return " /p:DCC_BplOutput=\"" + rootPath + consts.Separator + ".bpl\" " +
 		"/p:DCC_DcpOutput=\"" + rootPath + consts.Separator + ".dcp\" " +
 		"/p:DCC_DcuOutput=\"" + rootPath + consts.Separator + ".dcu\" " +
-		"/p:DCC_ExeOutput=\"" + rootPath + consts.Separator + consts.BinFolder + "\" " +
+		"/p:DCC_ExeOutput=\"" + binPath + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
 		"/P:platform=Win32 "
@@ -93,8 +101,7 @@ func compilePas(path string, additionalPaths string) {
 }
 
 func BuildDucs() {
-	curr, _ := os.Getwd()
-	rootPath := curr + consts.Separator + "modules"
+	rootPath := env.GetModulesDir()
 	if !isCommandAvailable("dcc32.exe") {
 		msg.Warn("dcc32 not found in path")
 		return
@@ -125,12 +132,12 @@ func BuildDucs() {
 }
 
 func buildAllPas() {
-	paths := getNewPaths(filepath.Dir("./modules"))
+	paths := getNewPaths(env.GetModulesDir())
 	additionalPaths := "-U" + strconv.Quote(paths)
 
-	_ = filepath.Walk("./modules",
+	_ = filepath.Walk(env.GetModulesDir(),
 		func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() {
+			if info != nil && info.IsDir() {
 				return nil
 			}
 
@@ -167,10 +174,13 @@ func buildAllDproj(rootPath string) {
 func getNewPaths(path string) string {
 	var paths []string
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if info == nil {
+			return nil
+		}
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
 		dir := filepath.Dir(path)
 		dir, _ = filepath.Abs(dir)
-		if matched && !utils.Contains(paths, dir) {
+		if matched && !librarypath.Contains(paths, dir) {
 			paths = append(paths, dir)
 		}
 		return nil

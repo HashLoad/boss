@@ -1,8 +1,9 @@
-package utils
+package librarypath
 
 import (
 	"github.com/beevik/etree"
 	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"io/ioutil"
@@ -12,7 +13,7 @@ import (
 	"strings"
 )
 
-func UpdateLibraryPath() {
+func updateDprojLibraryPath() {
 	var dprojsNames = getDprojName()
 	for _, dprojName := range dprojsNames {
 		updateLibraryPathProject(dprojName)
@@ -64,29 +65,25 @@ func getDprojName() []string {
 
 	var result []string
 	var matches = 0
-	dir, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
 
 	if packageJson, e := models.LoadPackage(false); e != nil {
 		panic(e)
 	} else {
 		if len(packageJson.Projects) > 0 {
 			for _, project := range packageJson.Projects {
-				result = append(result, dir+string(filepath.Separator)+project)
+				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+project)
 			}
 
 			result = packageJson.Projects
 		} else {
-			files, err := ioutil.ReadDir(dir)
+			files, err := ioutil.ReadDir(env.GetCurrentDir())
 			if err != nil {
 				panic(e)
 			}
 			for _, file := range files {
 				matched, e := regexp.MatchString(".*.dproj$", file.Name())
 				if e == nil && matched {
-					result = append(result, dir+string(filepath.Separator)+file.Name())
+					result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
 					matches++
 				}
 			}
@@ -109,18 +106,15 @@ func Contains(a []string, x string) bool {
 }
 
 func getNewPaths(paths []string) []string {
-	dir, _ := os.Getwd()
-	path := filepath.Join(dir, consts.FolderDependencies)
-	_, e := os.Stat(path)
+	_, e := os.Stat(env.GetModulesDir())
 	if os.IsNotExist(e) {
 		return nil
 	}
-	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		curr, _ := os.Getwd()
+	_ = filepath.Walk(env.GetCurrentDir(), func(path string, info os.FileInfo, err error) error {
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
-			dir, _ = filepath.Rel(curr, dir)
+			dir, _ = filepath.Rel(env.GetCurrentDir(), dir)
 			if !Contains(paths, dir) {
 				paths = append(paths, dir)
 			}

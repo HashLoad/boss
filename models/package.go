@@ -1,11 +1,10 @@
 package models
 
 import (
-	"bytes"
 	"encoding/json"
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/utils/parser"
 	. "io/ioutil"
-
-	"github.com/hashload/boss/consts"
 )
 
 type Package struct {
@@ -21,19 +20,8 @@ type Package struct {
 	Dependencies interface{} `json:"dependencies"`
 }
 
-func JSONMarshal(v interface{}, safeEncoding bool) ([]byte, error) {
-	b, err := json.MarshalIndent(v, "", "\t")
-
-	if safeEncoding {
-		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
-		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
-		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
-	}
-	return b, err
-}
-
 func (p *Package) Save() {
-	marshal, _ := JSONMarshal(p, true)
+	marshal, _ := parser.JSONMarshal(p, true)
 
 	_ = WriteFile(p.fileName, marshal, 664)
 }
@@ -71,13 +59,15 @@ func getNew(file string) *Package {
 }
 
 func LoadPackage(createNew bool) (*Package, error) {
-	if fileBytes, e := ReadFile(consts.FilePackage); e != nil {
+
+	if fileBytes, e := ReadFile(env.GetBossFile()); e != nil {
 		if createNew {
 			e = nil
 		}
-		return getNew(consts.FilePackage), e
+
+		return getNew(env.GetBossFile()), e
 	} else {
-		result := getNew(consts.FilePackage)
+		result := getNew(env.GetBossFile())
 		if err := json.Unmarshal(fileBytes, result); err != nil {
 			return nil, e
 		}
@@ -88,7 +78,7 @@ func LoadPackage(createNew bool) (*Package, error) {
 
 func LoadPackageOther(path string) (*Package, error) {
 	if fileBytes, e := ReadFile(path); e != nil {
-		return nil, e
+		return getNew(path), e
 	} else {
 		result := getNew(path)
 		if err := json.Unmarshal(fileBytes, result); err != nil {

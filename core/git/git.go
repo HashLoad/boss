@@ -24,7 +24,7 @@ func CloneCache(dep models.Dependency) *git.Repository {
 	repository, e := git.Clone(storageCache, memfs.New(), &git.CloneOptions{
 		URL:  url,
 		Tags: git.AllTags,
-		Auth: models.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
+		Auth: env.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
 	})
 	if e != nil {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
@@ -49,7 +49,7 @@ func UpdateCache(dep models.Dependency) *git.Repository {
 	}
 	_ = repository.Fetch(&git.FetchOptions{
 		Force: true,
-		Auth:  models.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
+		Auth:  env.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
 	initSubmodules(dep, repository)
 	return repository
 }
@@ -98,7 +98,7 @@ func initSubmodules(dep models.Dependency, repository *git.Repository) {
 	_ = submodules.Update(&git.SubmoduleUpdateOptions{
 		Init:              true,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
-		Auth:              models.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
+		Auth:              env.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
 	})
 
 }

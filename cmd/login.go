@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/hashload/boss/env"
 	"log"
 	"os/user"
 	"path/filepath"
 	"syscall"
 
-	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
@@ -20,7 +20,7 @@ var loginCmd = &cobra.Command{
 	Short: "Register login to repo",
 	Long:  `Register login to repo`,
 	Run: func(cmd *cobra.Command, args []string) {
-		configuration := models.GlobalConfiguration
+		configuration := env.GlobalConfiguration
 
 		if removeLogin {
 			delete(configuration.Auth, args[0])
@@ -28,7 +28,7 @@ var loginCmd = &cobra.Command{
 			return
 		}
 
-		var auth *models.Auth
+		var auth *env.Auth
 		var repo string
 		if len(args) > 0 && args[0] != "" {
 			repo = args[0]
@@ -42,7 +42,7 @@ var loginCmd = &cobra.Command{
 		}
 
 		if auth == nil {
-			auth = &models.Auth{}
+			auth = &env.Auth{}
 		}
 
 		auth.UseSsh = getParamBoolean("Use SSH")

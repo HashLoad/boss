@@ -7,7 +7,10 @@ const FilePackage = "boss.json"
 const Separator = string(filepath.Separator)
 
 const FolderDependencies = "modules"
+const FolderBossHome = ".boss"
+
 const BinFolder string = ".bin"
+const BossConfigFile = "boss.cfg.json"
 
 const MinimalDependencyVersion string = ">0.0.0"
 

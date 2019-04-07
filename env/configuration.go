@@ -1,23 +1,23 @@
-package models
+package env
 
 import (
 	"encoding/json"
-	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils/crypto"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	sshGit "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-
-	ssh2 "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+	"path"
 )
 
 var machineID = []byte(crypto.GetMachineID()[:16])
 
 type Configuration struct {
+	path       string
 	Key        string           `json:"id"`
 	Auth       map[string]*Auth `json:"auth"`
 	PurgeTime  int              `json:"purgeAfter"`
@@ -93,7 +93,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		if e != nil {
 			panic(e)
 		}
-		return &ssh2.PublicKeys{User: "git", Signer: signer}
+		return &sshGit.PublicKeys{User: "git", Signer: signer}
 
 	} else {
 		return &http.BasicAuth{Username: auth.GetUser(), Password: auth.GetPassword()}
@@ -101,30 +101,30 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 }
 
 func (c *Configuration) SaveConfiguration() {
-	d, err := json.Marshal(c)
+	jsonString, err := json.Marshal(c)
 	if err != nil {
 		msg.Die(err.Error())
 	}
 
-	err = os.MkdirAll(env.GetBossHome(), 0755)
+	err = os.MkdirAll(c.path, 0755)
 	if err != nil {
 		msg.Die(err.Error())
 	}
 
-	p := filepath.Join(env.GetBossHome(), "boss.cfg.json")
-	f, err := os.Create(p)
+	filePath := path.Join(c.path, consts.BossConfigFile)
+	f, err := os.Create(filePath)
 	if err != nil {
 		msg.Die(err.Error())
 	}
 	defer f.Close()
 
-	_, err = f.Write(d)
+	_, err = f.Write(jsonString)
 	if err != nil {
 		msg.Die(err.Error())
 	}
 }
 
-func defaultCreate() *Configuration {
+func makeDefault() *Configuration {
 	return &Configuration{
 		PurgeTime: 3,
 		Auth:      make(map[string]*Auth),
@@ -132,28 +132,28 @@ func defaultCreate() *Configuration {
 	}
 }
 
-var GlobalConfiguration, _ = loadConfiguration()
-
-func loadConfiguration() (*Configuration, error) {
-
-	c := &Configuration{
+func LoadConfiguration(cachePath string) (*Configuration, error) {
+	configuration := &Configuration{
 		PurgeTime: 3,
 	}
-	p := filepath.Join(env.GetBossHome(), "boss.cfg.json")
-	f, err := ioutil.ReadFile(p)
+
+	configFileName := path.Join(cachePath, consts.BossConfigFile)
+	buffer, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		return defaultCreate(), err
+		return makeDefault(), err
 	}
-	err = json.Unmarshal(f, c)
+	err = json.Unmarshal(buffer, configuration)
 	if err != nil {
 		msg.Err("Fail to load cfg %s", err)
-		return defaultCreate(), err
+		return makeDefault(), err
 	}
-	if c.Key != crypto.Md5MachineID() {
+	if configuration.Key != crypto.Md5MachineID() {
 		msg.Err("Failed to load auth... recreate login accounts")
-		c.Key = crypto.Md5MachineID()
-		c.Auth = make(map[string]*Auth)
+		configuration.Key = crypto.Md5MachineID()
+		configuration.Auth = make(map[string]*Auth)
 	}
 
-	return c, nil
+	configuration.path = cachePath
+
+	return configuration, nil
 }

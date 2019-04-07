@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"errors"
-	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
 	"os"
@@ -16,7 +16,7 @@ var cmdDelphi = &cobra.Command{
 	Short: "Configure Delphi version",
 	Long:  `Configure Delphi version to compile modules`,
 	Run: func(cmd *cobra.Command, args []string) {
-		msg.Info("Running in path %s", models.GlobalConfiguration.DelphiPath)
+		msg.Info("Running in path %s", env.GlobalConfiguration.DelphiPath)
 		_ = cmd.Usage()
 	},
 }
@@ -59,7 +59,7 @@ var cmdDelphiUse = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		config := models.GlobalConfiguration
+		config := env.GlobalConfiguration
 		config.DelphiPath = args[0]
 		config.SaveConfiguration()
 		msg.Info("Successful!")

@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"github.com/hashload/boss/env"
 	"io"
 	"regexp"
 	"strings"
@@ -43,7 +44,7 @@ func (d *Dependency) GetURLPrefix() string {
 
 func (d *Dependency) GetURL() string {
 	prefix := d.GetURLPrefix()
-	auth := GlobalConfiguration.Auth[prefix]
+	auth := env.GlobalConfiguration.Auth[prefix]
 	if auth != nil {
 		if auth.UseSsh {
 			return d.makeSshUrl()

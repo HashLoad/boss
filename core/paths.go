@@ -39,7 +39,7 @@ func makeCache(deps []models.Dependency) {
 }
 
 func ensureModules(pkg *models.Package, deps []models.Dependency) {
-	msg.Info("Installing modules in project patch")
+	msg.Info("Installing modules")
 	for _, dep := range deps {
 		msg.Info("Processing dependency: %s", dep.GetName())
 		repository := OpenRepository(dep)
@@ -118,7 +118,7 @@ func processOthers() {
 		}
 		msg.Info("Processing module: %s", info.Name())
 
-		fileName := filepath.Join(env.GetModulesDir(), info.Name(), "boss.json")
+		fileName := filepath.Join(env.GetModulesDir(), info.Name(), consts.FilePackage)
 
 		_, i := os.Stat(fileName)
 		if os.IsNotExist(i) {

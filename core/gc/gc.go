@@ -25,7 +25,7 @@ func RunGC() {
 			return nil
 		}
 
-		lastUpdate := repoInfo.LastUpdate.AddDate(0, 0, models.GlobalConfiguration.PurgeTime)
+		lastUpdate := repoInfo.LastUpdate.AddDate(0, 0, env.GlobalConfiguration.PurgeTime)
 		if lastUpdate.Before(time.Now()) {
 			_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), repoInfo.Key))
 			_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), "info", info.Name()))
@@ -33,6 +33,6 @@ func RunGC() {
 
 		return nil
 	})
-	models.GlobalConfiguration.LastPurge = time.Now().String()
-	models.GlobalConfiguration.SaveConfiguration()
+	env.GlobalConfiguration.LastPurge = time.Now().String()
+	env.GlobalConfiguration.SaveConfiguration()
 }

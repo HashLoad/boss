@@ -22,20 +22,20 @@ func EnsureCacheDir(dep models.Dependency) {
 	}
 }
 
-func EnsureModulesDir() {
+func EnsureCleanModulesDir() {
 	cacheDir := env.GetModulesDir()
-	fi, err := os.Stat(cacheDir)
+	cacheDirInfo, err := os.Stat(cacheDir)
 	if os.IsNotExist(err) {
 		msg.Debug("Creating %s", cacheDir)
 		if err := os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
 			msg.Die("Could not create %s: %s", cacheDir, err)
 		}
-	} else if !fi.IsDir() {
+	} else if cacheDirInfo != nil && !cacheDirInfo.IsDir() {
 		msg.Die("modules is not a directory")
 	} else {
 		if err = os.RemoveAll(cacheDir); err != nil {
 			msg.Warn("Failed to remove old cache")
 		}
-		EnsureModulesDir()
+		EnsureCleanModulesDir()
 	}
 }

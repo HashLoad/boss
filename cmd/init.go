@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"os"
 	"path/filepath"
@@ -19,12 +20,11 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		printHead()
 		pkgJson, _ := models.LoadPackage(true)
-		s, _ := os.Getwd()
 
 		var folderName = ""
 		rxp, err := regexp.Compile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
 		if err == nil {
-			allString := rxp.FindAllStringSubmatch(s, -1)
+			allString := rxp.FindAllStringSubmatch(env.GetCurrentDir(), -1)
 			folderName = allString[0][1]
 		}
 
