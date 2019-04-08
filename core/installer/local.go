@@ -14,6 +14,5 @@ func LocalInstall(args []string) {
 	}
 
 	EnsureDependencyOfArgs(pkg, args)
-
 	DoInstall(pkg)
 }

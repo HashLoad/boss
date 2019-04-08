@@ -23,56 +23,39 @@ func isCommandAvailable(name string) bool {
 	return true
 }
 
-func getDcc32Dir() string {
-	if env.GlobalConfiguration.DelphiPath != "" {
-		return env.GlobalConfiguration.DelphiPath
-	}
-
-	command := exec.Command("where", "dcc32")
-	output, err := command.Output()
-	if err != nil {
-		msg.Warn("dcc32 not found")
-	}
-	outputStr := strings.ReplaceAll(string(output), "\n", "")
-	outputStr = strings.ReplaceAll(outputStr, "\r", "")
-	outputStr = filepath.Dir(outputStr)
-
-	return outputStr
-}
-
 func getCompilerParameters(rootPath string) string {
 	var binPath string
 	if !env.Global {
-		binPath = rootPath + consts.Separator + consts.BinFolder
+		binPath = filepath.Join(rootPath, consts.BinFolder)
 	} else {
 		binPath = env.GetGlobalBinPath()
 	}
 
-	return " /p:DCC_BplOutput=\"" + rootPath + consts.Separator + ".bpl\" " +
-		"/p:DCC_DcpOutput=\"" + rootPath + consts.Separator + ".dcp\" " +
-		"/p:DCC_DcuOutput=\"" + rootPath + consts.Separator + ".dcu\" " +
+	return " /p:DCC_BplOutput=\"" + filepath.Join(rootPath, consts.BplFolder) + "\" " +
+		"/p:DCC_DcpOutput=\"" + filepath.Join(rootPath, consts.DcpFolder) + "\" " +
+		"/p:DCC_DcuOutput=\"" + filepath.Join(rootPath, consts.DcuFolder) + "\" " +
 		"/p:DCC_ExeOutput=\"" + binPath + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
 		"/P:platform=Win32 "
 }
 
-//noinspection GoUnhandledErrorResult
-func compile(path string, rootPath string) {
-	msg.Info("  Building " + filepath.Base(path))
-	dccDir := getDcc32Dir()
-	rsvars := dccDir + consts.Separator + "rsvars.bat"
-	fileRes := "build_boss_" + strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-	abs, _ := filepath.Abs(filepath.Dir(path))
-	buildLog := abs + consts.Separator + fileRes + ".log"
-	buildBat := abs + consts.Separator + fileRes + ".bat"
+func compile(dprojPath string, rootPath string) {
+	msg.Info("  Building " + filepath.Base(dprojPath))
+	dccDir := env.GetDcc32Dir()
+	rsvars := filepath.Join(dccDir, "rsvars.bat")
+	fileRes := "build_boss_" + strings.TrimSuffix(filepath.Base(dprojPath), filepath.Ext(dprojPath))
+	abs, _ := filepath.Abs(filepath.Dir(dprojPath))
+	buildLog := filepath.Join(abs, fileRes+".log")
+	buildBat := filepath.Join(abs, fileRes+".bat")
 	readFile, err := ioutil.ReadFile(rsvars)
 	if err != nil {
 		msg.Err("    error on read rsvars.bat")
 	}
 	readFileStr := string(readFile)
-	project, _ := filepath.Abs(path)
+	project, _ := filepath.Abs(dprojPath)
 
+	readFileStr += " \n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPaths(env.GetModulesDir()) + " "
 	readFileStr += " \n msbuild " + project + " /t:Build /p:Configuration=Debug " + getCompilerParameters(rootPath)
 	readFileStr += " > " + buildLog
 
@@ -92,12 +75,10 @@ func compile(path string, rootPath string) {
 
 }
 
-//noinspection GoUnhandledErrorResult
 func compilePas(path string, additionalPaths string) {
 	command := exec.Command("dcc32.exe", filepath.Base(path), additionalPaths)
 	command.Dir = filepath.Dir(path)
-	command.Output()
-
+	_ = command.Wait()
 }
 
 func BuildDucs() {
@@ -112,18 +93,17 @@ func BuildDucs() {
 	if pkg, err := models.LoadPackage(false); err != nil || pkg.Dependencies == nil {
 		buildAllDproj(rootPath)
 	} else {
-
 		rawDeps := pkg.Dependencies.(map[string]interface{})
 		deps := models.GetDependencies(rawDeps)
 		for _, dep := range deps {
-			modulePkg, err := models.LoadPackageOther(rootPath + consts.Separator + dep.GetName() + consts.Separator + consts.FilePackage)
+			modulePkg, err := models.LoadPackageOther(filepath.Join(rootPath, dep.GetName(), consts.FilePackage))
 			if err != nil {
-				return
+				continue
 			}
 
 			dprojs := modulePkg.Projects
 			for _, dproj := range dprojs {
-				s, _ := filepath.Abs(rootPath + consts.Separator + dep.GetName() + "/" + dproj)
+				s, _ := filepath.Abs(filepath.Join(rootPath, dep.GetName(), dproj))
 				compile(s, rootPath)
 			}
 		}

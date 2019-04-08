@@ -11,16 +11,15 @@ import (
 
 func DoInstall(pkg *models.Package) {
 	paths.EnsureCleanModulesDir()
-
 	msg.Info("Installing modules in project patch")
 
 	core.EnsureDependencies(pkg)
+
+	pkg.Save()
 
 	librarypath.UpdateLibraryPath()
 
 	msg.Info("Compiling units")
 
 	compiler.BuildDucs()
-
-	pkg.Save()
 }

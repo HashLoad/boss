@@ -11,7 +11,7 @@ import (
 	sshGit "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 var machineID = []byte(crypto.GetMachineID()[:16])
@@ -111,8 +111,8 @@ func (c *Configuration) SaveConfiguration() {
 		msg.Die(err.Error())
 	}
 
-	filePath := path.Join(c.path, consts.BossConfigFile)
-	f, err := os.Create(filePath)
+	configPath := filepath.Join(c.path, consts.BossConfigFile)
+	f, err := os.Create(configPath)
 	if err != nil {
 		msg.Die(err.Error())
 	}
@@ -137,7 +137,7 @@ func LoadConfiguration(cachePath string) (*Configuration, error) {
 		PurgeTime: 3,
 	}
 
-	configFileName := path.Join(cachePath, consts.BossConfigFile)
+	configFileName := filepath.Join(cachePath, consts.BossConfigFile)
 	buffer, err := ioutil.ReadFile(configFileName)
 	if err != nil {
 		return makeDefault(), err

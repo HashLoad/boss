@@ -2,9 +2,13 @@ package setup
 
 import (
 	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/snakeice/penv"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -20,8 +24,17 @@ func getPath(arr []penv.NameValue) string {
 }
 
 func Initialize() {
+	var OldGlobal = env.Global
+	env.Internal = true
+	env.Global = true
+
+	msg.Info("Initializing boss system...")
 	addPath(consts.EnvBossBin)
 	addPath(env.GetGlobalBinPath())
+	installBplIdentifier()
+
+	env.Global = OldGlobal
+	env.Internal = false
 }
 
 func addPath(path string) {
@@ -32,7 +45,6 @@ func addPath(path string) {
 
 	currentPath := getPath(environment.Setters)
 	if !strings.Contains(currentPath, path) {
-		msg.Info("Initializing boss in your system...")
 		pathEnv := path + ";"
 		if !strings.HasSuffix(currentPath, ";") {
 			pathEnv = ";" + pathEnv
@@ -42,6 +54,30 @@ func addPath(path string) {
 			msg.Die(err.Error())
 		}
 		msg.Warn("Please restart your console after complete.")
+	}
+
+}
+
+func installBplIdentifier() {
+	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
+	filepath.Join(env.GetModulesDir(), consts.BinFolder)
+	if _, err := os.Stat(exePath); os.IsNotExist(err) {
+
+		pkg, _ := models.LoadPackage(true)
+		installer.EnsureDependencyOfArgs(pkg, []string{"github.com/HashLoad/bpl-identifier"})
+		installer.DoInstall(pkg)
+
+		err := os.MkdirAll(filepath.Dir(exePath), os.ModePerm)
+		if err != nil {
+			msg.Err(err.Error())
+		}
+
+		var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
+
+		err = os.Rename(OutExeCompilation, exePath)
+		if err != nil {
+			msg.Err(err.Error())
+		}
 	}
 
 }

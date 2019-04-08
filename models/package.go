@@ -54,7 +54,6 @@ func getNew(file string) *Package {
 
 	res.Dependencies = make(map[string]interface{})
 	res.Projects = []string{}
-
 	return res
 }
 

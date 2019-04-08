@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 )
 
-var processed = make([]string, 0)
+var processed = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}
 
 func EnsureDependencies(pkg *models.Package) {
 	if pkg.Dependencies == nil {

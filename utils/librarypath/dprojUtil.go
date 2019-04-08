@@ -42,7 +42,7 @@ func updateLibraryPathProject(dprojName string) {
 			if child == nil {
 				child = createTag(children)
 			}
-			processCurrentPathpaths(child)
+			processCurrentPath(child)
 		}
 	}
 
@@ -62,7 +62,6 @@ func createTag(node *etree.Element) *etree.Element {
 }
 
 func getDprojName() []string {
-
 	var result []string
 	var matches = 0
 
@@ -92,47 +91,10 @@ func getDprojName() []string {
 	return result
 }
 
-func removeIndex(array []string, index int) []string {
-	return append(array[:index], array[index+1:]...)
-}
-
-func Contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
-}
-
-func getNewPaths(paths []string) []string {
-	_, e := os.Stat(env.GetModulesDir())
-	if os.IsNotExist(e) {
-		return nil
-	}
-	_ = filepath.Walk(env.GetCurrentDir(), func(path string, info os.FileInfo, err error) error {
-		matched, _ := regexp.MatchString(".*.pas$", info.Name())
-		if matched {
-			dir, _ := filepath.Split(path)
-			dir, _ = filepath.Rel(env.GetCurrentDir(), dir)
-			if !Contains(paths, dir) {
-				paths = append(paths, dir)
-			}
-		}
-		return nil
-	})
-	return paths
-}
-
-func processCurrentPathpaths(node *etree.Element) {
+func processCurrentPath(node *etree.Element) {
 	currentPaths := strings.Split(node.Text(), ";")
-	for index, path := range currentPaths {
-		if strings.HasPrefix(strings.Trim(path, ""), consts.FolderDependencies) {
-			removeIndex(currentPaths, index)
-		}
-	}
 
-	currentPaths = getNewPaths(currentPaths)
+	currentPaths = GetNewPaths(currentPaths, false)
 
 	node.SetText(strings.Join(currentPaths, ";"))
 
