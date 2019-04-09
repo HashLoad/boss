@@ -12,6 +12,7 @@ Usage:
   boss [command]
 
 Available Commands:
+  delphi      Configure Delphi version
   gc          Garbage collector
   help        Help about any command
   init        Initialize a new project
@@ -24,12 +25,17 @@ Available Commands:
   upgrade     upgrade a cli
   version     show cli version
 
+Flags:
+  -g, --global   global environment
+  -h, --help     help for boss
+
 Use "boss [command] --help" for more information about a command.
 
 ```
 + Sample: 
 	+ `boss install github.com/HashLoad/horse`
 	+ `boss install github.com/HashLoad/horse:1.0.0`
+	+ `boss install -g github.com/HashLoad/delphi-docker`
 
 
 ### For use yor project in boss create a tag with [semantic version](https://semver.org/) 

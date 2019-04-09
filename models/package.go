@@ -5,6 +5,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/utils/parser"
 	. "io/ioutil"
+	"strings"
 )
 
 type Package struct {
@@ -31,6 +32,14 @@ func (p *Package) AddDependency(dep string, ver string) {
 		p.Dependencies = make(map[string]interface{})
 	}
 	deps := p.Dependencies.(map[string]interface{})
+
+	for key, _ := range deps {
+		if strings.ToLower(key) == strings.ToLower(dep) {
+			deps[key] = ver
+			return
+		}
+	}
+
 	deps[dep] = ver
 }
 

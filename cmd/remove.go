@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/models"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,7 @@ var removeCmd = &cobra.Command{
 		}
 
 		for e := range args {
-			loadPackage.RemoveDependency(args[e])
+			loadPackage.RemoveDependency(installer.ParseDependency(args[e]))
 		}
 		loadPackage.Save()
 	},

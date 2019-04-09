@@ -51,7 +51,7 @@ func DoInstallPackages() {
 	keys, err := knowPackages.ReadValueNames(int(keyStat.ValueCount))
 	handleError(err)
 
-	existingBpls := []string{}
+	var existingBpls []string
 
 	err = filepath.Walk(bplDir, func(path string, info os.FileInfo, err error) error {
 		if info == nil || info.IsDir() {

@@ -10,8 +10,8 @@ import (
 )
 
 func DoInstall(pkg *models.Package) {
-	paths.EnsureCleanModulesDir()
 	msg.Info("Installing modules in project patch")
+	paths.EnsureCleanModulesDir()
 
 	core.EnsureDependencies(pkg)
 
