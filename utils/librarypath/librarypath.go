@@ -1,7 +1,10 @@
 package librarypath
 
 import (
+	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -45,14 +48,33 @@ func cleanPath(paths []string, fullPath bool) []string {
 }
 
 func GetNewPaths(paths []string, fullPath bool) []string {
-	_, e := os.Stat(env.GetModulesDir())
+	paths = cleanPath(paths, fullPath)
+	var path = env.GetModulesDir()
+
+	matches, _ := ioutil.ReadDir(path)
+
+	for _, value := range matches {
+
+		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
+		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
+
+			other, _ := models.LoadPackageOther(packagePath)
+			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, true)
+
+		} else {
+			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath)
+		}
+	}
+	return paths
+}
+
+func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
+	_, e := os.Stat(path)
 	if os.IsNotExist(e) {
-		return nil
+		return paths
 	}
 
-	paths = cleanPath(paths, fullPath)
-
-	_ = filepath.Walk(env.GetModulesDir(), func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
@@ -66,4 +88,5 @@ func GetNewPaths(paths []string, fullPath bool) []string {
 		return nil
 	})
 	return paths
+
 }

@@ -71,7 +71,7 @@ begin
 end;
 
 [Dirs]
-Name: "{app}"; Permissions: users-full
+Name: "{app}"; Permissions: everyone-full
 
 [Files]
 Source: "..\boss.exe"; DestDir: "{app}"; Flags: ignoreversion

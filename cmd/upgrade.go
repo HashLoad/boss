@@ -34,9 +34,8 @@ var upgradeCmd = &cobra.Command{
 		if err != nil {
 			err.Error()
 		}
-		if err := os.Remove(exePath + "_o"); err != nil {
-			msg.Warn("Failed to remove old file " + exePath + "_0")
-		}
+		_ = os.Remove(exePath + "_o")
+
 		if err := os.Rename(exePath, exePath+"_o"); err != nil {
 			msg.Warn("Failed on rename " + exePath + " to " + exePath + "_0")
 		}

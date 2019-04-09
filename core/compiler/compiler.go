@@ -35,7 +35,7 @@ func getCompilerParameters(rootPath string) string {
 		"/p:DCC_DcpOutput=\"" + filepath.Join(rootPath, consts.DcpFolder) + "\" " +
 		"/p:DCC_DcuOutput=\"" + filepath.Join(rootPath, consts.DcuFolder) + "\" " +
 		"/p:DCC_ExeOutput=\"" + binPath + "\" " +
-		"/target:Rebuild " +
+		"/target:Build " +
 		"/p:config=Debug " +
 		"/P:platform=Win32 "
 }
