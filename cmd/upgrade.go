@@ -29,8 +29,11 @@ var upgradeCmd = &cobra.Command{
 		if !checkVersion(version) {
 			return
 		}
-
-		exePath, err := filepath.Abs(os.Args[0])
+		ex, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		exePath, _ := filepath.Abs(ex)
 		if err != nil {
 			err.Error()
 		}
