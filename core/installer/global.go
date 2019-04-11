@@ -67,7 +67,7 @@ func DoInstallPackages() {
 		}
 
 		if Find(keys, path) == -1 {
-			handleError(knowPackages.SetStringValue(path, consts.BossInstalled+path))
+			handleError(knowPackages.SetStringValue(path, path))
 		}
 		existingBpls = append(existingBpls, path)
 
@@ -79,11 +79,7 @@ func DoInstallPackages() {
 			continue
 		}
 
-		stringValue, _, err := knowPackages.GetStringValue(key)
-		if err != nil {
-			msg.Warn("Ignoring: %s", err.Error())
-		}
-		if strings.HasPrefix(stringValue, consts.BossInstalled) {
+		if strings.HasPrefix(key, env.GetModulesDir()) {
 			err := knowPackages.DeleteValue(key)
 			handleError(err)
 		}

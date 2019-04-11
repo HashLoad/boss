@@ -81,34 +81,38 @@ func compilePas(path string, additionalPaths string) {
 	_ = command.Wait()
 }
 
-func BuildDucs() {
-	rootPath := env.GetModulesDir()
+func Build() {
 	if !isCommandAvailable("dcc32.exe") {
 		msg.Warn("dcc32 not found in path")
 		return
 	}
 
 	buildAllPas()
+	rootPath := env.GetCurrentDir()
+	buildAllDprojByPackage(rootPath)
+}
 
-	if pkg, err := models.LoadPackage(false); err != nil || pkg.Dependencies == nil {
+func buildAllDprojByPackage(rootPath string) {
+	if pkg, err := models.LoadPackageOther(filepath.Join(rootPath, consts.FilePackage)); err != nil || pkg.Dependencies == nil {
 		buildAllDproj(rootPath)
 	} else {
 		rawDeps := pkg.Dependencies.(map[string]interface{})
+
 		deps := models.GetDependencies(rawDeps)
 		for _, dep := range deps {
-			modulePkg, err := models.LoadPackageOther(filepath.Join(rootPath, dep.GetName(), consts.FilePackage))
+			modulePkg, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage))
 			if err != nil {
 				continue
 			}
+			buildAllDprojByPackage(filepath.Join(env.GetModulesDir(), dep.GetName()))
 
 			dprojs := modulePkg.Projects
 			for _, dproj := range dprojs {
-				s, _ := filepath.Abs(filepath.Join(rootPath, dep.GetName(), dproj))
-				compile(s, rootPath)
+				s, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), dep.GetName(), dproj))
+				compile(s, env.GetModulesDir())
 			}
 		}
 	}
-
 }
 
 func buildAllPas() {

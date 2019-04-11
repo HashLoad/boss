@@ -18,8 +18,6 @@ func DoInstall(pkg *models.Package) {
 	pkg.Save()
 
 	librarypath.UpdateLibraryPath()
-
 	msg.Info("Compiling units")
-
-	compiler.BuildDucs()
+	compiler.Build()
 }

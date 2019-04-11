@@ -14,7 +14,7 @@ import (
 )
 
 func updateDprojLibraryPath() {
-	var dprojsNames = getDprojName()
+	var dprojsNames = GetDprojNames()
 	for _, dprojName := range dprojsNames {
 		updateLibraryPathProject(dprojName)
 	}
@@ -61,7 +61,7 @@ func createTag(node *etree.Element) *etree.Element {
 	return child
 }
 
-func getDprojName() []string {
+func GetDprojNames() []string {
 	var result []string
 	var matches = 0
 
