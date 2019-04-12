@@ -52,7 +52,7 @@ func writeFile(filename string, content string) {
 		log.Fatal(err)
 	}
 	w := transform.NewWriter(f, encode.NewEncoder())
-	_, err = fmt.Fprintln(w, content)
+	_, err = fmt.Fprint(w, content)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,53 +94,59 @@ func getDcpString(dcps []string) string {
 	var dpsLine = "\n"
 
 	for _, dcp := range dcps {
-		dpsLine += "  " + dcp + COMMENT_BOSS + ",\n"
+		dpsLine += "  " + filepath.Base(dcp) + COMMENT_BOSS + ",\n"
 	}
 	return dpsLine[:len(dpsLine)-2]
 }
 
-func cleanFile(filecontent string) string {
-	lines := strings.Split(filecontent, "\n")
-	var result = ""
-	for key, value := range lines {
+func injectDcps(filecontent string, dcps []string) (string, bool) {
+	regexRequires := regexp.MustCompile(`(?m)^(requires)([\n\r \w,{}\\.]+)(;)`)
+
+	resultRegex := regexRequires.FindAllStringSubmatch(filecontent, -1)
+	if len(resultRegex) == 0 {
+		return filecontent, false
+	}
+
+	resultRegexIndexes := regexRequires.FindAllStringSubmatchIndex(filecontent, -1)
+
+	currentRequiresString := regexp.MustCompile("[\r\n ]+").ReplaceAllString(resultRegex[0][2], "")
+
+	currentRequires := strings.Split(currentRequiresString, ",")
+
+	var result = filecontent[:resultRegexIndexes[0][3]]
+
+	for _, value := range currentRequires {
 		if strings.Contains(value, COMMENT_BOSS) {
 			continue
 		}
-
-		if key > 0 {
-			result += "\n"
-		}
-		result += value
+		result += "\n  " + value + ","
 	}
-	return result
+
+	result = result + getDcpString(dcps) + ";" + filecontent[resultRegexIndexes[0][7]:]
+	return result, true
 }
 
 func processFile(content string, dcps []string) string {
 	if len(dcps) == 0 {
 		return content
 	}
-	content = cleanFile(content)
-	var dpcLine = getDcpString(dcps)
-
-	requiresExists := regexp.MustCompile(`(?mi)^requires`)
-
-	if requiresExists.Match([]byte(content)) {
-		loc := requiresExists.FindIndex([]byte(content))
-		index := loc[1] + strings.Index(content[loc[1]:], ";")
-		content = content[:index] + "," + dpcLine + ";" + content[index+1:]
-
+	if content, success := injectDcps(content, dcps); success {
 		return content
 	}
 
 	lines := strings.Split(content, "\n")
+
+	var dpcLine = getDcpString(dcps)
 	var containsindex = 1
+
 	for key, value := range lines {
 		if strings.TrimSpace(strings.ToLower(value)) == "contains" {
 			containsindex = key - 1
 			break
 		}
 	}
-	content = strings.Join(lines[:containsindex], "\n") +
+
+	content = strings.Join(lines[:containsindex], "\n\n") +
 		"requires" + dpcLine + ";\n\n" + strings.Join(lines[containsindex:], "\n")
 	return content
 
