@@ -59,7 +59,7 @@ func GetNewPaths(paths []string, fullPath bool) []string {
 		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
 
 			other, _ := models.LoadPackageOther(packagePath)
-			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, true)
+			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath)
 
 		} else {
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath)

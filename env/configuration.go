@@ -12,17 +12,21 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 var machineID = []byte(crypto.GetMachineID()[:16])
 
 type Configuration struct {
-	path       string
-	Key        string           `json:"id"`
-	Auth       map[string]*Auth `json:"auth"`
-	PurgeTime  int              `json:"purgeAfter"`
-	LastPurge  string           `json:"last_purge"`
-	DelphiPath string           `json:"delphi_path,omitempty"`
+	path                string
+	Key                 string           `json:"id"`
+	Auth                map[string]*Auth `json:"auth"`
+	PurgeTime           int              `json:"purgeAfter"`
+	InternalRefreshRate int              `json:"internal_refresh_rate"`
+	LastPurge           time.Time        `json:"last_purge_cache"`
+	LastInternalUpdate  time.Time        `json:"last_internal_update"`
+	DelphiPath          string           `json:"delphi_path,omitempty"`
+	ConfigVersion       int64            `json:"config_version"`
 }
 
 type Auth struct {
@@ -101,7 +105,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 }
 
 func (c *Configuration) SaveConfiguration() {
-	jsonString, err := json.Marshal(c)
+	jsonString, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
 		msg.Die(err.Error())
 	}
@@ -126,9 +130,11 @@ func (c *Configuration) SaveConfiguration() {
 
 func makeDefault() *Configuration {
 	return &Configuration{
-		PurgeTime: 3,
-		Auth:      make(map[string]*Auth),
-		Key:       crypto.Md5MachineID(),
+		PurgeTime:           3,
+		InternalRefreshRate: 5,
+		LastInternalUpdate:  time.Now(),
+		Auth:                make(map[string]*Auth),
+		Key:                 crypto.Md5MachineID(),
 	}
 }
 

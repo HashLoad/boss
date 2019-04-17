@@ -10,9 +10,28 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const PATH string = "PATH"
+
+func Initialize() {
+	var OldGlobal = env.Global
+	env.Internal = true
+	env.Global = true
+
+	msg.Info("Initializing boss system...")
+
+	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath()}
+	modules := []string{"bpl-identifier"}
+
+	migration()
+	addPath(paths)
+	installModules(modules)
+
+	env.Global = OldGlobal
+	env.Internal = false
+}
 
 func getPath(arr []penv.NameValue) string {
 	for _, nv := range arr {
@@ -23,29 +42,24 @@ func getPath(arr []penv.NameValue) string {
 	return ""
 }
 
-func Initialize() {
-	var OldGlobal = env.Global
-	env.Internal = true
-	env.Global = true
-
-	msg.Info("Initializing boss system...")
-	addPath(consts.EnvBossBin)
-	addPath(env.GetGlobalBinPath())
-	installBplIdentifier()
-
-	env.Global = OldGlobal
-	env.Internal = false
-}
-
-func addPath(path string) {
+func addPath(paths []string) {
+	var needAdd = false
 	environment, e := penv.Load()
 	if e != nil {
 		msg.Die("Failed to load env \n %s", e.Error())
+		return
 	}
 
 	currentPath := getPath(environment.Setters)
-	if !strings.Contains(currentPath, path) {
-		pathEnv := path + ";"
+	pathEnv := ""
+	for _, path := range paths {
+		if !strings.Contains(currentPath, path) {
+			pathEnv = path + ";"
+			needAdd = true
+		}
+	}
+
+	if needAdd {
 		if !strings.HasSuffix(currentPath, ";") {
 			pathEnv = ";" + pathEnv
 		}
@@ -58,26 +72,53 @@ func addPath(path string) {
 
 }
 
-func installBplIdentifier() {
-	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
-	filepath.Join(env.GetModulesDir(), consts.BinFolder)
-	if _, err := os.Stat(exePath); os.IsNotExist(err) {
-
-		pkg, _ := models.LoadPackage(true)
-		installer.EnsureDependencyOfArgs(pkg, []string{"github.com/HashLoad/bpl-identifier"})
-		installer.DoInstall(pkg)
-
-		err := os.MkdirAll(filepath.Dir(exePath), os.ModePerm)
-		if err != nil {
-			msg.Err(err.Error())
-		}
-
-		var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
-
-		err = os.Rename(OutExeCompilation, exePath)
-		if err != nil {
-			msg.Err(err.Error())
+func installModules(modules []string) {
+	pkg, _ := models.LoadPackage(true)
+	dependencies := pkg.Dependencies.(map[string]interface{})
+	encountered := 0
+	for _, newPackage := range modules {
+		for installed, _ := range dependencies {
+			if strings.Contains(installed, newPackage) {
+				encountered++
+			}
 		}
 	}
 
+	nextUpdate := env.GlobalConfiguration.LastInternalUpdate.
+		AddDate(0, 0, env.GlobalConfiguration.PurgeTime)
+
+	if encountered == len(modules) && time.Now().Before(nextUpdate) {
+		return
+	}
+
+	env.GlobalConfiguration.LastInternalUpdate = time.Now()
+	env.GlobalConfiguration.SaveConfiguration()
+
+	installer.GlobalInstall(modules)
+	moveBptIdentifier()
+
+}
+
+func moveBptIdentifier() {
+
+	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
+	err := os.MkdirAll(filepath.Dir(exePath), os.ModePerm)
+	if err != nil {
+		msg.Err(err.Error())
+	}
+
+	var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
+
+	err = os.Rename(OutExeCompilation, exePath)
+	if err != nil {
+		msg.Err(err.Error())
+	}
+}
+
+func migration() {
+	if env.GlobalConfiguration.ConfigVersion < 1 {
+		env.GlobalConfiguration.InternalRefreshRate = 5
+		env.GlobalConfiguration.ConfigVersion++
+		env.GlobalConfiguration.SaveConfiguration()
+	}
 }

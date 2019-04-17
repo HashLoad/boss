@@ -33,6 +33,6 @@ func RunGC() {
 
 		return nil
 	})
-	env.GlobalConfiguration.LastPurge = time.Now().String()
+	env.GlobalConfiguration.LastPurge = time.Now()
 	env.GlobalConfiguration.SaveConfiguration()
 }
