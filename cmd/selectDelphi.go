@@ -4,11 +4,9 @@ import (
 	"errors"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils/dcc32"
 	"github.com/spf13/cobra"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 )
 
 var cmdDelphi = &cobra.Command{
@@ -26,7 +24,7 @@ var cmdDelphiList = &cobra.Command{
 	Short: "List Delphi versions",
 	Long:  `List Delphi versions to compile modules`,
 	Run: func(cmd *cobra.Command, args []string) {
-		paths := getDcc32Dir()
+		paths := dcc32.GetDcc32DirByCmd()
 		if len(paths) == 0 {
 			msg.Warn("Installations not found in $PATH")
 			return
@@ -64,24 +62,6 @@ var cmdDelphiUse = &cobra.Command{
 		config.SaveConfiguration()
 		msg.Info("Successful!")
 	},
-}
-
-func getDcc32Dir() []string {
-	command := exec.Command("where", "dcc32")
-	output, err := command.Output()
-	if err != nil {
-		msg.Warn("dcc32 not found")
-	}
-	outputStr := strings.ReplaceAll(string(output), "\t", "")
-	outputStr = strings.ReplaceAll(outputStr, "\r", "")
-	if strings.HasSuffix(outputStr, "\n") {
-		outputStr = outputStr[0 : len(outputStr)-1]
-	}
-	installations := strings.Split(outputStr, "\n")
-	for key, value := range installations {
-		installations[key] = filepath.Dir(value)
-	}
-	return installations
 }
 
 func init() {

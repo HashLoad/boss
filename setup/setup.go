@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils/dcc32"
 	"github.com/snakeice/penv"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ func Initialize() {
 
 	msg.Info("Initializing boss system...")
 
+	initializeDelphiVersion()
 	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath()}
 	modules := []string{"bpl-identifier"}
 
@@ -121,4 +123,24 @@ func migration() {
 		env.GlobalConfiguration.ConfigVersion++
 		env.GlobalConfiguration.SaveConfiguration()
 	}
+}
+
+func initializeDelphiVersion() {
+	if len(env.GlobalConfiguration.DelphiPath) != 0 {
+		return
+	}
+	dcc32DirByCmd := dcc32.GetDcc32DirByCmd()
+	if len(dcc32DirByCmd) != 0 {
+		env.GlobalConfiguration.DelphiPath = dcc32DirByCmd[0]
+		env.GlobalConfiguration.SaveConfiguration()
+		return
+	}
+
+	byRegisty := dcc32.GetDelphiPathsByRegisty()
+	if len(byRegisty) != 0 {
+		env.GlobalConfiguration.DelphiPath = byRegisty[len(byRegisty)-1]
+		env.GlobalConfiguration.SaveConfiguration()
+		return
+	}
+
 }

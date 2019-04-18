@@ -3,6 +3,7 @@ package librarypath
 import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
 	"strings"
 )
@@ -10,7 +11,7 @@ import (
 const SearchPathRegistry = "Search Path"
 
 func updateGlobalLibraryPath() {
-	ideVersion := env.GetDelphiVersionFromRegisty()
+	ideVersion := env.GetCurrentDelphiVersionFromRegisty()
 	library, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Library`, registry.ALL_ACCESS)
 
 	if err != nil {
@@ -26,7 +27,7 @@ func updateGlobalLibraryPath() {
 
 	for _, platform := range platforms {
 		delphiPlatform, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Library\`+platform, registry.ALL_ACCESS)
-		env.HandleError(err)
+		utils.HandleError(err)
 		paths, _, err := delphiPlatform.GetStringValue(SearchPathRegistry)
 		if err != nil {
 			msg.Warn("Failed to update library path from platform %s with delphi %s", platform, ideVersion)
@@ -37,7 +38,7 @@ func updateGlobalLibraryPath() {
 		newSplitPaths := GetNewPaths(splitPaths, true)
 		newPaths := strings.Join(newSplitPaths, ";")
 		err = delphiPlatform.SetStringValue(SearchPathRegistry, newPaths)
-		env.HandleError(err)
+		utils.HandleError(err)
 	}
 
 }

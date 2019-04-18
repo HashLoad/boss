@@ -66,6 +66,10 @@ func getNew(file string) *Package {
 	return res
 }
 
+func (p *Package) GetLockFile() PackageLock {
+	return LoadPackageLock(p)
+}
+
 func LoadPackage(createNew bool) (*Package, error) {
 
 	if fileBytes, e := ReadFile(env.GetBossFile()); e != nil {

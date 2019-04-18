@@ -5,10 +5,9 @@ import (
 	"encoding/hex"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils/dcc32"
 	"github.com/mitchellh/go-homedir"
-	"golang.org/x/sys/windows/registry"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -85,56 +84,14 @@ func GetDcc32Dir() string {
 		return GlobalConfiguration.DelphiPath
 	}
 
-	command := exec.Command("where", "dcc32")
-	output, err := command.Output()
-	if err != nil {
-		msg.Warn("dcc32 not found")
+	byCmd := dcc32.GetDcc32DirByCmd()
+	if len(byCmd) > 0 {
+		return byCmd[0]
 	}
-	outputStr := strings.ReplaceAll(string(output), "\n", "")
-	outputStr = strings.ReplaceAll(outputStr, "\r", "")
-	outputStr = filepath.Dir(outputStr)
 
-	return outputStr
-}
-
-func HandleError(err error) {
-	if err != nil {
-		msg.Err(err.Error())
-	}
-}
-
-func HandleErrorFatal(err error) {
-	if err != nil {
-		msg.Die(err.Error())
-	}
-}
-
-func GetDelphiVersionFromRegisty() string {
-
-	delphiVersions, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`,
-		registry.ALL_ACCESS)
-	if err != nil {
-		msg.Err("Cannot open registry to IDE version")
-	}
-	keyInfo, err := delphiVersions.Stat()
-	HandleError(err)
-
-	names, err := delphiVersions.ReadSubKeyNames(int(keyInfo.SubKeyCount))
-	HandleError(err)
-
-	for _, value := range names {
-		delphiInfo, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+value, registry.QUERY_VALUE)
-		HandleError(err)
-
-		appPath, _, err := delphiInfo.GetStringValue("App")
-		if os.IsNotExist(err) {
-			continue
-		}
-		HandleError(err)
-		if strings.HasPrefix(strings.ToLower(appPath), strings.ToLower(GlobalConfiguration.DelphiPath)) {
-			return value
-		}
-
-	}
 	return ""
+}
+
+func GetCurrentDelphiVersionFromRegisty() string {
+	return dcc32.GetDelphiVersionNumberName(GlobalConfiguration.DelphiPath)
 }

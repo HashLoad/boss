@@ -5,6 +5,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"os/exec"
@@ -28,14 +29,8 @@ func Find(array []string, value string) int {
 	return -1
 }
 
-func handleError(err error) {
-	if err != nil {
-		msg.Err(err.Error())
-	}
-}
-
 func DoInstallPackages() {
-	var ideVersion = env.GetDelphiVersionFromRegisty()
+	var ideVersion = env.GetCurrentDelphiVersionFromRegisty()
 	var bplDir = filepath.Join(env.GetModulesDir(), consts.BplFolder)
 
 	knowPackages, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Known Packages`,
@@ -46,10 +41,10 @@ func DoInstallPackages() {
 	}
 
 	keyStat, err := knowPackages.Stat()
-	handleError(err)
+	utils.HandleError(err)
 
 	keys, err := knowPackages.ReadValueNames(int(keyStat.ValueCount))
-	handleError(err)
+	utils.HandleError(err)
 
 	var existingBpls []string
 
@@ -67,7 +62,7 @@ func DoInstallPackages() {
 		}
 
 		if Find(keys, path) == -1 {
-			handleError(knowPackages.SetStringValue(path, path))
+			utils.HandleError(knowPackages.SetStringValue(path, path))
 		}
 		existingBpls = append(existingBpls, path)
 
@@ -81,7 +76,7 @@ func DoInstallPackages() {
 
 		if strings.HasPrefix(key, env.GetModulesDir()) {
 			err := knowPackages.DeleteValue(key)
-			handleError(err)
+			utils.HandleError(err)
 		}
 	}
 }

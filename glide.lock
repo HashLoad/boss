@@ -1,5 +1,5 @@
-hash: 21a25f1ef11e6cfbf7202fc881113b3c4c680fc82ee10567824a5a47388564ab
-updated: 2019-03-29T16:37:08.1516278-03:00
+hash: 0b149816dc03b04c7b097821a479e673581700f26507df5f9f2e2d47e22b9ea7
+updated: 2019-04-18T01:59:34.3496001-03:00
 imports:
 - name: github.com/beevik/etree
   version: 8aee6516be3b1163bb6450c35c50e4969e3a3aa8
@@ -92,6 +92,14 @@ imports:
   - unix
   - windows
   - windows/registry
+- name: golang.org/x/text
+  version: 905a57155faa8230500121607930ebb9dd8e139c
+  subpackages:
+  - encoding
+  - encoding/charmap
+  - encoding/internal
+  - encoding/internal/identifier
+  - transform
 - name: gopkg.in/cheggaaa/pb.v2
   version: c112833d014c77e8bde723fd0158e3156951639f
   subpackages:
@@ -159,4 +167,6 @@ imports:
   version: b24eb346a94c3ba12c1da1e564dbac1b498a77ce
 - name: gopkg.in/warnings.v0
   version: ec4a0fea49c7b46c2aeb0b51aac55779c607e52b
+- name: gopkg.in/yaml.v2
+  version: 51d6538a90f86fe93ac480b35f37b2be17fef232
 testImports: []
