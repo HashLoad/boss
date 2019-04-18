@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -82,7 +83,7 @@ func getDpcNames() []string {
 
 	for _, value := range fileInfos {
 		if strings.ToLower(filepath.Ext(value.Name())) == ".dcp" {
-			dpcs = append(dpcs, value.Name())
+			dpcs = append(dpcs, strings.TrimSuffix(value.Name(), path.Ext(value.Name())))
 		}
 	}
 	return dpcs
