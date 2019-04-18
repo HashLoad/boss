@@ -85,5 +85,5 @@ func isDesignTimeBpl(bplPath string) bool {
 
 	command := exec.Command(filepath.Join(env.GetInternalGlobalDir(), consts.FolderDependencies, consts.BinFolder, consts.BplIdentifierName), bplPath)
 	out, _ := command.Output()
-	return command.ProcessState.ExitCode() == 0 || strings.HasPrefix(strings.ToLower(string(out)), "design")
+	return strings.HasPrefix(strings.ToLower(string(out)), "design")
 }
