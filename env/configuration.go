@@ -107,29 +107,30 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 func (c *Configuration) SaveConfiguration() {
 	jsonString, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Die("Error on parse config file", err.Error())
 	}
 
 	err = os.MkdirAll(c.path, 0755)
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Die("Failed on create path", c.path, err.Error())
 	}
 
 	configPath := filepath.Join(c.path, consts.BossConfigFile)
 	f, err := os.Create(configPath)
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Die("Failed on create file ", configPath, err.Error())
 	}
 	defer f.Close()
 
 	_, err = f.Write(jsonString)
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Die("Failed on write cache file", err.Error())
 	}
 }
 
-func makeDefault() *Configuration {
+func makeDefault(configPath string) *Configuration {
 	return &Configuration{
+		path:                configPath,
 		PurgeTime:           3,
 		InternalRefreshRate: 5,
 		LastInternalUpdate:  time.Now(),
@@ -146,12 +147,12 @@ func LoadConfiguration(cachePath string) (*Configuration, error) {
 	configFileName := filepath.Join(cachePath, consts.BossConfigFile)
 	buffer, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		return makeDefault(), err
+		return makeDefault(cachePath), err
 	}
 	err = json.Unmarshal(buffer, configuration)
 	if err != nil {
 		msg.Err("Fail to load cfg %s", err)
-		return makeDefault(), err
+		return makeDefault(cachePath), err
 	}
 	if configuration.Key != crypto.Md5MachineID() {
 		msg.Err("Failed to load auth... recreate login accounts")
