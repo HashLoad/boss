@@ -75,7 +75,9 @@ func getDprDpkFromDproj(dprojName string) (filename string, find bool) {
 func getDpcNames() []string {
 	fileInfos, err := ioutil.ReadDir(filepath.Join(env.GetModulesDir(), consts.DcpFolder))
 	if err != nil {
-		msg.Err("Falied on load dcps")
+		if !os.IsNotExist(err) {
+			msg.Err("Failed on load dcps")
+		}
 		return []string{}
 	}
 

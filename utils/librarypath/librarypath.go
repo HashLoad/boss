@@ -31,7 +31,7 @@ func Contains(a []string, x string) bool {
 
 func cleanPath(paths []string, fullPath bool) []string {
 	prefix := env.GetModulesDir()
-	processedPaths := []string{}
+	var processedPaths []string
 	if !fullPath {
 		prefix, _ = filepath.Rel(env.GetCurrentDir(), prefix)
 	}
@@ -68,6 +68,30 @@ func GetNewPaths(paths []string, fullPath bool) []string {
 	return paths
 }
 
+func getDefaultPath(fullPath bool) []string {
+	var paths []string
+
+	if !fullPath {
+		fullPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcpFolder)
+
+		dir, err := filepath.Rel(env.GetCurrentDir(), fullPath)
+		if err == nil {
+			paths = append(paths, dir)
+		}
+
+		fullPath = filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcpFolder)
+		dir, err = filepath.Rel(env.GetCurrentDir(), fullPath)
+		if err == nil {
+			paths = append(paths, dir)
+		}
+	} else {
+		paths = append(paths, filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcpFolder))
+		paths = append(paths, filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcuFolder))
+	}
+
+	return paths
+}
+
 func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 	_, e := os.Stat(path)
 	if os.IsNotExist(e) {
@@ -87,6 +111,6 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 		}
 		return nil
 	})
-	return paths
+	return append(paths, getDefaultPath(fullPath)...)
 
 }

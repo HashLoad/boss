@@ -21,6 +21,9 @@ func GetDcc32DirByCmd() []string {
 	if strings.HasSuffix(outputStr, "\n") {
 		outputStr = outputStr[0 : len(outputStr)-1]
 	}
+	if len(outputStr) == 0 {
+		return []string{}
+	}
 	installations := strings.Split(outputStr, "\n")
 	for key, value := range installations {
 		installations[key] = filepath.Dir(value)

@@ -45,22 +45,23 @@ func getwd() string {
 }
 
 func GetCacheDir() string {
-	s := os.Getenv("BOSS_CACHE_DIR")
-
-	if s == "" {
-		s = filepath.Join(GetBossHome(), "cache")
-	}
-	return s
+	return filepath.Join(GetBossHome(), "cache")
 }
 
 func GetBossHome() string {
-	cacheDir, e := homedir.Dir()
-	if e != nil {
-		msg.Err("Error to get cache paths", e)
-	}
 
-	cacheDir = filepath.FromSlash(cacheDir)
-	return filepath.Join(cacheDir, consts.FolderBossHome)
+	homeDir := os.Getenv("BOSS_HOME")
+
+	if homeDir == "" {
+		systemHome, e := homedir.Dir()
+		homeDir = systemHome
+		if e != nil {
+			msg.Err("Error to get cache paths", e)
+		}
+
+		homeDir = filepath.FromSlash(homeDir)
+	}
+	return filepath.Join(homeDir, consts.FolderBossHome)
 }
 
 func GetBossFile() string {

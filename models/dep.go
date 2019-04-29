@@ -34,7 +34,7 @@ func (d *Dependency) makeSshUrl() string {
 	submatch := re.FindStringSubmatch(d.Repository)
 	provider := submatch[1]
 	repo := submatch[2]
-	return "git@" + provider + ":" + repo + ".git"
+	return "git@" + provider + ":" + repo
 }
 
 func (d *Dependency) GetURLPrefix() string {
@@ -50,7 +50,7 @@ func (d *Dependency) GetURL() string {
 			return d.makeSshUrl()
 		}
 	}
-	return "https://" + d.Repository + ".git"
+	return "https://" + d.Repository
 }
 
 var re = regexp.MustCompile(`(?m)^(.|)(\d+)\.(\d+)$`)

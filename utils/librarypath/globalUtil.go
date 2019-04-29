@@ -12,6 +12,9 @@ const SearchPathRegistry = "Search Path"
 
 func updateGlobalLibraryPath() {
 	ideVersion := env.GetCurrentDelphiVersionFromRegisty()
+	if ideVersion == "" {
+		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
+	}
 	library, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Library`, registry.ALL_ACCESS)
 
 	if err != nil {

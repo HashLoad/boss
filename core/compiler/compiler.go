@@ -82,10 +82,10 @@ func compilePas(path string, additionalPaths string) {
 }
 
 func Build() {
-	if !isCommandAvailable("dcc32.exe") {
-		msg.Warn("dcc32 not found in path")
-		return
-	}
+	//if !isCommandAvailable("dcc32.exe") {
+	//	msg.Warn("dcc32 not found in path")
+	//	return
+	//}
 
 	buildAllPas()
 	rootPath := env.GetCurrentDir()
