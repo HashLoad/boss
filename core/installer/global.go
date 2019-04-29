@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
+	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"os/exec"
@@ -29,9 +30,33 @@ func Find(array []string, value string) int {
 	return -1
 }
 
+func addPathBpl(ideVersion string) {
+	idePath, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Environment Variables`,
+		registry.ALL_ACCESS)
+	if err != nil {
+		msg.Err("Cannot add automatic bpl path dir")
+		return
+	}
+	value, _, err := idePath.GetStringValue("PATH")
+	utils.HandleError(err)
+
+	currentPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.BplFolder)
+
+	paths := strings.Split(value, ";")
+	if librarypath.Contains(paths, currentPath) {
+		return
+	}
+
+	paths = append(paths, currentPath)
+	err = idePath.SetStringValue("PATH", strings.Join(paths, ";"))
+	utils.HandleError(err)
+}
+
 func DoInstallPackages() {
 	var ideVersion = env.GetCurrentDelphiVersionFromRegisty()
 	var bplDir = filepath.Join(env.GetModulesDir(), consts.BplFolder)
+
+	addPathBpl(ideVersion)
 
 	knowPackages, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Known Packages`,
 		registry.ALL_ACCESS)
