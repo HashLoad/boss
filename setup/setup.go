@@ -96,7 +96,7 @@ func installModules(modules []string) {
 	env.GlobalConfiguration.LastInternalUpdate = time.Now()
 	env.GlobalConfiguration.SaveConfiguration()
 
-	installer.GlobalInstall(modules)
+	installer.GlobalInstall(modules, pkg)
 	moveBptIdentifier()
 
 }

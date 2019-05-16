@@ -10,14 +10,16 @@ import (
 )
 
 func DoInstall(pkg *models.Package) {
-	msg.Info("Installing modules in project patch")
-	paths.EnsureCleanModulesDir()
+	msg.Info("Installing modules in project path")
 
-	core.EnsureDependencies(pkg)
+	dependencies := core.EnsureDependencies(pkg.Lock, pkg)
+	paths.EnsureCleanModulesDir(dependencies, pkg.Lock)
 
+	pkg.Lock.CleanRemoved(dependencies)
 	pkg.Save()
 
-	librarypath.UpdateLibraryPath()
+	librarypath.UpdateLibraryPath(pkg)
 	msg.Info("Compiling units")
-	compiler.Build()
+	compiler.Build(pkg)
+	pkg.Save()
 }

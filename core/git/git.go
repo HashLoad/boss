@@ -87,19 +87,23 @@ func GetRepository(dep models.Dependency) *git.Repository {
 }
 
 func initSubmodules(dep models.Dependency, repository *git.Repository) {
-	worktree, e := repository.Worktree()
-	if e != nil {
-		msg.Err("... %s", e)
+	worktree, err := repository.Worktree()
+	if err != nil {
+		msg.Err("... %s", err)
 	}
-	submodules, e := worktree.Submodules()
-	if e != nil {
-		msg.Err("On get submodules... %s", e)
+	submodules, err := worktree.Submodules()
+	if err != nil {
+		msg.Err("On get submodules... %s", err)
 	}
-	_ = submodules.Update(&git.SubmoduleUpdateOptions{
+
+	err = submodules.Update(&git.SubmoduleUpdateOptions{
 		Init:              true,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 		Auth:              env.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
 	})
+	if err != nil {
+		msg.Err("Failed on update submodules from dependency %s: %s", dep.Repository, err.Error())
+	}
 
 }
 

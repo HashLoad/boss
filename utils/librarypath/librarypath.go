@@ -11,11 +11,11 @@ import (
 	"strings"
 )
 
-func UpdateLibraryPath() {
+func UpdateLibraryPath(pkg *models.Package) {
 	if env.Global {
 		updateGlobalLibraryPath()
 	} else {
-		updateDprojLibraryPath()
+		updateDprojLibraryPath(pkg)
 	}
 
 }
@@ -100,6 +100,9 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		matched, _ := regexp.MatchString(".*.pas$", info.Name())
+		if !matched {
+			matched, _ = regexp.MatchString(".*.inc", info.Name())
+		}
 		if matched {
 			dir, _ := filepath.Split(path)
 			if !fullPath {
@@ -111,6 +114,10 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 		}
 		return nil
 	})
-	return append(paths, getDefaultPath(fullPath)...)
-
+	for _, path := range getDefaultPath(fullPath) {
+		if !Contains(paths, path) {
+			paths = append(paths, path)
+		}
+	}
+	return paths
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	git2 "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
@@ -16,9 +17,9 @@ import (
 
 var processed = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}
 
-func EnsureDependencies(pkg *models.Package) {
+func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package) []models.Dependency {
 	if pkg.Dependencies == nil {
-		return
+		return []models.Dependency{}
 	}
 	rawDeps := pkg.Dependencies.(map[string]interface{})
 
@@ -26,9 +27,11 @@ func EnsureDependencies(pkg *models.Package) {
 
 	makeCache(deps)
 
-	ensureModules(pkg, deps)
+	ensureModules(rootLock, pkg, deps)
 
-	processOthers()
+	deps = append(deps, processOthers(rootLock)...)
+
+	return deps
 }
 
 func makeCache(deps []models.Dependency) {
@@ -38,7 +41,8 @@ func makeCache(deps []models.Dependency) {
 	}
 }
 
-func ensureModules(pkg *models.Package, deps []models.Dependency) {
+//TODO Diferenciar update e install
+func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []models.Dependency) {
 	msg.Info("Installing modules")
 	for _, dep := range deps {
 		msg.Info("Processing dependency: %s", dep.GetName())
@@ -68,40 +72,42 @@ func ensureModules(pkg *models.Package, deps []models.Dependency) {
 
 		var referenceName plumbing.ReferenceName
 
+		worktree, _ := repository.Worktree()
+
 		if !hasMatch {
-			msg.Warn("  No candidate to version for %s. Using master branch", dep.GetVersion())
 			if masterReference := git.GetMaster(repository); masterReference != nil {
 				referenceName = plumbing.NewBranchReferenceName(masterReference.Name)
 			}
 		} else {
-			msg.Info("  Detected semantic version. For %s using version %s", dep.Repository, bestMatch.Name().Short())
 			referenceName = bestMatch.Name()
 			if dep.GetVersion() == consts.MinimalDependencyVersion {
-				pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + bestMatch.Name().Short()
+				pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + referenceName.Short()
 			}
 		}
-		worktree, _ := repository.Worktree()
+
+		if !rootLock.NeedUpdate(dep, referenceName.Short()) {
+			msg.Warn("  %s already updated", dep.GetName())
+			continue
+		} else if !hasMatch {
+			msg.Warn("  No candidate to version for %s. Using master branch", dep.GetVersion())
+		} else {
+			msg.Info("  Detected semantic version. For %s using version %s", dep.Repository, bestMatch.Name().Short())
+		}
 
 		err := worktree.Checkout(&git2.CheckoutOptions{
 			Force:  true,
 			Branch: referenceName,
 		})
+
+		rootLock.AddInstalled(dep, referenceName.Short())
+
 		if err != nil {
 			msg.Die("  Error on switch to needed version from dependency: %s\n%s", dep.Repository, err)
 		}
 	}
 }
 
-func contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
-}
-
-func processOthers() {
+func processOthers(rootLock models.PackageLock) []models.Dependency {
 	infos, e := ioutil.ReadDir(env.GetModulesDir())
 	if e != nil {
 		msg.Err("Error on try load dir of modules: %s", e)
@@ -111,7 +117,7 @@ func processOthers() {
 		if !info.IsDir() {
 			continue
 		}
-		if contains(processed, info.Name()) {
+		if utils.Contains(processed, info.Name()) {
 			continue
 		} else {
 			processed = append(processed, info.Name())
@@ -131,7 +137,8 @@ func processOthers() {
 			}
 			msg.Err("  Error on try load package %s: %s", fileName, e)
 		} else {
-			EnsureDependencies(packageOther)
+			return EnsureDependencies(rootLock, packageOther)
 		}
 	}
+	return []models.Dependency{}
 }

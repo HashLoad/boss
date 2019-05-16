@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/hashload/boss/core/installer"
+	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
 )
 
@@ -12,18 +12,25 @@ var removeCmd = &cobra.Command{
 	Short: "Remove a dependency",
 	Long:  `Remove a dependency`,
 	Run: func(cmd *cobra.Command, args []string) {
-		msg.Debug("TODO")
-		return
-
-		loadPackage, e := models.LoadPackage(false)
+		pkg, e := models.LoadPackage(false)
 		if e != nil {
 			e.Error()
 		}
 
-		for e := range args {
-			loadPackage.RemoveDependency(installer.ParseDependency(args[e]))
+		if pkg == nil {
+			return
 		}
-		loadPackage.Save()
+
+		for e := range args {
+			pkg.RemoveDependency(installer.ParseDependency(installer.ParseDependency(args[e])))
+		}
+		pkg.Save()
+
+		if env.Global {
+			installer.GlobalInstall(args, pkg)
+		} else {
+			installer.LocalInstall(args, pkg)
+		}
 	},
 }
 

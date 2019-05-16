@@ -19,12 +19,15 @@ type Package struct {
 	Projects     []string    `json:"projects"`
 	Scripts      interface{} `json:"scripts,omitempty"`
 	Dependencies interface{} `json:"dependencies"`
+	Lock         PackageLock `json:"-"`
 }
 
 func (p *Package) Save() {
 	marshal, _ := parser.JSONMarshal(p, true)
 
 	_ = WriteFile(p.fileName, marshal, 664)
+
+	p.Lock.Save()
 }
 
 func (p *Package) AddDependency(dep string, ver string) {
@@ -63,26 +66,22 @@ func getNew(file string) *Package {
 
 	res.Dependencies = make(map[string]interface{})
 	res.Projects = []string{}
+	res.Lock = LoadPackageLock(res)
 	return res
 }
 
-func (p *Package) GetLockFile() PackageLock {
-	return LoadPackageLock(p)
-}
-
 func LoadPackage(createNew bool) (*Package, error) {
-
 	if fileBytes, e := ReadFile(env.GetBossFile()); e != nil {
 		if createNew {
 			e = nil
 		}
-
 		return getNew(env.GetBossFile()), e
 	} else {
 		result := getNew(env.GetBossFile())
 		if err := json.Unmarshal(fileBytes, result); err != nil {
-			return nil, e
+			return nil, err
 		}
+		result.Lock = LoadPackageLock(result)
 		result.IsNew = false
 		return result, nil
 	}

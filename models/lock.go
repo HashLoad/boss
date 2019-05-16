@@ -4,28 +4,41 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/Masterminds/semver"
 	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
-type Dependencyes struct {
-	Name    string `ymal:"name"`
-	Version string `yaml:"version"`
-	Hash    string `yaml:"hash"`
+type DependencyArtifacts struct {
+	Bin []string `json:"bin"`
+	Dcp []string `json:"dcp"`
+	Dcu []string `json:"dcu"`
+	Bpl []string `json:"bpl"`
+}
+
+type LockedDependency struct {
+	Name      string              `json:"name"`
+	Version   string              `json:"version"`
+	Hash      string              `json:"hash"`
+	Artifacts DependencyArtifacts `json:"artifacts"`
+	Failed    bool                `json:"failed"`
+	Changed   bool                `json:"-"`
 }
 
 type PackageLock struct {
 	fileName  string
-	Hash      string                    `yaml:"hash"`
-	Updated   time.Time                 `yaml:"updated"`
-	Installed map[string]string         `yaml:"installedModules"`
-	Tree      map[string][]Dependencyes `yaml:"tree"`
+	Hash      string                      `json:"hash"`
+	Updated   time.Time                   `json:"updated"`
+	Installed map[string]LockedDependency `json:"installedModules"`
 }
 
 func LoadPackageLock(parentPackage *Package) PackageLock {
@@ -42,17 +55,15 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 			Updated:  time.Now(),
 			Hash:     hex.EncodeToString(hash.Sum(nil)),
 
-			Installed: map[string]string{"delphi-docker": "1.3.1"},
-			Tree: map[string][]Dependencyes{"delphi-docker": {{
-				Name:    "horse",
-				Version: "^1.2.8",
-				Hash:    "hash-aqui",
-			}}},
+			Installed: map[string]LockedDependency{},
 		}
 	} else {
 		lockfile := PackageLock{
-			fileName: packageLockPath,
+			fileName:  packageLockPath,
+			Updated:   time.Now(),
+			Installed: map[string]LockedDependency{},
 		}
+
 		if err := json.Unmarshal(fileBytes, &lockfile); err != nil {
 			utils.HandleError(err)
 		}
@@ -60,11 +71,160 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 	}
 }
 
-func (p *PackageLock) Save() {
+func (p PackageLock) Save() {
 	marshal, err := json.MarshalIndent(&p, "", "\t")
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
 
 	_ = ioutil.WriteFile(p.fileName, marshal, 664)
+}
+
+func (p PackageLock) AddInstalled(dep Dependency, version string) {
+
+	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
+
+	hash, err := utils.CreateHash(dependencyDir, utils.SHA256)
+	utils.HandleError(err)
+
+	if locked, ok := p.Installed[strings.ToLower(dep.Repository)]; !ok {
+		p.Installed[strings.ToLower(dep.Repository)] = LockedDependency{
+			Name:    dep.GetName(),
+			Version: version,
+			Changed: true,
+			Hash:    hash,
+			Artifacts: DependencyArtifacts{
+				Bin: []string{},
+				Bpl: []string{},
+				Dcp: []string{},
+				Dcu: []string{},
+			},
+		}
+	} else {
+		locked.Version = version
+		locked.Hash = hash
+		p.Installed[strings.ToLower(dep.Repository)] = locked
+	}
+}
+
+func (p Dependency) internalNeedUpdate(lockedDependency LockedDependency, version string) bool {
+	if lockedDependency.Failed {
+		return true
+	}
+
+	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, p.GetName())
+
+	if _, err := os.Stat(dependencyDir); os.IsNotExist(err) {
+		return true
+	}
+
+	hash, err := utils.CreateHash(dependencyDir, utils.SHA256)
+	utils.HandleError(err)
+
+	if lockedDependency.Hash != hash {
+		return true
+	}
+
+	parsedNewVersion, err := semver.NewVersion(version)
+	if err != nil {
+		return version != lockedDependency.Version
+	}
+
+	parsedVersion, err := semver.NewVersion(lockedDependency.Version)
+	if err != nil {
+		return version != lockedDependency.Version
+	}
+	return parsedNewVersion.GreaterThan(parsedVersion)
+
+}
+
+func (p LockedDependency) checkArtifactsType(directory string, artifacts []string) bool {
+	for _, value := range artifacts {
+		bpl := filepath.Join(directory, value)
+		_, err := os.Stat(bpl)
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
+func (p LockedDependency) checkArtifacts(lock PackageLock) bool {
+	baseModulesDir := filepath.Join(filepath.Dir(lock.fileName), consts.FolderDependencies)
+
+	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.BplFolder), p.Artifacts.Bpl) {
+		return false
+	}
+
+	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.BinFolder), p.Artifacts.Bin) {
+		return false
+	}
+
+	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.DcpFolder), p.Artifacts.Dcp) {
+		return false
+	}
+
+	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.DcuFolder), p.Artifacts.Dcu) {
+		return false
+	}
+
+	return true
+}
+
+func (p PackageLock) NeedUpdate(dep Dependency, version string) bool {
+	if lockedDependency, ok := p.Installed[strings.ToLower(dep.Repository)]; !ok {
+		return true
+	} else {
+		lockedDependency.Changed = dep.internalNeedUpdate(lockedDependency, version) || !lockedDependency.checkArtifacts(p)
+
+		if lockedDependency.Changed {
+			lockedDependency.Failed = false
+			lockedDependency.Artifacts.Bin = []string{}
+			lockedDependency.Artifacts.Bpl = []string{}
+			lockedDependency.Artifacts.Dcp = []string{}
+			lockedDependency.Artifacts.Dcu = []string{}
+		}
+		p.Installed[strings.ToLower(dep.Repository)] = lockedDependency
+		return lockedDependency.Changed
+	}
+}
+
+func (p PackageLock) GetInstalled(dep Dependency) LockedDependency {
+	return p.Installed[strings.ToLower(dep.Repository)]
+}
+
+func (p PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
+	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
+	hash, err := utils.CreateHash(dependencyDir, utils.SHA256)
+	utils.HandleError(err)
+
+	locked.Hash = hash
+
+	p.Installed[strings.ToLower(dep.Repository)] = locked
+}
+
+func (p PackageLock) CleanRemoved(deps []Dependency) {
+	var repositories []string
+	for _, dep := range deps {
+		repositories = append(repositories, strings.ToLower(dep.Repository))
+	}
+
+	for key, _ := range p.Installed {
+		if !utils.Contains(repositories, strings.ToLower(key)) {
+			delete(p.Installed, key)
+		}
+	}
+}
+
+func (p PackageLock) GetArtifactList() []string {
+	var result []string
+
+	for _, installed := range p.Installed {
+		result = append(result, installed.Artifacts.Dcp...)
+		result = append(result, installed.Artifacts.Dcu...)
+		result = append(result, installed.Artifacts.Bin...)
+		result = append(result, installed.Artifacts.Bpl...)
+	}
+
+	return result
 }

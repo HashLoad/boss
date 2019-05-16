@@ -17,7 +17,7 @@ const BossConfigFile = "boss.cfg.json"
 
 const MinimalDependencyVersion string = ">0.0.0"
 
-var EnvBossBin = filepath.Join(".", FolderDependencies, BinFolder)
+var EnvBossBin = "." + string(filepath.Separator) + FolderDependencies + string(filepath.Separator) + BinFolder
 
 const XmlTagNameProperty string = "PropertyGroup"
 const XmlTagNamePropertyAttribute string = "Condition"
@@ -25,7 +25,7 @@ const XmlTagNamePropertyAttributeValue string = "'$(Base)'!=''"
 
 const XmlTagNameLibraryPath string = "DCC_UnitSearchPath"
 
-const Version string = "v2.2.5"
+const Version string = "v2.3.0"
 
 const BossInternalDir = "{internal}"
 

@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-func updateDprojLibraryPath() {
-	var dprojsNames = GetDprojNames()
+func updateDprojLibraryPath(pkg *models.Package) {
+	var dprojsNames = GetDprojNames(pkg)
 	for _, dprojName := range dprojsNames {
 		updateLibraryPathProject(dprojName)
 	}
@@ -61,33 +61,30 @@ func createTag(node *etree.Element) *etree.Element {
 	return child
 }
 
-func GetDprojNames() []string {
+func GetDprojNames(pkg *models.Package) []string {
 	var result []string
 	var matches = 0
 
-	if packageJson, e := models.LoadPackage(false); e != nil {
-		panic(e)
-	} else {
-		if len(packageJson.Projects) > 0 {
-			for _, project := range packageJson.Projects {
-				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+project)
-			}
+	if len(pkg.Projects) > 0 {
+		for _, project := range pkg.Projects {
+			result = append(result, env.GetCurrentDir()+string(filepath.Separator)+project)
+		}
 
-			result = packageJson.Projects
-		} else {
-			files, err := ioutil.ReadDir(env.GetCurrentDir())
-			if err != nil {
-				panic(e)
-			}
-			for _, file := range files {
-				matched, e := regexp.MatchString(".*.dproj$", file.Name())
-				if e == nil && matched {
-					result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
-					matches++
-				}
+		result = pkg.Projects
+	} else {
+		files, err := ioutil.ReadDir(env.GetCurrentDir())
+		if err != nil {
+			panic(err)
+		}
+		for _, file := range files {
+			matched, e := regexp.MatchString(".*.dproj$", file.Name())
+			if e == nil && matched {
+				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
+				matches++
 			}
 		}
 	}
+
 	return result
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/text/encoding/charmap"
@@ -19,8 +20,8 @@ import (
 
 var encode = charmap.Windows1252
 
-func InjectDpcs() {
-	dprojNames := librarypath.GetDprojNames()
+func InjectDpcs(pkg *models.Package) {
+	dprojNames := librarypath.GetDprojNames(pkg)
 
 	for _, value := range dprojNames {
 		if fileName, exists := getDprDpkFromDproj(filepath.Base(value)); exists {

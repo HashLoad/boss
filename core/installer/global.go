@@ -14,8 +14,7 @@ import (
 	"strings"
 )
 
-func GlobalInstall(args []string) {
-	pkg, _ := models.LoadPackage(true)
+func GlobalInstall(args []string, pkg *models.Package) {
 	EnsureDependencyOfArgs(pkg, args)
 	DoInstall(pkg)
 	DoInstallPackages()

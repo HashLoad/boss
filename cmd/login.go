@@ -47,7 +47,7 @@ var loginCmd = &cobra.Command{
 
 		auth.UseSsh = getParamBoolean("Use SSH")
 		if auth.UseSsh {
-			auth.Path = getParamOrDef("Patch of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
+			auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
 		} else {
 			auth.SetUser(getParamOrDef("Username", ""))
 			auth.SetPass(getPass("Password"))

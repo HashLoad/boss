@@ -31,8 +31,6 @@ var runScript = &cobra.Command{
 }
 
 func runCmd(cmdName string) {
-	//cmdName = "cmd /c " + cmdName
-
 	fields := strings.Fields(cmdName)
 
 	cmd := exec.Command(fields[0], fields[1:]...)
