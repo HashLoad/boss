@@ -220,11 +220,16 @@ func (p PackageLock) GetArtifactList() []string {
 	var result []string
 
 	for _, installed := range p.Installed {
-		result = append(result, installed.Artifacts.Dcp...)
-		result = append(result, installed.Artifacts.Dcu...)
-		result = append(result, installed.Artifacts.Bin...)
-		result = append(result, installed.Artifacts.Bpl...)
+		result = append(result, installed.GetArtifacts()...)
 	}
+	return result
+}
 
+func (p LockedDependency) GetArtifacts() []string {
+	var result []string
+	result = append(result, p.Artifacts.Dcp...)
+	result = append(result, p.Artifacts.Dcu...)
+	result = append(result, p.Artifacts.Bin...)
+	result = append(result, p.Artifacts.Bpl...)
 	return result
 }

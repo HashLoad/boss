@@ -118,11 +118,9 @@ func MoveArtifacts(dep *models.Dependency, rootPath string) {
 
 }
 
-func EnsureArtifacts(lock *models.PackageLock, dep models.Dependency, rootPath string) {
+func EnsureArtifacts(lockedDependency *models.LockedDependency, dep models.Dependency, rootPath string) {
 
 	var moduleName = dep.GetName()
-
-	lockedDependency := lock.GetInstalled(dep)
 
 	files, err := ioutil.ReadDir(filepath.Join(rootPath, moduleName, consts.BplFolder))
 	if err == nil {
@@ -159,8 +157,6 @@ func EnsureArtifacts(lock *models.PackageLock, dep models.Dependency, rootPath s
 			}
 		}
 	}
-
-	lock.SetInstalled(dep, lockedDependency)
 }
 
 func compilePas(path string, additionalPaths string) {
@@ -171,10 +167,10 @@ func compilePas(path string, additionalPaths string) {
 
 func Build(pkg *models.Package) {
 	rootPath := env.GetCurrentDir()
-	buildAllDprojByPackage(rootPath, pkg.Lock)
+	buildAllDprojByPackage(rootPath, &pkg.Lock)
 }
 
-func buildAllDprojByPackage(rootPath string, lock models.PackageLock) {
+func buildAllDprojByPackage(rootPath string, lock *models.PackageLock) {
 	if pkg, err := models.LoadPackageOther(filepath.Join(rootPath, consts.FilePackage)); err != nil || pkg.Dependencies == nil {
 		buildAllDproj(rootPath)
 	} else {
@@ -191,7 +187,7 @@ func buildAllDprojByPackage(rootPath string, lock models.PackageLock) {
 
 			dependency := lock.GetInstalled(dep)
 
-			if !dependency.Changed {
+			if !dependency.Changed && !(len(dependency.GetArtifacts()) == 0 && len(modulePkg.Projects) > 0) {
 				continue
 			} else {
 				dependency.Changed = false
@@ -201,7 +197,7 @@ func buildAllDprojByPackage(rootPath string, lock models.PackageLock) {
 					if !compile(s, env.GetModulesDir(), &dep) {
 						dependency.Failed = true
 					}
-					EnsureArtifacts(&lock, dep, env.GetModulesDir())
+					EnsureArtifacts(&dependency, dep, env.GetModulesDir())
 					MoveArtifacts(&dep, env.GetModulesDir())
 				}
 				lock.SetInstalled(dep, dependency)
