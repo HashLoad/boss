@@ -30,3 +30,5 @@ const Version string = "v2.5.0"
 const BossInternalDir = "{internal}"
 
 const BplIdentifierName = "BplIdentifier.exe"
+
+const REGEX_ARTIFACTS = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$)"

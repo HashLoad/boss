@@ -21,8 +21,9 @@ func UpdateLibraryPath(pkg *models.Package) {
 }
 
 func Contains(a []string, x string) bool {
+	x = strings.TrimSpace(strings.ToLower(x))
 	for _, n := range a {
-		if x == n {
+		if x == strings.TrimSpace(strings.ToLower(n)) {
 			return true
 		}
 	}
@@ -79,7 +80,7 @@ func getDefaultPath(fullPath bool) []string {
 			paths = append(paths, dir)
 		}
 
-		fullPath = filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcpFolder)
+		fullPath = filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcuFolder)
 		dir, err = filepath.Rel(env.GetCurrentDir(), fullPath)
 		if err == nil {
 			paths = append(paths, dir)
@@ -92,6 +93,16 @@ func getDefaultPath(fullPath bool) []string {
 	return paths
 }
 
+func cleanEmpty(paths []string) []string {
+	for index, value := range paths {
+
+		if value == "" {
+			paths = append(paths[index:], paths[index+1:]...)
+		}
+	}
+	return paths
+}
+
 func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 	_, e := os.Stat(path)
 	if os.IsNotExist(e) {
@@ -99,10 +110,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 	}
 
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		matched, _ := regexp.MatchString(".*.pas$", info.Name())
-		if !matched {
-			matched, _ = regexp.MatchString(".*.inc", info.Name())
-		}
+		matched, _ := regexp.MatchString(consts.REGEX_ARTIFACTS, info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
 			if !fullPath {
@@ -119,5 +127,5 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 			paths = append(paths, path)
 		}
 	}
-	return paths
+	return cleanEmpty(paths)
 }

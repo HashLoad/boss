@@ -238,11 +238,7 @@ func getNewPaths(path string, basePath string) string {
 			return nil
 		}
 
-		matched, _ := regexp.MatchString(".*.pas$", info.Name())
-		if !matched {
-			matched, _ = regexp.MatchString(".*.inc$", info.Name())
-		}
-		matched = true
+		matched, _ := regexp.MatchString(consts.REGEX_ARTIFACTS, info.Name())
 		dir := filepath.Dir(path)
 		dir, err = filepath.Rel(basePath, dir)
 		utils.HandleError(err)
@@ -251,5 +247,6 @@ func getNewPaths(path string, basePath string) string {
 		}
 		return nil
 	})
+
 	return strings.Join(paths, ";")
 }
