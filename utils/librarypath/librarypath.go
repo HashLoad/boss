@@ -90,14 +90,14 @@ func getDefaultPath(fullPath bool) []string {
 		paths = append(paths, filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcuFolder))
 	}
 
-	return paths
+	return append(paths, "$(DCC_UnitSearchPath)")
 }
 
 func cleanEmpty(paths []string) []string {
 	for index, value := range paths {
 
 		if value == "" {
-			paths = append(paths[index:], paths[index+1:]...)
+			paths = append(paths[:index], paths[index+1:]...)
 		}
 	}
 	return paths
@@ -122,6 +122,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 		}
 		return nil
 	})
+
 	for _, path := range getDefaultPath(fullPath) {
 		if !Contains(paths, path) {
 			paths = append(paths, path)
