@@ -1,5 +1,5 @@
 #define BossName "Boss"
-#define BossVersion "2.5.5"
+#define BossVersion "2.5.6"
 #define BossPublisher "Hashload"
 #define BossURL "https://github.com/HashLoad/boss"
 
