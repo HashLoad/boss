@@ -15,14 +15,6 @@ import (
 	"strings"
 )
 
-func isCommandAvailable(name string) bool {
-	cmd := exec.Command(name, "-version")
-	if err := cmd.Run(); err != nil {
-		return false
-	}
-	return true
-}
-
 func getCompilerParameters(rootPath string, dep *models.Dependency) string {
 	var binPath string
 	var moduleName = ""
@@ -159,7 +151,7 @@ func EnsureArtifacts(lockedDependency *models.LockedDependency, dep models.Depen
 	}
 }
 
-func compilePas(path string, additionalPaths string) {
+func _(path string, additionalPaths string) {
 	command := exec.Command("dcc32.exe", filepath.Base(path), additionalPaths)
 	command.Dir = filepath.Dir(path)
 	_ = command.Wait()
@@ -229,6 +221,7 @@ func buildAllDproj(rootPath string) {
 }
 
 func getNewPaths(path string, basePath string) string {
+	var ignore = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}
 	var paths []string
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info == nil {
@@ -236,6 +229,10 @@ func getNewPaths(path string, basePath string) string {
 		}
 		if info.IsDir() {
 			return nil
+		} else {
+			if utils.Contains(ignore, info.Name()) {
+				return nil
+			}
 		}
 
 		matched, _ := regexp.MatchString(consts.REGEX_ARTIFACTS, info.Name())
