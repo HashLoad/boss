@@ -27,7 +27,7 @@ const XmlTagNameLibraryPath string = "DCC_UnitSearchPath"
 
 const Version string = "v2.5.6"
 
-const BossInternalDir = "{internal}"
+const BossInternalDir = "internal."
 
 const BplIdentifierName = "BplIdentifier.exe"
 

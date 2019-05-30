@@ -108,6 +108,6 @@ func DoInstallPackages() {
 func isDesignTimeBpl(bplPath string) bool {
 
 	command := exec.Command(filepath.Join(env.GetInternalGlobalDir(), consts.FolderDependencies, consts.BinFolder, consts.BplIdentifierName), bplPath)
-	out, _ := command.Output()
-	return strings.HasPrefix(strings.ToLower(string(out)), "design")
+	_ = command.Run()
+	return command.ProcessState.ExitCode() == 0
 }
