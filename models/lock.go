@@ -84,8 +84,7 @@ func (p PackageLock) AddInstalled(dep Dependency, version string) {
 
 	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
 
-	hash, err := utils.CreateHash(dependencyDir, utils.SHA256)
-	utils.HandleError(err)
+	hash := utils.HashDir(dependencyDir)
 
 	if locked, ok := p.Installed[strings.ToLower(dep.Repository)]; !ok {
 		p.Installed[strings.ToLower(dep.Repository)] = LockedDependency{
@@ -117,9 +116,7 @@ func (p Dependency) internalNeedUpdate(lockedDependency LockedDependency, versio
 	if _, err := os.Stat(dependencyDir); os.IsNotExist(err) {
 		return true
 	}
-
-	hash, err := utils.CreateHash(dependencyDir, utils.SHA256)
-	utils.HandleError(err)
+	hash := utils.HashDir(dependencyDir)
 
 	if lockedDependency.Hash != hash {
 		return true
@@ -195,8 +192,7 @@ func (p PackageLock) GetInstalled(dep Dependency) LockedDependency {
 
 func (p PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
 	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
-	hash, err := utils.CreateHash(dependencyDir, utils.SHA256)
-	utils.HandleError(err)
+	hash := utils.HashDir(dependencyDir)
 
 	locked.Hash = hash
 
@@ -209,7 +205,7 @@ func (p PackageLock) CleanRemoved(deps []Dependency) {
 		repositories = append(repositories, strings.ToLower(dep.Repository))
 	}
 
-	for key, _ := range p.Installed {
+	for key := range p.Installed {
 		if !utils.Contains(repositories, strings.ToLower(key)) {
 			delete(p.Installed, key)
 		}
