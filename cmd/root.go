@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/setup"
+	"github.com/hashload/boss/utils"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -17,7 +20,10 @@ var RootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	RootCmd.PersistentFlags().BoolVarP(&env.Global, "global", "g", false, "global environment")
+	RootCmd.PersistentFlags().BoolVarP(&msg.DebugEnable, "debug", "d", false, "debug")
+	msg.DebugEnable = utils.Contains(os.Args, "-d")
 
+	setup.Initialize()
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

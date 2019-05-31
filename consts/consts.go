@@ -25,10 +25,10 @@ const XmlTagNamePropertyAttributeValue string = "'$(Base)'!=''"
 
 const XmlTagNameLibraryPath string = "DCC_UnitSearchPath"
 
-const Version string = "v2.6.0"
+const Version string = "v2.6.1"
 
 const BossInternalDir = "internal."
 
 const BplIdentifierName = "BplIdentifier.exe"
 
-const REGEX_ARTIFACTS = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$)"
+const REGEX_ARTIFACTS = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$)"

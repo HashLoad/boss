@@ -21,18 +21,34 @@ func Initialize() {
 	env.Internal = true
 	env.Global = true
 
+	msg.Debug("DEBUG MODE")
 	msg.Info("Initializing boss system...")
 
+	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
 	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath()}
 	modules := []string{"bpl-identifier"}
 
+	msg.Debug("\tExecuting migrations")
 	migration()
-	addPath(paths)
+	msg.Debug("\tAdjusting paths")
+	tester := make(chan string, 1)
+	go func() {
+		addPath(paths)
+		tester <- "ok"
+	}()
+	select {
+	case _ = <-tester:
+	case <-time.After(time.Second * 10):
+		msg.Warn("Failed to update paths, please run with administrator privileges")
+	}
+	msg.Debug("\tInstalling internal modules")
 	installModules(modules)
 
 	env.Global = OldGlobal
 	env.Internal = false
+	msg.Debug("finish boss system initialization")
+
 }
 
 func getPath(arr []penv.NameValue) string {

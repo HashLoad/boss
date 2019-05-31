@@ -36,6 +36,7 @@ func NewMessenger() *Messenger {
 	return m
 }
 
+var DebugEnable bool
 var Default = NewMessenger()
 
 func Die(msg string, args ...interface{}) {
@@ -92,6 +93,9 @@ func (m *Messenger) Info(msg string, args ...interface{}) {
 }
 
 func (m *Messenger) Debug(msg string, args ...interface{}) {
+	if !DebugEnable {
+		return
+	}
 	m.Msg("[DEBUG]\t"+msg, args...)
 }
 
