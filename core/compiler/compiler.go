@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func getCompilerParameters(rootPath string, dep *models.Dependency) string {
+func getCompilerParameters(rootPath string, dep *models.Dependency, platform string) string {
 	var binPath string
 	var moduleName = ""
 
@@ -29,13 +29,13 @@ func getCompilerParameters(rootPath string, dep *models.Dependency) string {
 		binPath = env.GetGlobalBinPath()
 	}
 
-	return " /p:DCC_BplOutput=\"" + filepath.Join(rootPath, moduleName, consts.BplFolder) + "\" " +
-		"/p:DCC_DcpOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcpFolder) + "\" " +
-		"/p:DCC_DcuOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcuFolder) + "\" " +
+	return " /p:DCC_BplOutput=\"" + filepath.Join(rootPath, moduleName, consts.BplFolder, platform) + "\" " +
+		"/p:DCC_DcpOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcpFolder, platform) + "\" " +
+		"/p:DCC_DcuOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcuFolder, platform) + "\" " +
 		"/p:DCC_ExeOutput=\"" + binPath + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
-		"/P:platform=Win32 "
+		"/P:platform=" + platform + " "
 }
 
 func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
@@ -54,7 +54,9 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 	project, _ := filepath.Abs(dprojPath)
 
 	readFileStr += " \n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPaths(env.GetModulesDir(), abs) + " "
-	readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep)
+	for _, value := range librarypath.GetActivePlatforms(dprojPath) {
+		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep, value)
+	}
 	readFileStr += " > \"" + buildLog + "\""
 
 	err = ioutil.WriteFile(buildBat, []byte(readFileStr), os.ModePerm)
@@ -93,7 +95,7 @@ func movePath(old string, new string) {
 		}
 	}
 	if !hasError {
-		err = os.Remove(old)
+		err = os.RemoveAll(old)
 		if !os.IsNotExist(err) {
 			utils.HandleError(err)
 		}

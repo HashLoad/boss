@@ -41,8 +41,17 @@ type PackageLock struct {
 	Installed map[string]LockedDependency `json:"installedModules"`
 }
 
-func LoadPackageLock(parentPackage *Package) PackageLock {
+func removeOld(parentPackage *Package) {
+	var oldFileName = filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLockOld)
+	var newFileName = filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
+	if _, err := os.Stat(oldFileName); err == nil {
+		err := os.Rename(oldFileName, newFileName)
+		utils.HandleError(err)
+	}
+}
 
+func LoadPackageLock(parentPackage *Package) PackageLock {
+	removeOld(parentPackage)
 	packageLockPath := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
 	if fileBytes, err := ioutil.ReadFile(packageLockPath); err != nil {
 		hash := md5.New()

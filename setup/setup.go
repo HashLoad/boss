@@ -95,7 +95,7 @@ func installModules(modules []string) {
 	dependencies := pkg.Dependencies.(map[string]interface{})
 	encountered := 0
 	for _, newPackage := range modules {
-		for installed, _ := range dependencies {
+		for installed := range dependencies {
 			if strings.Contains(installed, newPackage) {
 				encountered++
 			}
@@ -130,14 +130,6 @@ func moveBptIdentifier() {
 	err = os.Rename(OutExeCompilation, exePath)
 	if err != nil {
 		msg.Err(err.Error())
-	}
-}
-
-func migration() {
-	if env.GlobalConfiguration.ConfigVersion < 1 {
-		env.GlobalConfiguration.InternalRefreshRate = 5
-		env.GlobalConfiguration.ConfigVersion++
-		env.GlobalConfiguration.SaveConfiguration()
 	}
 }
 

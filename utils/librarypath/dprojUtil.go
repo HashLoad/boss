@@ -6,10 +6,12 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -94,5 +96,37 @@ func processCurrentPath(node *etree.Element) {
 	currentPaths = GetNewPaths(currentPaths, false)
 
 	node.SetText(strings.Join(currentPaths, ";"))
+}
+
+func GetActivePlatforms(dprojName string) []string {
+	doc := etree.NewDocument()
+	info, err := os.Stat(dprojName)
+	if os.IsNotExist(err) || info.IsDir() {
+		msg.Err(".dproj not found.")
+		return []string{}
+	}
+	err = doc.ReadFromFile(dprojName)
+	if err != nil {
+		msg.Err("Error on read dproj: %s", err)
+		return []string{}
+	}
+	root := doc.Root()
+
+	var result = []string{}
+
+	path, err := etree.CompilePath("/Project/ProjectExtensions/BorlandProject/Platforms")
+	utils.HandleError(err)
+	platforms := root.FindElementPath(path)
+	for _, platform := range platforms.ChildElements() {
+		value := platform.SelectAttr(consts.XmlValueAttribute)
+		activePlatform, err := strconv.ParseBool(platform.Text())
+		utils.HandleError(err)
+
+		if value != nil && activePlatform {
+			result = append(result, value.Value)
+		}
+	}
+
+	return result
 
 }
