@@ -11,7 +11,9 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 	for e := range args {
 		dependency := ParseDependency(args[e])
 		dependency = strings.ToLower(dependency)
-		split := strings.Split(dependency, ":")
+
+		re := regexp.MustCompile(`(?m)((.*)(:\W[\d.]{1,})|.*)$`)
+		split := re.FindAllString(dependency, -1)
 		var ver string
 		if len(split) == 1 {
 			ver = consts.MinimalDependencyVersion

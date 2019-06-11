@@ -30,6 +30,9 @@ func (d *Dependency) GetVersion() string {
 }
 
 func (d *Dependency) makeSshUrl() string {
+	if strings.Contains(d.Repository, "@") {
+		return d.Repository
+	}
 	re = regexp.MustCompile(`(?m)([\w\d.]*)(?:/)(.*)`)
 	submatch := re.FindStringSubmatch(d.Repository)
 	provider := submatch[1]
@@ -38,7 +41,7 @@ func (d *Dependency) makeSshUrl() string {
 }
 
 func (d *Dependency) GetURLPrefix() string {
-	var re = regexp.MustCompile(`(?m)(\w+\.\w+)`)
+	var re = regexp.MustCompile(`^[^/^:]+`)
 	return re.FindString(d.Repository)
 }
 

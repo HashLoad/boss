@@ -21,10 +21,11 @@ func CloneCache(dep models.Dependency) *git.Repository {
 	msg.Info("Downloading dependency %s", dep.Repository)
 	storageCache := makeStorageCache(dep)
 	url := dep.GetURL()
+	auth := env.GlobalConfiguration.GetAuth(dep.GetURLPrefix())
 	repository, e := git.Clone(storageCache, memfs.New(), &git.CloneOptions{
 		URL:  url,
 		Tags: git.AllTags,
-		Auth: env.GlobalConfiguration.GetAuth(dep.GetURLPrefix()),
+		Auth: auth,
 	})
 	if e != nil {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
@@ -37,9 +38,9 @@ func CloneCache(dep models.Dependency) *git.Repository {
 func UpdateCache(dep models.Dependency) *git.Repository {
 	msg.Info("Updating dependency %s", dep.Repository)
 	storageCache := makeStorageCache(dep)
-	repository, e := git.Open(storageCache, memfs.New())
-	if e != nil {
-		msg.Warn("Error to open cache of %s: %s", dep.Repository, e)
+	repository, err := git.Open(storageCache, memfs.New())
+	if err != nil {
+		msg.Warn("Error to open cache of %s: %s", dep.Repository, err)
 		repository = refreshCopy(dep)
 	} else {
 		worktree, _ := repository.Worktree()

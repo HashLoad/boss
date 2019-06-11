@@ -1,5 +1,5 @@
-hash: 0b149816dc03b04c7b097821a479e673581700f26507df5f9f2e2d47e22b9ea7
-updated: 2019-04-18T01:59:34.3496001-03:00
+hash: fff45191fe1ef0b9e58462f328a39214ce72b45ebb0d314e03647041f2f85ee3
+updated: 2019-06-07T23:50:41.8984559-03:00
 imports:
 - name: github.com/beevik/etree
   version: 8aee6516be3b1163bb6450c35c50e4969e3a3aa8
@@ -22,6 +22,8 @@ imports:
   - io
 - name: github.com/kevinburke/ssh_config
   version: 81db2a75821ed34e682567d48be488a1c3121088
+- name: github.com/ldez/go-git-cmd-wrapper
+  version: de13bdcd31bd9d5a48485b32d44f94ac9c74d7eb
 - name: github.com/lxn/win
   version: 0040366d745006bbf7528ac96de2de375846aa79
 - name: github.com/masterminds/glide
@@ -51,7 +53,7 @@ imports:
 - name: github.com/snakeice/penv.git
   version: 4eb344cfbb6b574d806d11fbfd67bbc201a84904
 - name: github.com/spf13/cobra
-  version: ef82de70bb3f60c65fb8eebacbb2d122ef517385
+  version: f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5
 - name: github.com/spf13/pflag
   version: 298182f68c66c05229eb03ac171abe6e309ee79a
 - name: github.com/src-d/gcfg
@@ -121,7 +123,7 @@ imports:
   - osfs
   - util
 - name: gopkg.in/src-d/go-git.v4
-  version: db6c41c156481962abf9a55a324858674c25ab08
+  version: aa6f288c256ff8baf8a7745546a9752323dc0d89
   subpackages:
   - config
   - internal/revision
@@ -169,4 +171,6 @@ imports:
   version: ec4a0fea49c7b46c2aeb0b51aac55779c607e52b
 - name: gopkg.in/yaml.v2
   version: 51d6538a90f86fe93ac480b35f37b2be17fef232
+  subpackages:
+  - vcs
 testImports: []

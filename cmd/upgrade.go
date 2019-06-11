@@ -34,9 +34,7 @@ var upgradeCmd = &cobra.Command{
 			panic(err)
 		}
 		exePath, _ := filepath.Abs(ex)
-		if err != nil {
-			err.Error()
-		}
+
 		_ = os.Remove(exePath + "_o")
 
 		if err := os.Rename(exePath, exePath+"_o"); err != nil {

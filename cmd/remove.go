@@ -27,9 +27,9 @@ var removeCmd = &cobra.Command{
 		pkg.Save()
 
 		if env.Global {
-			installer.GlobalInstall(args, pkg)
+			installer.GlobalInstall([]string{}, pkg)
 		} else {
-			installer.LocalInstall(args, pkg)
+			installer.LocalInstall([]string{}, pkg)
 		}
 	},
 }

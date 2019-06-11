@@ -29,9 +29,9 @@ func getCompilerParameters(rootPath string, dep *models.Dependency, platform str
 		binPath = env.GetGlobalBinPath()
 	}
 
-	return " /p:DCC_BplOutput=\"" + filepath.Join(rootPath, moduleName, consts.BplFolder, platform) + "\" " +
-		"/p:DCC_DcpOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcpFolder, platform) + "\" " +
-		"/p:DCC_DcuOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcuFolder, platform) + "\" " +
+	return " /p:DCC_BplOutput=\"" + filepath.Join(rootPath, moduleName, consts.BplFolder) + "\" " +
+		"/p:DCC_DcpOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcpFolder) + "\" " +
+		"/p:DCC_DcuOutput=\"" + filepath.Join(rootPath, moduleName, consts.DcuFolder) + "\" " +
 		"/p:DCC_ExeOutput=\"" + binPath + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
@@ -54,7 +54,8 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 	project, _ := filepath.Abs(dprojPath)
 
 	readFileStr += " \n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPaths(env.GetModulesDir(), abs) + " "
-	for _, value := range librarypath.GetActivePlatforms(dprojPath) {
+	for _, value := range []string{"Win32"} {
+		//librarypath.GetActivePlatforms(dprojPath) {
 		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep, value)
 	}
 	readFileStr += " > \"" + buildLog + "\""
