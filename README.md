@@ -1,4 +1,5 @@
 
+
 # Dependency Manager for Delphi
 
 ### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13) 
@@ -6,8 +7,9 @@
 Installation: 
  * Download [setup](https://github.com/HashLoad/boss/releases)
  * Just type `boss` in cmd
+ * (Optional) Install a [Boss Delphi IDE complement](https://github.com/HashLoad/boss-ide)
+ 
 ```
-
 Usage:
   boss [command]
 
@@ -33,9 +35,10 @@ Use "boss [command] --help" for more information about a command.
 
 ```
 + Sample: 
-	+ `boss install github.com/HashLoad/horse`
-	+ `boss install github.com/HashLoad/horse:1.0.0`
-	+ `boss install -g github.com/HashLoad/delphi-docker`
+	+ `boss install horse`
+	+ `boss install horse:1.0.0`
+	+ `boss install -g delphi-docker`
+	+ `boss install -g boss-ide`
 
 
 ### For use yor project in boss create a tag with [semantic version](https://semver.org/) 
