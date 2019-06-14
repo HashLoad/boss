@@ -6,7 +6,6 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	git2 "gopkg.in/src-d/go-git.v4"
 )
 
 var updatedDependencies []string
@@ -25,8 +24,4 @@ func GetDependency(dep models.Dependency) {
 		git.CloneCache(dep)
 	}
 	models.SaveRepoData(dep.GetHashName())
-}
-
-func OpenRepository(dep models.Dependency) *git2.Repository {
-	return git.GetRepository(dep)
 }

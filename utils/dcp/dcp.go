@@ -20,11 +20,7 @@ import (
 
 var encode = charmap.Windows1252
 
-//noinspection GoUnreachableCode
 func InjectDpcs(pkg *models.Package) {
-	//TODO Adjust path on bpl
-	return
-
 	dprojNames := librarypath.GetDprojNames(pkg)
 
 	for _, value := range dprojNames {

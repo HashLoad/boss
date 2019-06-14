@@ -46,7 +46,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 	msg.Info("Installing modules")
 	for _, dep := range deps {
 		msg.Info("Processing dependency: %s", dep.GetName())
-		repository := OpenRepository(dep)
+		repository := git.GetRepository(dep)
 		versions := git.GetVersions(repository)
 		constraints, e := semver.NewConstraint(dep.GetVersion())
 		if e != nil {

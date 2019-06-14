@@ -1,4 +1,4 @@
-package cmd
+package config
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/hashload/boss/utils/dcc32"
 	"github.com/spf13/cobra"
 	"os"
+	"strconv"
 )
 
 var cmdDelphi = &cobra.Command{
@@ -42,30 +43,34 @@ var cmdDelphiUse = &cobra.Command{
 	Short: "Use Delphi version",
 	Long:  `Use Delphi version to compile modules`,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
-
-		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
-			return err
-		}
-
-		if _, err := os.Stat(args[0]); os.IsNotExist(err) {
-			return errors.New("invalid path")
+		if _, err := strconv.Atoi(args[0]); err != nil {
+			if _, err = os.Stat(args[0]); os.IsNotExist(err) {
+				return errors.New("invalid path")
+			}
 		}
 
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		var path = args[0]
 		config := env.GlobalConfiguration
-		config.DelphiPath = args[0]
+		if index, err := strconv.Atoi(path); err == nil {
+			delphiPaths := dcc32.GetDcc32DirByCmd()
+			config.DelphiPath = delphiPaths[index]
+		} else {
+			config.DelphiPath = args[0]
+		}
+
 		config.SaveConfiguration()
 		msg.Info("Successful!")
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(cmdDelphi)
+	ConfigCmd.AddCommand(cmdDelphi)
 	cmdDelphi.AddCommand(cmdDelphiList)
 	cmdDelphi.AddCommand(cmdDelphiUse)
 }

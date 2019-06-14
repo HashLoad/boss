@@ -44,4 +44,7 @@ func migration() {
 		}
 	})
 
+	executeUpdate(3, func() {
+		env.GlobalConfiguration.GitEmbedded = true
+	})
 }

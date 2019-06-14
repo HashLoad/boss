@@ -22,7 +22,7 @@ func Initialize() {
 	env.Global = true
 
 	msg.Debug("DEBUG MODE")
-	msg.Info("Initializing boss system...")
+	msg.Debug("Initializing boss system...")
 
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()

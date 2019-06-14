@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/hashload/boss/cmd/config"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/setup"
@@ -24,6 +25,9 @@ func Execute() {
 	msg.DebugEnable = utils.Contains(os.Args, "-d")
 
 	setup.Initialize()
+
+	config.InitilizeConfig(RootCmd)
+
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
