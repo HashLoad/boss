@@ -12,7 +12,7 @@ var loginCmd = &cobra.Command{
 	Short: "Register login to repo",
 	Long:  `Register login to repo`,
 	Run: func(cmd *cobra.Command, args []string) {
-		core.Login()
+		core.Login(removeLogin, args)
 	},
 }
 

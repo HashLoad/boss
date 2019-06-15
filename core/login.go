@@ -11,7 +11,7 @@ import (
 	"syscall"
 )
 
-func Login() {
+func Login(removeLogin bool, args []string) {
 	configuration := env.GlobalConfiguration
 
 	if removeLogin {

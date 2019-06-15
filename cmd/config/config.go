@@ -12,6 +12,6 @@ var ConfigCmd = &cobra.Command{
 	},
 }
 
-func InitilizeConfig(root *cobra.Command) {
+func InitializeConfig(root *cobra.Command) {
 	root.AddCommand(ConfigCmd)
 }

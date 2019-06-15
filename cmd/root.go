@@ -25,7 +25,7 @@ func Execute() {
 
 	setup.Initialize()
 
-	config.InitilizeConfig(RootCmd)
+	config.InitializeConfig(RootCmd)
 
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
