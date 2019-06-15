@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
 	"gopkg.in/cheggaaa/pb.v2"
 	"io"
@@ -15,24 +16,27 @@ import (
 	"path/filepath"
 )
 
+const latestRelease string = "https://api.github.com/repos/HashLoad/boss/releases/latest"
+const releaseTag string = "https://api.github.com/repos/HashLoad/boss/releases/tags/%s"
+const tags string = "https://api.github.com/repos/HashLoad/boss/tags"
+
 func DoBossUpgrade(preRelease bool) {
-	var err error
 	var link string
 	var size float64
 	var version string
 
 	if !preRelease {
-		err, link, size, version = getLastestLink()
+		link, size, version = getDownloadLink(latestRelease)
 	} else {
-		err, link, size, version = getLinkPreRelease()
-	}
-	if err != nil {
-		err.Error()
+		tag := getLastTag()
+
+		link, size, version = getDownloadLink(fmt.Sprintf(releaseTag, tag))
 	}
 
 	if !checkVersion(version, preRelease) {
 		return
 	}
+
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -58,7 +62,9 @@ func DoBossUpgrade(preRelease bool) {
 func checkVersion(newVersion string, preRelease bool) bool {
 	version, _ := semver.NewVersion(newVersion)
 	current, _ := semver.NewVersion(consts.Version)
+
 	needUpdate := version.GreaterThan(current)
+
 	if !needUpdate && preRelease {
 		needUpdate = current.Prerelease() == "" && version.Prerelease() != ""
 	} else if !needUpdate && !preRelease {
@@ -74,16 +80,13 @@ func checkVersion(newVersion string, preRelease bool) bool {
 	return needUpdate
 }
 
-func getLastestLink() (err error, link string, size float64, version string) {
-	resp, err := http.Get("https://api.github.com/repos/HashLoad/boss/releases/latest")
-	if err != nil {
-		return err, "", 0, ""
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status), "", 0, ""
-	}
+func getDownloadLink(releaseUrl string) (link string, size float64, version string) {
+	resp := makeRequest(releaseUrl)
 	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		msg.Die(err.Error())
+	}
+
 	var obj map[string]interface{}
 	if err := json.Unmarshal(contents, &obj); err != nil {
 		msg.Die("failed in parse version JSON")
@@ -91,91 +94,66 @@ func getLastestLink() (err error, link string, size float64, version string) {
 	for _, value := range obj["assets"].([]interface{}) {
 		bossExe := value.(map[string]interface{})
 		if bossExe["name"].(string) == "boss.exe" {
-			return nil, bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string)
+			return bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string)
 		}
 	}
-	return fmt.Errorf("not found"), "", 0, ""
+	utils.HandleError(resp.Body.Close())
+	msg.Die("not found")
+	return "", 0, ""
 }
 
-func getLinkPreRelease() (err error, link string, size float64, version string) {
-	err, tag := getLastTag()
-	if err != nil {
-		return err, "", 0, ""
-	}
-
-	resp, err := http.Get("https://api.github.com/repos/HashLoad/boss/releases/tags/" + tag)
-	if err != nil {
-		return err, "", 0, ""
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status), "", 0, ""
-	}
+func getLastTag() string {
+	resp := makeRequest(tags)
 	contents, err := ioutil.ReadAll(resp.Body)
-	var obj map[string]interface{}
-	if err := json.Unmarshal(contents, &obj); err != nil {
-		msg.Die("failed in parse version JSON")
-	}
-	for _, value := range obj["assets"].([]interface{}) {
-		bossExe := value.(map[string]interface{})
-		if bossExe["name"].(string) == "boss.exe" {
-			return nil, bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string)
-		}
-	}
-	return fmt.Errorf("not found"), "", 0, ""
-}
-
-func getLastTag() (err error, tag string) {
-	resp, err := http.Get("https://api.github.com/repos/HashLoad/boss/tags")
 	if err != nil {
-		return err, ""
+		msg.Die(err.Error())
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status), ""
-	}
-	contents, err := ioutil.ReadAll(resp.Body)
 	var obj []interface{}
 	if err := json.Unmarshal(contents, &obj); err != nil {
-		msg.Die("failed in parse version JSON")
+		msg.Die("failed in parse tags JSON")
 	}
 
+	utils.HandleError(resp.Body.Close())
 	tagObj := obj[0].(map[string]interface{})
-	//for _, value := range obj["assets"].([]interface{}) {
-	//	bossExe := value.(map[string]interface{})
-	//	if bossExe["name"].(string) == "boss.exe" {
-	//		return nil, bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string)
-	//	}
-	//}
-	return nil, tagObj["name"].(string)
+	return tagObj["name"].(string)
 }
 
-//noinspection GoUnhandledErrorResult
+func makeRequest(url string) *http.Response {
+	resp, err := http.Get(url)
+	if err != nil {
+		msg.Die(err.Error())
+		return nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		msg.Die("bad status: %s", resp.Status)
+	}
+	return resp
+}
+
 func downloadFile(filepath string, url string, size float64) (err error) {
 	_ = os.Remove(filepath)
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
+
 	bar := pb.New(int(math.Round(size)))
 	bar.Start()
 	proxyReader := bar.NewProxyReader(resp.Body)
 	_, err = io.Copy(out, proxyReader)
 	bar.Finish()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	utils.HandleError(out.Close())
+	utils.HandleError(resp.Body.Close())
+
+	return err
 }
