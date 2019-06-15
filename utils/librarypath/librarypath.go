@@ -4,6 +4,7 @@ import (
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,16 +21,6 @@ func UpdateLibraryPath(pkg *models.Package) {
 
 }
 
-func Contains(a []string, x string) bool {
-	x = strings.TrimSpace(strings.ToLower(x))
-	for _, n := range a {
-		if x == strings.TrimSpace(strings.ToLower(n)) {
-			return true
-		}
-	}
-	return false
-}
-
 func cleanPath(paths []string, fullPath bool) []string {
 	prefix := env.GetModulesDir()
 	var processedPaths []string
@@ -41,7 +32,7 @@ func cleanPath(paths []string, fullPath bool) []string {
 		if strings.HasPrefix(paths[key], prefix) {
 			continue
 		}
-		if !Contains(processedPaths, paths[key]) {
+		if !utils.Contains(processedPaths, paths[key]) {
 			processedPaths = append(processedPaths, paths[key])
 		}
 	}
@@ -116,7 +107,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 			if !fullPath {
 				dir, _ = filepath.Rel(env.GetCurrentDir(), dir)
 			}
-			if !Contains(paths, dir) {
+			if !utils.Contains(paths, dir) {
 				paths = append(paths, dir)
 			}
 		}
@@ -124,7 +115,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 	})
 
 	for _, path := range getDefaultPath(fullPath) {
-		if !Contains(paths, path) {
+		if !utils.Contains(paths, path) {
 			paths = append(paths, path)
 		}
 	}

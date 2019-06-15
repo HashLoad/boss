@@ -105,7 +105,6 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	}
 }
 
-//noinspection GoNilness, GoUnhandledErrorResult
 func (c *Configuration) SaveConfiguration() {
 	jsonString, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {

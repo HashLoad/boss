@@ -18,7 +18,7 @@ const BossConfigFile = "boss.cfg.json"
 
 const MinimalDependencyVersion string = ">0.0.0"
 
-var EnvBossBin = "." + string(filepath.Separator) + FolderDependencies + string(filepath.Separator) + BinFolder
+const EnvBossBin = "." + string(filepath.Separator) + FolderDependencies + string(filepath.Separator) + BinFolder
 
 const XmlTagNameProperty string = "PropertyGroup"
 const XmlValueAttribute = "value"

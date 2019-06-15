@@ -22,10 +22,9 @@ func Initialize() {
 	env.Global = true
 
 	msg.Debug("DEBUG MODE")
-	msg.Debug("Initializing boss system...")
-
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
+
 	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath()}
 	modules := []string{"bpl-identifier"}
 

@@ -35,6 +35,7 @@ func SaveRepoData(key string) {
 	f, err := os.Create(p)
 	if err != nil {
 		msg.Err(err.Error())
+		return
 	}
 	defer f.Close()
 
