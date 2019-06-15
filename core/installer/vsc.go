@@ -1,12 +1,11 @@
-package core
+package installer
 
 import (
 	"github.com/hashload/boss/core/cache"
-	"github.com/hashload/boss/core/git"
+	"github.com/hashload/boss/core/gitWrapper"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	git2 "gopkg.in/src-d/go-git.v4"
 )
 
 var updatedDependencies []string
@@ -20,13 +19,9 @@ func GetDependency(dep models.Dependency) {
 	updatedDependencies = append(updatedDependencies, dep.GetHashName())
 
 	if cache.HasCache(dep) {
-		git.UpdateCache(dep)
+		gitWrapper.UpdateCache(dep)
 	} else {
-		git.CloneCache(dep)
+		gitWrapper.CloneCache(dep)
 	}
 	models.SaveRepoData(dep.GetHashName())
-}
-
-func OpenRepository(dep models.Dependency) *git2.Repository {
-	return git.GetRepository(dep)
 }

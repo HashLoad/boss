@@ -6,7 +6,6 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"github.com/hashload/boss/utils/librarypath"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -15,7 +14,7 @@ import (
 	"strings"
 )
 
-func getCompilerParameters(rootPath string, dep *models.Dependency) string {
+func getCompilerParameters(rootPath string, dep *models.Dependency, platform string) string {
 	var binPath string
 	var moduleName = ""
 
@@ -35,7 +34,7 @@ func getCompilerParameters(rootPath string, dep *models.Dependency) string {
 		"/p:DCC_ExeOutput=\"" + binPath + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
-		"/P:platform=Win32 "
+		"/P:platform=" + platform + " "
 }
 
 func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
@@ -54,7 +53,10 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 	project, _ := filepath.Abs(dprojPath)
 
 	readFileStr += " \n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPaths(env.GetModulesDir(), abs) + " "
-	readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep)
+	for _, value := range []string{"Win32"} {
+		//librarypath.GetActivePlatforms(dprojPath) {
+		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep, value)
+	}
 	readFileStr += " > \"" + buildLog + "\""
 
 	err = ioutil.WriteFile(buildBat, []byte(readFileStr), os.ModePerm)
@@ -93,7 +95,7 @@ func movePath(old string, new string) {
 		}
 	}
 	if !hasError {
-		err = os.Remove(old)
+		err = os.RemoveAll(old)
 		if !os.IsNotExist(err) {
 			utils.HandleError(err)
 		}
@@ -239,7 +241,7 @@ func getNewPaths(path string, basePath string) string {
 		dir := filepath.Dir(path)
 		dir, err = filepath.Rel(basePath, dir)
 		utils.HandleError(err)
-		if matched && !librarypath.Contains(paths, dir) {
+		if matched && !utils.Contains(paths, dir) {
 			paths = append(paths, dir)
 		}
 		return nil

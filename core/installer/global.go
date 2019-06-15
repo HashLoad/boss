@@ -6,7 +6,6 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"os/exec"
@@ -20,7 +19,7 @@ func GlobalInstall(args []string, pkg *models.Package) {
 	DoInstallPackages()
 }
 
-func Find(array []string, value string) int {
+func find(array []string, value string) int {
 	for key, item := range array {
 		if item == value {
 			return key
@@ -42,7 +41,7 @@ func addPathBpl(ideVersion string) {
 	currentPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.BplFolder)
 
 	paths := strings.Split(value, ";")
-	if librarypath.Contains(paths, currentPath) {
+	if utils.Contains(paths, currentPath) {
 		return
 	}
 
@@ -85,7 +84,7 @@ func DoInstallPackages() {
 			return nil
 		}
 
-		if Find(keys, path) == -1 {
+		if find(keys, path) == -1 {
 			utils.HandleError(knowPackages.SetStringValue(path, path))
 		}
 		existingBpls = append(existingBpls, path)
@@ -94,7 +93,7 @@ func DoInstallPackages() {
 	})
 
 	for _, key := range keys {
-		if Find(existingBpls, key) != -1 {
+		if find(existingBpls, key) != -1 {
 			continue
 		}
 

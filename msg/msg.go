@@ -20,7 +20,7 @@ type Messenger struct {
 	Stderr     io.Writer
 	Stdin      io.Reader
 	PanicOnDie bool
-	ecode      int
+	eCode      int
 	hasErrored bool
 }
 
@@ -30,7 +30,7 @@ func NewMessenger() *Messenger {
 		Stderr:     os.Stderr,
 		Stdin:      os.Stdin,
 		PanicOnDie: false,
-		ecode:      1,
+		eCode:      1,
 	}
 
 	return m
@@ -104,13 +104,13 @@ func (m *Messenger) Die(msg string, args ...interface{}) {
 	if m.PanicOnDie {
 		panic("trapped a Die() call")
 	}
-	os.Exit(m.ecode)
+	os.Exit(m.eCode)
 }
 
 func (m *Messenger) ExitCode(e int) int {
 	m.Lock()
-	old := m.ecode
-	m.ecode = e
+	old := m.eCode
+	m.eCode = e
 	m.Unlock()
 	return old
 }

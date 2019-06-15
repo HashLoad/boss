@@ -22,10 +22,9 @@ func Initialize() {
 	env.Global = true
 
 	msg.Debug("DEBUG MODE")
-	msg.Info("Initializing boss system...")
-
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
+
 	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath()}
 	modules := []string{"bpl-identifier"}
 
@@ -95,7 +94,7 @@ func installModules(modules []string) {
 	dependencies := pkg.Dependencies.(map[string]interface{})
 	encountered := 0
 	for _, newPackage := range modules {
-		for installed, _ := range dependencies {
+		for installed := range dependencies {
 			if strings.Contains(installed, newPackage) {
 				encountered++
 			}
@@ -130,14 +129,6 @@ func moveBptIdentifier() {
 	err = os.Rename(OutExeCompilation, exePath)
 	if err != nil {
 		msg.Err(err.Error())
-	}
-}
-
-func migration() {
-	if env.GlobalConfiguration.ConfigVersion < 1 {
-		env.GlobalConfiguration.InternalRefreshRate = 5
-		env.GlobalConfiguration.ConfigVersion++
-		env.GlobalConfiguration.SaveConfiguration()
 	}
 }
 

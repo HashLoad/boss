@@ -27,6 +27,7 @@ type Configuration struct {
 	LastInternalUpdate  time.Time        `json:"last_internal_update"`
 	DelphiPath          string           `json:"delphi_path,omitempty"`
 	ConfigVersion       int64            `json:"config_version"`
+	GitEmbedded         bool             `json:"git_embedded"`
 }
 
 type Auth struct {
@@ -120,6 +121,7 @@ func (c *Configuration) SaveConfiguration() {
 	if err != nil {
 		msg.Die("Failed on create file ", configPath, err.Error())
 	}
+
 	defer f.Close()
 
 	_, err = f.Write(jsonString)
@@ -136,6 +138,7 @@ func makeDefault(configPath string) *Configuration {
 		LastInternalUpdate:  time.Now(),
 		Auth:                make(map[string]*Auth),
 		Key:                 crypto.Md5MachineID(),
+		GitEmbedded:         true,
 	}
 }
 

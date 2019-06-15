@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/hashload/boss/core"
 	"github.com/spf13/cobra"
 )
 
@@ -9,10 +10,10 @@ var updateCmd = &cobra.Command{
 	Short: "update dependencies",
 	Long:  `update dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		installCmd.Run(cmd, []string{})
+		core.InstallModules(args, false)
 	},
 }
 
 func init() {
-	//RootCmd.AddCommand(updateCmd)
+	RootCmd.AddCommand(updateCmd)
 }
