@@ -18,5 +18,5 @@ var upgradeCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(upgradeCmd)
-	upgradeCmd.Flags().BoolVar(&preRelease, "Pre-release", false, "dev")
+	upgradeCmd.Flags().BoolVar(&preRelease, "dev", false, "Pre-release")
 }

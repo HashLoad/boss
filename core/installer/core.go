@@ -39,6 +39,10 @@ func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package) []mode
 	}
 	rawDeps := pkg.Dependencies.(map[string]interface{})
 
+	if len(rawDeps) == 0 {
+		return []models.Dependency{}
+	}
+
 	deps := models.GetDependencies(rawDeps)
 
 	makeCache(deps)

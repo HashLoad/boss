@@ -6,7 +6,6 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"os/exec"
@@ -42,7 +41,7 @@ func addPathBpl(ideVersion string) {
 	currentPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.BplFolder)
 
 	paths := strings.Split(value, ";")
-	if librarypath.Contains(paths, currentPath) {
+	if utils.Contains(paths, currentPath) {
 		return
 	}
 

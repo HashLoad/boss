@@ -6,7 +6,6 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"github.com/hashload/boss/utils/librarypath"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -242,7 +241,7 @@ func getNewPaths(path string, basePath string) string {
 		dir := filepath.Dir(path)
 		dir, err = filepath.Rel(basePath, dir)
 		utils.HandleError(err)
-		if matched && !librarypath.Contains(paths, dir) {
+		if matched && !utils.Contains(paths, dir) {
 			paths = append(paths, dir)
 		}
 		return nil
