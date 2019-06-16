@@ -31,6 +31,7 @@ func DoInstall(pkg *models.Package) {
 	msg.Info("Compiling units")
 	compiler.Build(pkg)
 	pkg.Save()
+	msg.Info("Success!")
 }
 
 func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package) []models.Dependency {
