@@ -58,6 +58,6 @@ func doInitialization() {
 	pkgJson.Save()
 }
 
-func InitilizeBossPackage() {
+func InitializeBossPackage() {
 	doInitialization()
 }

@@ -10,7 +10,7 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a new project",
 	Long:  `Initialize a new project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		core.InitilizeBossPackage()
+		core.InitializeBossPackage()
 	},
 }
 

@@ -1,4 +1,4 @@
-package gc
+package core
 
 import (
 	"github.com/hashload/boss/env"
