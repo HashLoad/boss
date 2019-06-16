@@ -18,6 +18,8 @@ import (
 	"path/filepath"
 )
 
+var processed = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}
+
 func DoInstall(pkg *models.Package) {
 	msg.Info("Installing modules in project path")
 
@@ -57,6 +59,8 @@ func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package) []mode
 
 func processOthers(rootLock models.PackageLock) []models.Dependency {
 	infos, e := ioutil.ReadDir(env.GetModulesDir())
+	var lenProcessedInitial = len(processed)
+	var result []models.Dependency
 	if e != nil {
 		msg.Err("Error on try load dir of modules: %s", e)
 	}
@@ -65,6 +69,7 @@ func processOthers(rootLock models.PackageLock) []models.Dependency {
 		if !info.IsDir() {
 			continue
 		}
+
 		if utils.Contains(processed, info.Name()) {
 			continue
 		} else {
@@ -85,15 +90,16 @@ func processOthers(rootLock models.PackageLock) []models.Dependency {
 			}
 			msg.Err("  Error on try load package %s: %s", fileName, e)
 		} else {
-			return EnsureDependencies(rootLock, packageOther)
+			result = append(result, EnsureDependencies(rootLock, packageOther)...)
 		}
 	}
-	return []models.Dependency{}
+	if lenProcessedInitial > len(processed) {
+		result = append(result, processOthers(rootLock)...)
+	}
+
+	return result
 }
 
-var processed = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}
-
-//TODO Diferenciar update e install
 func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []models.Dependency) {
 	msg.Info("Installing modules")
 	for _, dep := range deps {
@@ -138,7 +144,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 		}
 
 		if !rootLock.NeedUpdate(dep, referenceName.Short()) {
-			msg.Warn("  %s already updated", dep.GetName())
+			msg.Info("  %s already updated", dep.GetName())
 			continue
 		} else if !hasMatch {
 			msg.Warn("  No candidate to version for %s. Using master branch", dep.GetVersion())

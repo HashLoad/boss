@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/hashload/boss/cmd/config"
-	"github.com/hashload/boss/core/gc"
+	"github.com/hashload/boss/core"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/setup"
@@ -30,5 +30,5 @@ func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
-	gc.RunGC()
+	core.RunGC()
 }

@@ -14,6 +14,12 @@ import (
 	"strings"
 )
 
+func Build(pkg *models.Package) {
+	//dependencyOrder(pkg)
+	rootPath := env.GetCurrentDir()
+	buildAllDprojByPackage(rootPath, &pkg.Lock)
+}
+
 func getCompilerParameters(rootPath string, dep *models.Dependency, platform string) string {
 	var binPath string
 	var moduleName = ""
@@ -103,7 +109,7 @@ func movePath(old string, new string) {
 
 }
 
-func MoveArtifacts(dep *models.Dependency, rootPath string) {
+func moveArtifacts(dep *models.Dependency, rootPath string) {
 	var moduleName = dep.GetName()
 	movePath(filepath.Join(rootPath, moduleName, consts.BplFolder), filepath.Join(rootPath, consts.BplFolder))
 	movePath(filepath.Join(rootPath, moduleName, consts.DcpFolder), filepath.Join(rootPath, consts.DcpFolder))
@@ -112,7 +118,7 @@ func MoveArtifacts(dep *models.Dependency, rootPath string) {
 
 }
 
-func EnsureArtifacts(lockedDependency *models.LockedDependency, dep models.Dependency, rootPath string) {
+func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Dependency, rootPath string) {
 
 	var moduleName = dep.GetName()
 
@@ -153,17 +159,6 @@ func EnsureArtifacts(lockedDependency *models.LockedDependency, dep models.Depen
 	}
 }
 
-func _(path string, additionalPaths string) {
-	command := exec.Command("dcc32.exe", filepath.Base(path), additionalPaths)
-	command.Dir = filepath.Dir(path)
-	_ = command.Wait()
-}
-
-func Build(pkg *models.Package) {
-	rootPath := env.GetCurrentDir()
-	buildAllDprojByPackage(rootPath, &pkg.Lock)
-}
-
 func buildAllDprojByPackage(rootPath string, lock *models.PackageLock) {
 	if pkg, err := models.LoadPackageOther(filepath.Join(rootPath, consts.FilePackage)); err != nil || pkg.Dependencies == nil {
 		buildAllDproj(rootPath)
@@ -191,8 +186,8 @@ func buildAllDprojByPackage(rootPath string, lock *models.PackageLock) {
 					if !compile(s, env.GetModulesDir(), &dep) {
 						dependency.Failed = true
 					}
-					EnsureArtifacts(&dependency, dep, env.GetModulesDir())
-					MoveArtifacts(&dep, env.GetModulesDir())
+					ensureArtifacts(&dependency, dep, env.GetModulesDir())
+					moveArtifacts(&dep, env.GetModulesDir())
 				}
 				lock.SetInstalled(dep, dependency)
 			}
@@ -217,7 +212,7 @@ func buildAllDproj(rootPath string) {
 				return nil
 			}
 			compile(path, rootPath, nil)
-			MoveArtifacts(nil, rootPath)
+			moveArtifacts(nil, rootPath)
 			return nil
 		})
 }
