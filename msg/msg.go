@@ -5,8 +5,6 @@ import (
 	"sync"
 )
 
-//provenied by glide https://github.com/Masterminds/glide
-
 import (
 	"bufio"
 	"fmt"

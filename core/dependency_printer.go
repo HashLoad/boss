@@ -1,16 +1,27 @@
-package compiler
+package core
 
 import (
+	"github.com/Masterminds/glide/msg"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/xlab/treeprint"
+	"os"
 	"path/filepath"
 )
 
 var tree = treeprint.New()
 
-func dependencyOrder(pkg *models.Package) {
+func PrintDependencies() {
+	pkg, err := models.LoadPackage(false)
+	if err != nil {
+		if os.IsNotExist(err) {
+			msg.Die("boss.json not exists in " + env.GetCurrentDir())
+		} else {
+			msg.Die("Fail on open dependencies file: %s", err)
+		}
+	}
+
 	rawDeps := pkg.Dependencies.(map[string]interface{})
 	master := tree.AddBranch(pkg.Name + ":")
 	deps := models.GetDependencies(rawDeps)

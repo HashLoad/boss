@@ -159,12 +159,6 @@ func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Depen
 	}
 }
 
-func _(path string, additionalPaths string) {
-	command := exec.Command("dcc32.exe", filepath.Base(path), additionalPaths)
-	command.Dir = filepath.Dir(path)
-	_ = command.Wait()
-}
-
 func buildAllDprojByPackage(rootPath string, lock *models.PackageLock) {
 	if pkg, err := models.LoadPackageOther(filepath.Join(rootPath, consts.FilePackage)); err != nil || pkg.Dependencies == nil {
 		buildAllDproj(rootPath)

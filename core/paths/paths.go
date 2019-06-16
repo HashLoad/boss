@@ -5,7 +5,6 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/utils"
-	"github.com/masterminds/glide/msg"
 	"io/ioutil"
 	"os"
 	"path/filepath"
