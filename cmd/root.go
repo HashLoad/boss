@@ -30,5 +30,5 @@ func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
-	core.RunGC()
+	core.RunGC(false)
 }

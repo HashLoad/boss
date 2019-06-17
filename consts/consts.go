@@ -36,4 +36,6 @@ const BplIdentifierName = "BplIdentifier.exe"
 
 const REGEX_ARTIFACTS = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$)"
 
+const REGISTY_BASE_PATH = `Software\Embarcadero\BDS\`
+
 var DefaultPaths = []string{BplFolder, DcuFolder, DcpFolder, BinFolder}

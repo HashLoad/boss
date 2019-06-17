@@ -2,6 +2,22 @@
 
 
 [[projects]]
+  digest = "1:3769c4f6cfb7cb71109ee43011024f81c03cde1da5f357771631bd5779dd3123"
+  name = "github.com/Masterminds/glide"
+  packages = ["msg"]
+  pruneopts = "UT"
+  revision = "9ef6ca313b3200079861f2de4e567b1d22081d19"
+  version = "v0.13.2"
+
+[[projects]]
+  digest = "1:74334b154a542b15a7391df3db5428675fdaa56b4d3f3de7b750289b9500d70e"
+  name = "github.com/Masterminds/vcs"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b4f55832432b95a611cf1495272b5c8e24952a1a"
+  version = "v1.13.0"
+
+[[projects]]
   digest = "1:bd8bc15ce3a9929e2777651cbc271fca5561c0d5f42187edb4720e638d24662d"
   name = "github.com/beevik/etree"
   packages = ["."]
@@ -362,6 +378,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Masterminds/glide/msg",
     "github.com/beevik/etree",
     "github.com/denisbrodbeck/machineid",
     "github.com/masterminds/semver",

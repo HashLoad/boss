@@ -23,6 +23,7 @@ func GetDependency(dep models.Dependency) {
 	if hasCache(dep) {
 		gitWrapper.UpdateCache(dep)
 	} else {
+		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
 		gitWrapper.CloneCache(dep)
 	}
 	models.SaveRepoData(dep.GetHashName())
