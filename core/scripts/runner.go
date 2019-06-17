@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
 	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
 )
 
 func RunCmd(cmdName string) {
@@ -46,7 +47,7 @@ func RunCmd(cmdName string) {
 
 func Run(args []string) {
 	if pkgJson, e := models.LoadPackage(true); e != nil {
-		e.Error()
+		msg.Err(e.Error())
 	} else {
 		scripts := pkgJson.Scripts.(map[string]interface{})
 		if command, ok := scripts[args[0]]; !ok {
