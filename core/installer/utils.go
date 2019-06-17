@@ -12,7 +12,7 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 		dependency := ParseDependency(args[e])
 		dependency = strings.ToLower(dependency)
 
-		re := regexp.MustCompile(`(?m)((.*)(:\W[\d.]{1,})|.*)$`)
+		re := regexp.MustCompile(`(?m)((.*)(:\W[\d.]+)|.*)$`)
 		split := re.FindAllString(dependency, -1)
 		var ver string
 		if len(split) == 1 {

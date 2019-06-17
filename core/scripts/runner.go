@@ -50,7 +50,7 @@ func Run(args []string) {
 	} else {
 		scripts := pkgJson.Scripts.(map[string]interface{})
 		if command, ok := scripts[args[0]]; !ok {
-			errors.New("script not exists").Error()
+			msg.Err(errors.New("script not exists").Error())
 		} else {
 			RunCmd(command.(string) + " " + strings.Join(args[1:], " "))
 		}

@@ -70,7 +70,7 @@ var cmdDelphiUse = &cobra.Command{
 }
 
 func init() {
-	ConfigCmd.AddCommand(cmdDelphi)
+	CmdConfig.AddCommand(cmdDelphi)
 	cmdDelphi.AddCommand(cmdDelphiList)
 	cmdDelphi.AddCommand(cmdDelphiUse)
 }

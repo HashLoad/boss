@@ -232,7 +232,7 @@ func getNewPaths(path string, basePath string) string {
 			}
 		}
 
-		matched, _ := regexp.MatchString(consts.REGEX_ARTIFACTS, info.Name())
+		matched, _ := regexp.MatchString(consts.RegexArtifacts, info.Name())
 		dir := filepath.Dir(path)
 		dir, err = filepath.Rel(basePath, dir)
 		utils.HandleError(err)

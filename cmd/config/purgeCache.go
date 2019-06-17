@@ -35,5 +35,5 @@ var purgeCacheCmd = &cobra.Command{
 }
 
 func init() {
-	ConfigCmd.AddCommand(purgeCacheCmd)
+	CmdConfig.AddCommand(purgeCacheCmd)
 }
