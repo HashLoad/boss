@@ -1,6 +1,7 @@
 package dcc32
 
 import (
+	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
@@ -34,8 +35,7 @@ func GetDcc32DirByCmd() []string {
 func GetDelphiVersionFromRegistry() map[string]string {
 	var result = make(map[string]string)
 
-	delphiVersions, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`,
-		registry.ALL_ACCESS)
+	delphiVersions, err := registry.OpenKey(registry.CURRENT_USER, consts.REGISTY_BASE_PATH, registry.ALL_ACCESS)
 	if err != nil {
 		msg.Err("Cannot open registry to IDE version")
 	}
@@ -47,7 +47,7 @@ func GetDelphiVersionFromRegistry() map[string]string {
 	utils.HandleError(err)
 
 	for _, value := range names {
-		delphiInfo, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+value, registry.QUERY_VALUE)
+		delphiInfo, err := registry.OpenKey(registry.CURRENT_USER, consts.REGISTY_BASE_PATH+value, registry.QUERY_VALUE)
 		utils.HandleError(err)
 
 		appPath, _, err := delphiInfo.GetStringValue("App")

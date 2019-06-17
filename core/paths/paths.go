@@ -4,6 +4,7 @@ import (
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"

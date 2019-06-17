@@ -29,7 +29,7 @@ func find(array []string, value string) int {
 }
 
 func addPathBpl(ideVersion string) {
-	idePath, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Environment Variables`,
+	idePath, err := registry.OpenKey(registry.CURRENT_USER, consts.REGISTY_BASE_PATH+ideVersion+`\Environment Variables`,
 		registry.ALL_ACCESS)
 	if err != nil {
 		msg.Err("Cannot add automatic bpl path dir")
@@ -56,7 +56,7 @@ func DoInstallPackages() {
 
 	addPathBpl(ideVersion)
 
-	knowPackages, err := registry.OpenKey(registry.CURRENT_USER, `Software\Embarcadero\BDS\`+ideVersion+`\Known Packages`,
+	knowPackages, err := registry.OpenKey(registry.CURRENT_USER, consts.REGISTY_BASE_PATH+ideVersion+`\Known Packages`,
 		registry.ALL_ACCESS)
 
 	if err != nil {
