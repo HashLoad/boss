@@ -36,7 +36,7 @@ func (p *Package) AddDependency(dep string, ver string) {
 	}
 	deps := p.Dependencies.(map[string]interface{})
 
-	for key, _ := range deps {
+	for key := range deps {
 		if strings.ToLower(key) == strings.ToLower(dep) {
 			deps[key] = ver
 			return

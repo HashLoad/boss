@@ -120,6 +120,7 @@ func (c *Configuration) SaveConfiguration() {
 	f, err := os.Create(configPath)
 	if err != nil {
 		msg.Die("Failed on create file ", configPath, err.Error())
+		return
 	}
 
 	defer f.Close()

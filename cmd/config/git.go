@@ -67,6 +67,6 @@ var gitModeCmd = &cobra.Command{
 }
 
 func init() {
-	ConfigCmd.AddCommand(gitCmd)
+	CmdConfig.AddCommand(gitCmd)
 	gitCmd.AddCommand(gitModeCmd)
 }

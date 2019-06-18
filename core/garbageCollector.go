@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func RunGC() {
+func RunGC(ignoreLastUpdate bool) {
 	_ = filepath.Walk(filepath.Join(env.GetCacheDir(), "info"), func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -26,7 +26,7 @@ func RunGC() {
 		}
 
 		lastUpdate := repoInfo.LastUpdate.AddDate(0, 0, env.GlobalConfiguration.PurgeTime)
-		if lastUpdate.Before(time.Now()) {
+		if lastUpdate.Before(time.Now()) || ignoreLastUpdate {
 			_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), repoInfo.Key))
 			_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), "info", info.Name()))
 		}

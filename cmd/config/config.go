@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ConfigCmd = &cobra.Command{
+var CmdConfig = &cobra.Command{
 	Use:   "config",
 	Short: "Configurations",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -13,5 +13,5 @@ var ConfigCmd = &cobra.Command{
 }
 
 func InitializeConfig(root *cobra.Command) {
-	root.AddCommand(ConfigCmd)
+	root.AddCommand(CmdConfig)
 }

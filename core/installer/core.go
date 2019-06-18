@@ -110,7 +110,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 		if e != nil {
 			msg.Err("  Version type not supported! %s", e)
 		}
-		var bestMatch *plumbing.Reference
+		var bestMatch plumbing.Reference
 		var bestVersion *semver.Version
 		hasMatch := false
 		for _, version := range versions {
@@ -122,7 +122,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 			if constraints.Check(newVersion) {
 				hasMatch = true
 				if bestVersion == nil || newVersion.GreaterThan(bestVersion) {
-					bestMatch = version
+					bestMatch = *version
 					bestVersion = newVersion
 				}
 			}

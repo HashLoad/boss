@@ -34,6 +34,8 @@ const BossInternalDirOld = "{internal}"
 
 const BplIdentifierName = "BplIdentifier.exe"
 
-const REGEX_ARTIFACTS = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$)"
+const RegexArtifacts = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$)"
+
+const RegistyBasePath = `Software\Embarcadero\BDS\`
 
 var DefaultPaths = []string{BplFolder, DcuFolder, DcpFolder, BinFolder}
