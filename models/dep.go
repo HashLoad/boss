@@ -3,10 +3,11 @@ package models
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"github.com/hashload/boss/env"
 	"io"
 	"regexp"
 	"strings"
+
+	"github.com/hashload/boss/env"
 
 	"github.com/hashload/boss/msg"
 )
@@ -53,7 +54,12 @@ func (p *Dependency) GetURL() string {
 			return p.makeSshUrl()
 		}
 	}
-	return "https://" + p.Repository
+	var hasHttp = regexp.MustCompile(`(?m)^https?:\/\/`)
+	if hasHttp.MatchString(p.Repository) {
+		return p.Repository
+	} else {
+		return "https://" + p.Repository
+	}
 }
 
 var re = regexp.MustCompile(`(?m)^(.|)(\d+)\.(\d+)$`)
