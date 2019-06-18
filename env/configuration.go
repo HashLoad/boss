@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/crypto"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
@@ -120,9 +121,10 @@ func (c *Configuration) SaveConfiguration() {
 	f, err := os.Create(configPath)
 	if err != nil {
 		msg.Die("Failed on create file ", configPath, err.Error())
+		return
 	}
 
-	defer f.Close()
+	defer utils.HandleError(f.Close())
 
 	_, err = f.Write(jsonString)
 	if err != nil {

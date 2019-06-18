@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -37,7 +38,7 @@ func SaveRepoData(key string) {
 		msg.Err(err.Error())
 		return
 	}
-	defer f.Close()
+	defer utils.HandleError(f.Close())
 
 	_, err = f.Write(d)
 	if err != nil {

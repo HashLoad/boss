@@ -82,7 +82,7 @@ func getDpcNames() []string {
 		return []string{}
 	}
 
-	dpcs := []string{}
+	var dpcs []string
 
 	for _, value := range fileInfos {
 		if strings.ToLower(filepath.Ext(value.Name())) == ".dcp" {
@@ -92,13 +92,13 @@ func getDpcNames() []string {
 	return dpcs
 }
 
-const COMMENT_BOSS = "{BOSS}"
+const CommentBoss = "{BOSS}"
 
 func getDcpString(dcps []string) string {
 	var dpsLine = "\n"
 
 	for _, dcp := range dcps {
-		dpsLine += "  " + filepath.Base(dcp) + COMMENT_BOSS + ",\n"
+		dpsLine += "  " + filepath.Base(dcp) + CommentBoss + ",\n"
 	}
 	return dpsLine[:len(dpsLine)-2]
 }
@@ -120,7 +120,7 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 	var result = filecontent[:resultRegexIndexes[0][3]]
 
 	for _, value := range currentRequires {
-		if strings.Contains(value, COMMENT_BOSS) {
+		if strings.Contains(value, CommentBoss) {
 			continue
 		}
 		result += "\n  " + value + ","

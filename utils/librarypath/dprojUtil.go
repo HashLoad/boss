@@ -98,7 +98,7 @@ func processCurrentPath(node *etree.Element) {
 	node.SetText(strings.Join(currentPaths, ";"))
 }
 
-func GetActivePlatforms(dprojName string) []string {
+func _(dprojName string) []string {
 	doc := etree.NewDocument()
 	info, err := os.Stat(dprojName)
 	if os.IsNotExist(err) || info.IsDir() {
@@ -112,7 +112,7 @@ func GetActivePlatforms(dprojName string) []string {
 	}
 	root := doc.Root()
 
-	var result = []string{}
+	var result []string
 
 	path, err := etree.CompilePath("/Project/ProjectExtensions/BorlandProject/Platforms")
 	utils.HandleError(err)

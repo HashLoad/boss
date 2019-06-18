@@ -1,11 +1,12 @@
 package core
 
 import (
+	"os"
+
 	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
-	"os"
 )
 
 func InstallModules(args []string, lockedVersion bool) {
@@ -29,7 +30,7 @@ func InstallModules(args []string, lockedVersion bool) {
 func RemoveModules(args []string) {
 	pkg, e := models.LoadPackage(false)
 	if e != nil {
-		e.Error()
+		msg.Err(e.Error())
 	}
 
 	if pkg == nil {

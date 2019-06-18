@@ -17,43 +17,43 @@ type Dependency struct {
 	UseSSH     bool
 }
 
-func (d *Dependency) GetHashName() string {
+func (p *Dependency) GetHashName() string {
 	hash := md5.New()
-	if _, err := io.WriteString(hash, d.Repository); err != nil {
+	if _, err := io.WriteString(hash, p.Repository); err != nil {
 		msg.Warn("Failed on write dependency hash")
 	}
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func (d *Dependency) GetVersion() string {
-	return d.version
+func (p *Dependency) GetVersion() string {
+	return p.version
 }
 
-func (d *Dependency) makeSshUrl() string {
-	if strings.Contains(d.Repository, "@") {
-		return d.Repository
+func (p *Dependency) makeSshUrl() string {
+	if strings.Contains(p.Repository, "@") {
+		return p.Repository
 	}
 	re = regexp.MustCompile(`(?m)([\w\d.]*)(?:/)(.*)`)
-	submatch := re.FindStringSubmatch(d.Repository)
+	submatch := re.FindStringSubmatch(p.Repository)
 	provider := submatch[1]
 	repo := submatch[2]
 	return "git@" + provider + ":" + repo
 }
 
-func (d *Dependency) GetURLPrefix() string {
+func (p *Dependency) GetURLPrefix() string {
 	var re = regexp.MustCompile(`^[^/^:]+`)
-	return re.FindString(d.Repository)
+	return re.FindString(p.Repository)
 }
 
-func (d *Dependency) GetURL() string {
-	prefix := d.GetURLPrefix()
+func (p *Dependency) GetURL() string {
+	prefix := p.GetURLPrefix()
 	auth := env.GlobalConfiguration.Auth[prefix]
 	if auth != nil {
 		if auth.UseSsh {
-			return d.makeSshUrl()
+			return p.makeSshUrl()
 		}
 	}
-	return "https://" + d.Repository
+	return "https://" + p.Repository
 }
 
 var re = regexp.MustCompile(`(?m)^(.|)(\d+)\.(\d+)$`)
@@ -96,7 +96,7 @@ func GetDependenciesNames(deps []Dependency) []string {
 	return dependencies
 }
 
-func (d *Dependency) GetName() string {
+func (p *Dependency) GetName() string {
 	var re = regexp.MustCompile(`[^/]+(:?/$|$)`)
-	return re.FindString(d.Repository)
+	return re.FindString(p.Repository)
 }

@@ -101,7 +101,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 	}
 
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		matched, _ := regexp.MatchString(consts.REGEX_ARTIFACTS, info.Name())
+		matched, _ := regexp.MatchString(consts.RegexArtifacts, info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
 			if !fullPath {
