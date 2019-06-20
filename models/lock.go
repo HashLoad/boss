@@ -83,7 +83,7 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 func (p PackageLock) Save() {
 	marshal, err := json.MarshalIndent(&p, "", "\t")
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		log.Fatalf("error %v", err)
 	}
 
 	_ = ioutil.WriteFile(p.fileName, marshal, 664)
