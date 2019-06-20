@@ -63,6 +63,18 @@ func containsOne(a []*Node, b []*Node) bool {
 	return false
 }
 
+func containsAll(list []*Node, in []*Node) bool {
+	var check = 0
+	for _, n := range in {
+		for _, x := range list {
+			if x.Value == n.Value {
+				check++
+			}
+		}
+	}
+	return check == len(in)
+}
+
 func (g *GraphItem) AddEdge(nLeft, nRight *Node) {
 	g.lock()
 	if g.depends == nil {
@@ -108,11 +120,41 @@ func removeNode(nodes []*Node, key int) []*Node {
 	}
 }
 
-func (g *GraphItem) Queue() NodeQueue {
+func (g *GraphItem) Queue(pkg *models.Package) NodeQueue {
 	g.lock()
 	queue := NodeQueue{}
 	queue.New()
 	nodes := g.nodes
+	for key := 0; key < len(nodes); key++ {
+		if !pkg.Lock.GetInstalled(nodes[key].Dep).Changed {
+			nodes = removeNode(nodes, key)
+			key--
+		}
+	}
+
+	var redo = true
+	for {
+		if !redo {
+			break
+		}
+		redo = false
+		for _, node := range nodes {
+			usedBy := g.usedBy[*node]
+			if !containsAll(nodes, usedBy) {
+				redo = true
+				for _, consumerNode := range usedBy {
+					installed := pkg.Lock.GetInstalled(consumerNode.Dep)
+					installed.Changed = true
+					pkg.Lock.SetInstalled(consumerNode.Dep, installed)
+					if !contains(nodes, consumerNode) {
+						redo = true
+						nodes = append(nodes, consumerNode)
+					}
+				}
+			}
+		}
+	}
+
 	for {
 		if len(nodes) == 0 {
 			break
@@ -126,7 +168,6 @@ func (g *GraphItem) Queue() NodeQueue {
 				key--
 			}
 		}
-
 	}
 	g.unlock()
 	return queue

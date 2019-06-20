@@ -32,7 +32,7 @@ func loadOrderGraph(pkg *models.Package) graphs.NodeQueue {
 	rawDeps := pkg.Dependencies.(map[string]interface{})
 	deps := models.GetDependencies(rawDeps)
 	loadGraph(&graph, nil, deps, nil)
-	return graph.Queue()
+	return graph.Queue(pkg)
 }
 
 func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.Dependency, father *graphs.Node) {
