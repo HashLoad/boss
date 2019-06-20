@@ -9,8 +9,6 @@ import (
 )
 
 func Build(pkg *models.Package) {
-	//rootPath := env.GetCurrentDir()
-	//buildAllDprojByPackage(rootPath, &pkg.Lock)
 	buildOrderedPackages(pkg)
 }
 
