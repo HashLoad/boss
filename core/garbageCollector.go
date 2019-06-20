@@ -12,7 +12,7 @@ import (
 
 func RunGC(ignoreLastUpdate bool) {
 	_ = filepath.Walk(filepath.Join(env.GetCacheDir(), "info"), func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
+		if info == nil || info.IsDir() {
 			return nil
 		}
 
