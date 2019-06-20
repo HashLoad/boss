@@ -1,10 +1,10 @@
 package core
 
 import (
-	"github.com/Masterminds/glide/msg"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
 	"github.com/xlab/treeprint"
 	"os"
 	"path/filepath"
