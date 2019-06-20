@@ -34,7 +34,7 @@ func CloneCacheEmbedded(dep models.Dependency) *git.Repository {
 }
 
 func UpdateCacheEmbedded(dep models.Dependency) *git.Repository {
-	msg.Info("Updating dependency %s", dep.Repository)
+	msg.Info("Updating dependency %s", dep.GetName())
 	storageCache := makeStorageCache(dep)
 	repository, err := git.Open(storageCache, memfs.New())
 	if err != nil {

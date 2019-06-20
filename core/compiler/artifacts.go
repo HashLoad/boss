@@ -43,6 +43,7 @@ func movePath(old string, new string) {
 func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Dependency, rootPath string) {
 
 	var moduleName = dep.GetName()
+	lockedDependency.Artifacts.Clean()
 
 	files, err := ioutil.ReadDir(filepath.Join(rootPath, moduleName, consts.BplFolder))
 	if err == nil {
