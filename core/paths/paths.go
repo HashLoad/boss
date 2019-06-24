@@ -51,6 +51,9 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 }
 
 func EnsureCacheDir(dep models.Dependency) {
+	if !env.GlobalConfiguration.GitEmbedded {
+		return
+	}
 	cacheDir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
 
 	fi, err := os.Stat(cacheDir)

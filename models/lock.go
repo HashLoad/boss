@@ -31,7 +31,7 @@ type LockedDependency struct {
 	Hash      string              `json:"hash"`
 	Artifacts DependencyArtifacts `json:"artifacts"`
 	Failed    bool                `json:"failed"`
-	Changed   bool                `json:"-"`
+	Changed   bool                `json:"changed"`
 }
 
 type PackageLock struct {
@@ -83,7 +83,7 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 func (p PackageLock) Save() {
 	marshal, err := json.MarshalIndent(&p, "", "\t")
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		log.Fatalf("error %v", err)
 	}
 
 	_ = ioutil.WriteFile(p.fileName, marshal, 664)
@@ -181,7 +181,8 @@ func (p PackageLock) NeedUpdate(dep Dependency, version string) bool {
 	if lockedDependency, ok := p.Installed[strings.ToLower(dep.Repository)]; !ok {
 		return true
 	} else {
-		lockedDependency.Changed = dep.internalNeedUpdate(lockedDependency, version) || !lockedDependency.checkArtifacts(p)
+		needUpdate := dep.internalNeedUpdate(lockedDependency, version) || !lockedDependency.checkArtifacts(p)
+		lockedDependency.Changed = needUpdate || lockedDependency.Changed
 
 		if lockedDependency.Changed {
 			lockedDependency.Failed = false
@@ -191,7 +192,7 @@ func (p PackageLock) NeedUpdate(dep Dependency, version string) bool {
 			lockedDependency.Artifacts.Dcu = []string{}
 		}
 		p.Installed[strings.ToLower(dep.Repository)] = lockedDependency
-		return lockedDependency.Changed
+		return needUpdate
 	}
 }
 
@@ -202,7 +203,6 @@ func (p PackageLock) GetInstalled(dep Dependency) LockedDependency {
 func (p PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
 	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
 	hash := utils.HashDir(dependencyDir)
-
 	locked.Hash = hash
 
 	p.Installed[strings.ToLower(dep.Repository)] = locked
