@@ -14,18 +14,19 @@ Usage:
   boss [command]
 
 Available Commands:
-  delphi      Configure Delphi version
-  gc          Garbage collector
-  help        Help about any command
-  init        Initialize a new project
-  install     Install a dependency
-  login       Register login to repo
-  publish     Publish package to registry
-  remove      Remove a dependency
-  run         Run cmd script
-  update      update dependencies
-  upgrade     upgrade a cli
-  version     show cli version
+  delphi           Configure Delphi version
+  gc               Garbage collector
+  help             Help about any command
+  init             Initialize a new project
+  install          Install a dependency
+  login            Register login to repo
+  publish          Publish package to registry
+  remove           Remove a dependency
+  run              Run cmd script
+  update           Update dependencies
+  upgrade          Upgrade a cli
+  version          Show cli version
+  dependencies     List dependencies  
 
 Flags:
   -g, --global   global environment
