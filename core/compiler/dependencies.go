@@ -27,12 +27,24 @@ func _() {
 	}
 }
 
+func loadOrderGraphDep(dep *models.Dependency) (queue *graphs.NodeQueue, err error) {
+	if pkg, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage)); err != nil {
+		return nil, err
+	} else {
+		var graph graphs.GraphItem
+		var deps = []models.Dependency{*dep}
+		loadGraph(&graph, nil, deps, nil)
+		nodeQueue := graph.Queue(pkg, true)
+		return &nodeQueue, err
+	}
+}
+
 func loadOrderGraph(pkg *models.Package) graphs.NodeQueue {
 	var graph graphs.GraphItem
 	rawDeps := pkg.Dependencies.(map[string]interface{})
 	deps := models.GetDependencies(rawDeps)
 	loadGraph(&graph, nil, deps, nil)
-	return graph.Queue(pkg)
+	return graph.Queue(pkg, false)
 }
 
 func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.Dependency, father *graphs.Node) {

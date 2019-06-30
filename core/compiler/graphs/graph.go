@@ -120,13 +120,13 @@ func removeNode(nodes []*Node, key int) []*Node {
 	}
 }
 
-func (g *GraphItem) Queue(pkg *models.Package) NodeQueue {
+func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) NodeQueue {
 	g.lock()
 	queue := NodeQueue{}
 	queue.New()
 	nodes := g.nodes
 	for key := 0; key < len(nodes); key++ {
-		if !pkg.Lock.GetInstalled(nodes[key].Dep).Changed {
+		if !pkg.Lock.GetInstalled(nodes[key].Dep).Changed && !allDeps {
 			nodes = removeNode(nodes, key)
 			key--
 		}
