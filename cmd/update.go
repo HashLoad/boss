@@ -7,8 +7,8 @@ import (
 
 var updateCmd = &cobra.Command{
 	Use:     "update",
-	Short:   "update dependencies",
-	Long:    `update dependencies`,
+	Short:   "Update dependencies",
+	Long:    `This command update installed dependencies`,
 	Aliases: []string{"up"},
 	Run: func(cmd *cobra.Command, args []string) {
 		core.InstallModules(args, false)
