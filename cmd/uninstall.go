@@ -8,7 +8,7 @@ import (
 var uninstallCmd = &cobra.Command{
 	Use:     "uninstall",
 	Short:   "Uninstall a dependency",
-	Long:    `This command uninstall a dependency`,
+	Long:    `Uninstall a dependency`,
 	Aliases: []string{"remove", "rm", "r", "un", "unlink"},
 	Run: func(cmd *cobra.Command, args []string) {
 		core.UninstallModules(args)

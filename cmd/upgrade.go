@@ -9,8 +9,8 @@ var preRelease bool
 
 var upgradeCmd = &cobra.Command{
 	Use:   "upgrade",
-	Short: "Upgrade a cli",
-	Long:  `This command upgrade the client version`,
+	Short: "upgrade a cli",
+	Long:  `upgrade a cli`,
 	Run: func(cmd *cobra.Command, args []string) {
 		core.DoBossUpgrade(preRelease)
 	},

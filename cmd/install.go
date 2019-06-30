@@ -7,8 +7,8 @@ import (
 
 var installCmd = &cobra.Command{
 	Use:     "install",
-	Short:   "Install a new dependency",
-	Long:    `This command install a new dependency`,
+	Short:   "Install a dependency",
+	Long:    `Install a dependency`,
 	Aliases: []string{"i", "add"},
 	Run: func(cmd *cobra.Command, args []string) {
 		core.InstallModules(args, true)

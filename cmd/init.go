@@ -8,7 +8,7 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new project",
-	Long:  `This commando initialize a new project`,
+	Long:  `Initialize a new project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		core.InitializeBossPackage()
 	},
