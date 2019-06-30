@@ -9,7 +9,7 @@ var installCmd = &cobra.Command{
 	Use:     "install",
 	Short:   "Install a dependency",
 	Long:    `Install a dependency`,
-	Aliases: []string{"i"},
+	Aliases: []string{"i", "add"},
 	Run: func(cmd *cobra.Command, args []string) {
 		core.InstallModules(args, true)
 	},

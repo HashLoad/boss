@@ -7,9 +7,9 @@ import (
 
 var dependenciesCmd = &cobra.Command{
 	Use:     "dependencies",
-	Aliases: []string{"dep"},
 	Short:   "Print dependencies tree",
 	Long:    `Print dependencies tree and versions`,
+	Aliases: []string{"dep"},
 	Run: func(cmd *cobra.Command, args []string) {
 		core.PrintDependencies()
 	},
