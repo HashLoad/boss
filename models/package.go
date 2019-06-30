@@ -50,7 +50,7 @@ func (p *Package) AddProject(project string) {
 	p.Projects = append(p.Projects, project)
 }
 
-func (p *Package) RemoveDependency(dep string) {
+func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
 		deps := p.Dependencies.(map[string]interface{})
 		if i := deps[dep]; i != nil {
