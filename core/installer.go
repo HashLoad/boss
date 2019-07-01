@@ -27,7 +27,7 @@ func InstallModules(args []string, lockedVersion bool) {
 	}
 }
 
-func RemoveModules(args []string) {
+func UninstallModules(args []string) {
 	pkg, e := models.LoadPackage(false)
 	if e != nil {
 		msg.Err(e.Error())
@@ -38,7 +38,7 @@ func RemoveModules(args []string) {
 	}
 
 	for e := range args {
-		pkg.RemoveDependency(installer.ParseDependency(installer.ParseDependency(args[e])))
+		pkg.UninstallDependency(installer.ParseDependency(installer.ParseDependency(args[e])))
 	}
 	pkg.Save()
 	//TODO implement remove without reinstall process

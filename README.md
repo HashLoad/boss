@@ -8,38 +8,87 @@ Installation:
  * Download [setup](https://github.com/HashLoad/boss/releases)
  * Just type `boss` in cmd
  * (Optional) Install a [Boss Delphi IDE complement](https://github.com/HashLoad/boss-ide)
- 
+
+## Available Commands
+
+### > Init
+This command initialize a new project
 ```
-Usage:
-  boss [command]
-
-Available Commands:
-  delphi           Configure Delphi version
-  gc               Garbage collector
-  help             Help about any command
-  init             Initialize a new project
-  install          Install a dependency
-  login            Register login to repo
-  publish          Publish package to registry
-  remove           Remove a dependency
-  run              Run cmd script
-  update           Update dependencies
-  upgrade          Upgrade a cli
-  version          Show cli version
-  dependencies     List dependencies  
-
-Flags:
-  -g, --global   global environment
-  -h, --help     help for boss
-
-Use "boss [command] --help" for more information about a command.
-
+boss init
 ```
-+ Sample: 
-	+ `boss install horse`
-	+ `boss install horse:1.0.0`
-	+ `boss install -g delphi-docker`
-	+ `boss install -g boss-ide`
 
+### > Install
+This command install a new dependency
+```
+boss install <dependency>
+```
+###### Aliases: i, add
 
-### For use yor project in boss create a tag with [semantic version](https://semver.org/) 
+### > Uninstall
+This command uninstall a dependency
+```
+boss uninstall <dependency>
+```
+###### Aliases: remove, rm, r, un, unlink
+
+### > Dependencies
+This command print all dependencies and your versions
+```
+boss dependencies
+```
+###### Aliases: dep
+
+### > Version
+This command show the client version
+```
+boss version
+```
+###### Aliases: v
+
+### > Update
+This command update installed dependencies
+```
+boss update
+```
+###### Aliases: up
+
+### > Upgrade
+This command upgrade the client version
+```
+boss upgrade
+```
+
+## Flags
+
+### > Global
+This flag defines a global environment
+```
+boss --global
+```
+###### Aliases: -g
+
+### > Help
+This is a helper for boss. Use `boss <command> --help` for more information about a command.
+```
+boss --help
+```
+###### Aliases: -h
+
+## Another commands
+```
+delphi           Configure Delphi version
+gc               Garbage collector  
+login            Register login to repo
+publish          Publish package to registry
+run              Run cmd script
+```
+
+## Samples 
+```
+boss install horse
+boss install horse:1.0.0
+boss install -g delphi-docker
+boss install -g boss-ide
+```
+
+###### For use yor project in boss create a tag with [semantic version](https://semver.org/). 
