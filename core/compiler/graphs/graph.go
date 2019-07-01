@@ -22,8 +22,8 @@ func (n *Node) String() string {
 
 type GraphItem struct {
 	nodes     []*Node
-	depends   map[Node][]*Node
-	usedBy    map[Node][]*Node
+	depends   map[string][]*Node
+	usedBy    map[string][]*Node
 	lockMutex sync.RWMutex
 }
 
@@ -63,17 +63,29 @@ func containsOne(a []*Node, b []*Node) bool {
 	return false
 }
 
+func containsAll(list []*Node, in []*Node) bool {
+	var check = 0
+	for _, n := range in {
+		for _, x := range list {
+			if x.Value == n.Value {
+				check++
+			}
+		}
+	}
+	return check == len(in)
+}
+
 func (g *GraphItem) AddEdge(nLeft, nRight *Node) {
 	g.lock()
 	if g.depends == nil {
-		g.depends = make(map[Node][]*Node)
-		g.usedBy = make(map[Node][]*Node)
+		g.depends = make(map[string][]*Node)
+		g.usedBy = make(map[string][]*Node)
 	}
-	if !contains(g.depends[*nLeft], nRight) {
-		g.depends[*nLeft] = append(g.depends[*nLeft], nRight)
+	if !contains(g.depends[nLeft.Value], nRight) {
+		g.depends[nLeft.Value] = append(g.depends[nLeft.Value], nRight)
 	}
-	if !contains(g.usedBy[*nRight], nLeft) {
-		g.usedBy[*nRight] = append(g.usedBy[*nRight], nLeft)
+	if !contains(g.usedBy[nRight.Value], nLeft) {
+		g.usedBy[nRight.Value] = append(g.usedBy[nRight.Value], nLeft)
 	}
 	g.unlock()
 }
@@ -82,16 +94,16 @@ func (g *GraphItem) String() {
 	g.lock()
 
 	for index := 0; index < len(g.nodes); index++ {
-		var node = *g.nodes[index]
+		var node = g.nodes[index]
 		var response = ""
 		response += g.nodes[index].String() + " -> \n\t\tDepends: "
-		nears := g.depends[node]
+		nears := g.depends[node.Value]
 		for _, near := range nears {
 			response += near.String() + " - "
 		}
 
 		response += "\n\t\tUsed by: "
-		nears = g.usedBy[node]
+		nears = g.usedBy[node.Value]
 		for _, near := range nears {
 			response += near.String() + " - "
 		}
@@ -108,11 +120,41 @@ func removeNode(nodes []*Node, key int) []*Node {
 	}
 }
 
-func (g *GraphItem) Queue() NodeQueue {
+func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) NodeQueue {
 	g.lock()
 	queue := NodeQueue{}
 	queue.New()
 	nodes := g.nodes
+	for key := 0; key < len(nodes); key++ {
+		if !pkg.Lock.GetInstalled(nodes[key].Dep).Changed && !allDeps {
+			nodes = removeNode(nodes, key)
+			key--
+		}
+	}
+
+	var redo = true
+	for {
+		if !redo {
+			break
+		}
+		redo = false
+		for _, node := range nodes {
+			usedBy := g.usedBy[node.Value]
+			if !containsAll(nodes, usedBy) {
+				for _, consumerNode := range usedBy {
+					installed := pkg.Lock.GetInstalled(consumerNode.Dep)
+					installed.Changed = true
+					pkg.Lock.SetInstalled(consumerNode.Dep, installed)
+					if !contains(nodes, consumerNode) {
+						redo = true
+						nodes = append(nodes, consumerNode)
+					}
+				}
+			}
+		}
+	}
+
+	//Ord
 	for {
 		if len(nodes) == 0 {
 			break
@@ -120,13 +162,12 @@ func (g *GraphItem) Queue() NodeQueue {
 
 		for key := 0; key < len(nodes); key++ {
 			node := nodes[key]
-			if !containsOne(g.depends[*node], nodes) {
+			if !containsOne(g.depends[node.Value], nodes) {
 				queue.Enqueue(*node)
 				nodes = removeNode(nodes, key)
 				key--
 			}
 		}
-
 	}
 	g.unlock()
 	return queue

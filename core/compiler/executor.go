@@ -52,7 +52,7 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 	readFileStr := string(readFile)
 	project, _ := filepath.Abs(dprojPath)
 
-	readFileStr += " \n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPaths(env.GetModulesDir(), abs) + " "
+	readFileStr += " \n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPathsDep(dep, abs) + " "
 	for _, value := range []string{"Win32"} {
 		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep, value)
 	}
@@ -75,11 +75,37 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 		utils.HandleError(err)
 		err = os.Remove(buildBat)
 		utils.HandleError(err)
+
 		return true
 	}
 }
 
-func getNewPaths(path string, basePath string) string {
+func getNewPathsDep(dep *models.Dependency, basePath string) string {
+	if graphDep, err := loadOrderGraphDep(dep); err == nil {
+		var result = ""
+		for {
+			if graphDep.IsEmpty() {
+				break
+			}
+			dequeue := graphDep.Dequeue()
+			var modulePath = filepath.Join(env.GetModulesDir(), dequeue.Dep.GetName())
+			if depPkg, err := models.LoadPackageOther(filepath.Join(modulePath, consts.FilePackage)); err == nil {
+				result += getPaths(filepath.Join(modulePath, depPkg.MainSrc), basePath)
+			} else {
+				result += getPaths(modulePath, basePath)
+			}
+		}
+		return result
+	} else {
+		return getNewPathsAll(basePath)
+	}
+}
+
+func getNewPathsAll(basePath string) string {
+	return getPaths(env.GetModulesDir(), basePath)
+}
+
+func getPaths(path string, basePath string) string {
 	var ignore = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}
 	var paths []string
 	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {

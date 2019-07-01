@@ -63,16 +63,13 @@ func GetVersions(repository *git.Repository) []*plumbing.Reference {
 		msg.Err("Fail to retrieve versions: %", err)
 	}
 	var result = make([]*plumbing.Reference, 0)
-
-loop:
-	reference, err := tags.Next()
-	if err != nil {
-		goto end
+	for {
+		reference, err := tags.Next()
+		if err != nil {
+			return result
+		}
+		result = append(result, reference)
 	}
-	result = append(result, reference)
-	goto loop
-end:
-	return result
 }
 
 func GetRepository(dep models.Dependency) *git.Repository {

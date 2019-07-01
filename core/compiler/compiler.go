@@ -24,23 +24,20 @@ func buildOrderedPackages(pkg *models.Package) {
 
 		dependency := pkg.Lock.GetInstalled(node.Dep)
 
-		if !dependency.Changed {
-			continue
-		} else {
-			msg.Info("Building %s", node.Dep.GetName())
-			dependency.Changed = false
-			if dependencyPackage, err := models.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage)); err == nil {
-				dprojs := dependencyPackage.Projects
-				for _, dproj := range dprojs {
-					s, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.GetName(), dproj))
-					if !compile(s, env.GetModulesDir(), &node.Dep) {
-						dependency.Failed = true
-					}
-					ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
-					moveArtifacts(node.Dep, env.GetModulesDir())
+		msg.Info("Building %s", node.Dep.GetName())
+		dependency.Changed = false
+		if dependencyPackage, err := models.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage)); err == nil {
+			dprojs := dependencyPackage.Projects
+			for _, dproj := range dprojs {
+				s, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.GetName(), dproj))
+				if !compile(s, env.GetModulesDir(), &node.Dep) {
+					dependency.Failed = true
 				}
+				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
+				moveArtifacts(node.Dep, env.GetModulesDir())
 			}
-			pkg.Lock.SetInstalled(node.Dep, dependency)
 		}
+		pkg.Lock.SetInstalled(node.Dep, dependency)
+
 	}
 }

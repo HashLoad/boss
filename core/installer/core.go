@@ -75,7 +75,7 @@ func processOthers(rootLock models.PackageLock) []models.Dependency {
 		} else {
 			processed = append(processed, info.Name())
 		}
-		msg.Info("Processing module: %s", info.Name())
+		msg.Info("Processing module %s", info.Name())
 
 		fileName := filepath.Join(env.GetModulesDir(), info.Name(), consts.FilePackage)
 
@@ -103,7 +103,7 @@ func processOthers(rootLock models.PackageLock) []models.Dependency {
 func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []models.Dependency) {
 	msg.Info("Installing modules")
 	for _, dep := range deps {
-		msg.Info("Processing dependency: %s", dep.GetName())
+		msg.Info("Processing dependency %s", dep.GetName())
 		repository := gitWrapper.GetRepository(dep)
 		versions := gitWrapper.GetVersions(repository)
 		constraints, e := semver.NewConstraint(dep.GetVersion())
@@ -149,7 +149,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 		} else if !hasMatch {
 			msg.Warn("  No candidate to version for %s. Using master branch", dep.GetVersion())
 		} else {
-			msg.Info("  Detected semantic version. For %s using version %s", dep.Repository, bestMatch.Name().Short())
+			msg.Info("  Detected semantic version. Using version %s", bestMatch.Name().Short())
 		}
 
 		err := worktree.Checkout(&git.CheckoutOptions{
@@ -160,13 +160,13 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 		rootLock.AddInstalled(dep, referenceName.Short())
 
 		if err != nil {
-			msg.Die("  Error on switch to needed version from dependency: %s\n%s", dep.Repository, err)
+			msg.Die("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)
 		}
 	}
 }
 
 func makeCache(deps []models.Dependency) {
-	msg.Info("Building cache files..")
+	msg.Info("Building cache files...")
 	for _, dep := range deps {
 		GetDependency(dep)
 	}

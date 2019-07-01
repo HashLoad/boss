@@ -144,6 +144,12 @@ func (p Dependency) internalNeedUpdate(lockedDependency LockedDependency, versio
 
 }
 
+func (p *DependencyArtifacts) Clean() {
+	p.Bin = []string{}
+	p.Bpl = []string{}
+	p.Dcp = []string{}
+	p.Dcu = []string{}
+}
 func (p LockedDependency) checkArtifactsType(directory string, artifacts []string) bool {
 	for _, value := range artifacts {
 		bpl := filepath.Join(directory, value)
