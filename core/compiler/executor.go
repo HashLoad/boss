@@ -129,5 +129,5 @@ func getPaths(path string, basePath string) string {
 		}
 		return nil
 	})
-	return strings.Join(paths, ";")
+	return strings.Join(paths, ";") + ";"
 }

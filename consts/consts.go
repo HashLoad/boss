@@ -27,7 +27,7 @@ const XmlTagNamePropertyAttributeValue string = "'$(Base)'!=''"
 
 const XmlTagNameLibraryPath string = "DCC_UnitSearchPath"
 
-const Version string = "v3.0.0-alpha5"
+const Version string = "v3.0.0-alpha7"
 
 const BossInternalDir = "internal."
 const BossInternalDirOld = "{internal}"
