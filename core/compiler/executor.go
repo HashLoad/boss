@@ -52,7 +52,8 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 	readFileStr := string(readFile)
 	project, _ := filepath.Abs(dprojPath)
 
-	readFileStr += " \n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPathsDep(dep, abs) + " "
+	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPathsDep(dep, abs) + " "
+	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
 	for _, value := range []string{"Win32"} {
 		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep, value)
 	}
@@ -82,13 +83,16 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 
 func getNewPathsDep(dep *models.Dependency, basePath string) string {
 	if graphDep, err := loadOrderGraphDep(dep); err == nil {
-		var result = ""
+		var result = filepath.Join(env.GetModulesDir(), consts.DcpFolder) + ";"
 		for {
 			if graphDep.IsEmpty() {
 				break
 			}
 			dequeue := graphDep.Dequeue()
 			var modulePath = filepath.Join(env.GetModulesDir(), dequeue.Dep.GetName())
+			if modulePath == basePath {
+				continue
+			}
 			if depPkg, err := models.LoadPackageOther(filepath.Join(modulePath, consts.FilePackage)); err == nil {
 				result += getPaths(filepath.Join(modulePath, depPkg.MainSrc), basePath)
 			} else {
@@ -97,7 +101,7 @@ func getNewPathsDep(dep *models.Dependency, basePath string) string {
 		}
 		return result
 	} else {
-		return getNewPathsAll(basePath)
+		return getNewPathsAll(basePath) + ";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder)
 	}
 }
 
