@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-func GlobalInstall(args []string, pkg *models.Package) {
+func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool) {
 	EnsureDependencyOfArgs(pkg, args)
-	DoInstall(pkg)
+	DoInstall(pkg, lockedVersion)
 	DoInstallPackages()
 }
 

@@ -72,6 +72,30 @@ func GetVersions(repository *git.Repository) []*plumbing.Reference {
 	}
 }
 
+func GetTagsShortName(repository *git.Repository) []string {
+	tags, _ := repository.Tags()
+	var result = []string{}
+	_ = tags.ForEach(func(reference *plumbing.Reference) error {
+		result = append(result, reference.Name().Short())
+		return nil
+	})
+	return result
+}
+
+func GetByTag(repository *git.Repository, shortName string) *plumbing.Reference {
+	tags, _ := repository.Tags()
+
+	for {
+		if reference, err := tags.Next(); err == nil {
+			if reference.Name().Short() == shortName {
+				return reference
+			}
+		} else {
+			return nil
+		}
+	}
+}
+
 func GetRepository(dep models.Dependency) *git.Repository {
 	cache := makeStorageCache(dep)
 	dir := osfs.New(filepath.Join(env.GetModulesDir(), dep.GetName()))

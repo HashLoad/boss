@@ -31,11 +31,10 @@ type Configuration struct {
 }
 
 type Auth struct {
-	UseSsh  bool   `json:"use,omitempty"`
-	Path    string `json:"path,omitempty"`
-	SshPass string `json:"ssh_pass"`
-	User    string `json:"x,omitempty"`
-	Pass    string `json:"y,omitempty"`
+	UseSsh bool   `json:"use,omitempty"`
+	Path   string `json:"path,omitempty"`
+	User   string `json:"x,omitempty"`
+	Pass   string `json:"y,omitempty"`
 }
 
 func (a *Auth) GetUser() string {
@@ -56,19 +55,6 @@ func (a *Auth) GetPassword() string {
 	}
 }
 
-func (a *Auth) GetSshPass() string {
-	if a.SshPass == "" {
-		return ""
-	}
-
-	if ret, err := crypto.Decrypt(machineID, a.SshPass); err != nil {
-		msg.Err("Fail to decrypt SshPass.", err)
-		return ""
-	} else {
-		return ret
-	}
-}
-
 func (a *Auth) SetUser(user string) {
 	if cUSer, err := crypto.Encrypt(machineID, user); err != nil {
 		msg.Err("Fail to crypt user.", err)
@@ -82,14 +68,6 @@ func (a *Auth) SetPass(pass string) {
 		msg.Err("Fail to crypt pass.")
 	} else {
 		a.Pass = cPass
-	}
-}
-
-func (a *Auth) SetSshPass(pass string) {
-	if cPass, err := crypto.Encrypt(machineID, pass); err != nil {
-		msg.Err("Fail to crypt SshPass.")
-	} else {
-		a.SshPass = cPass
 	}
 }
 
@@ -118,11 +96,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		}
 		var signer ssh.Signer
 
-		if auth.GetSshPass() == "" {
-			signer, e = ssh.ParsePrivateKey(pem)
-		} else {
-			signer, e = ssh.ParsePrivateKeyWithPassphrase(pem, []byte(auth.GetSshPass()))
-		}
+		signer, e = ssh.ParsePrivateKey(pem)
 
 		if e != nil {
 			panic(e)
