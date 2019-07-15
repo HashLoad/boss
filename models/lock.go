@@ -19,10 +19,10 @@ import (
 )
 
 type DependencyArtifacts struct {
-	Bin []string `json:"bin"`
-	Dcp []string `json:"dcp"`
-	Dcu []string `json:"dcu"`
-	Bpl []string `json:"bpl"`
+	Bin []string `json:"bin,omitempty"`
+	Dcp []string `json:"dcp,omitempty"`
+	Dcu []string `json:"dcu,omitempty"`
+	Bpl []string `json:"bpl,omitempty"`
 }
 
 type LockedDependency struct {

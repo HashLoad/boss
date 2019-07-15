@@ -21,9 +21,9 @@ func InstallModules(args []string, lockedVersion bool) {
 	}
 
 	if env.Global {
-		installer.GlobalInstall(args, pkg)
+		installer.GlobalInstall(args, pkg, lockedVersion)
 	} else {
-		installer.LocalInstall(args, pkg)
+		installer.LocalInstall(args, pkg, lockedVersion)
 	}
 }
 

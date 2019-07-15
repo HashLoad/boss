@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
+	"gopkg.in/src-d/go-git.v4"
 	"os"
 	"path/filepath"
 )
@@ -19,14 +20,15 @@ func GetDependency(dep models.Dependency) {
 	}
 
 	updatedDependencies = append(updatedDependencies, dep.GetHashName())
-
+	var repository *git.Repository
 	if hasCache(dep) {
-		gitWrapper.UpdateCache(dep)
+		repository = gitWrapper.UpdateCache(dep)
 	} else {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
-		gitWrapper.CloneCache(dep)
+		repository = gitWrapper.CloneCache(dep)
 	}
-	models.SaveRepoData(dep.GetHashName())
+	tagsShortNames := gitWrapper.GetTagsShortName(repository)
+	models.SaveRepoData(dep.GetHashName(), tagsShortNames)
 }
 
 func hasCache(dep models.Dependency) bool {
