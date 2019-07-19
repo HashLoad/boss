@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
 	"github.com/xlab/treeprint"
 	"os"
@@ -13,6 +14,12 @@ import (
 )
 
 var tree = treeprint.New()
+
+const (
+	updated     = 0
+	outdated    = 1
+	usingMaster = 2
+)
 
 func PrintDependencies() {
 	pkg, err := models.LoadPackage(false)
@@ -56,28 +63,36 @@ func printSingleDependency(dep *models.Dependency, lock models.PackageLock, tree
 	var output = dep.GetName()
 	output += "@"
 	output += lock.GetInstalled(*dep).Version
-	if isOutdaded(*dep, lock.GetInstalled(*dep).Version) {
+	switch isOutdated(*dep, lock.GetInstalled(*dep).Version) {
+	case outdated:
 		output += " outdated"
+		break
+	case usingMaster:
+		output += " using master"
+		break
 	}
 
 	return tree.AddBranch(output)
 }
 
-func isOutdaded(dependency models.Dependency, version string) bool {
+func isOutdated(dependency models.Dependency, version string) int {
+	installer.GetDependency(dependency)
 	info, err := models.RepoData(dependency.GetHashName())
 	if err != nil {
-		installer.GetDependency(dependency)
-		return isOutdaded(dependency, version)
+		utils.HandleError(err)
 	} else {
-		locked := semver.MustParse(version)
+		locked, err := semver.NewVersion(version)
+		if err != nil {
+			return usingMaster
+		}
 		constraint, _ := semver.NewConstraint(dependency.GetVersion())
 		for _, value := range info.Versions {
 			version, err := semver.NewVersion(value)
 			if err == nil && version.GreaterThan(locked) && constraint.Check(version) {
-				return true
+				return outdated
 			}
 		}
 	}
-	return false
+	return updated
 
 }

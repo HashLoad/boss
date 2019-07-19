@@ -7,6 +7,10 @@ const FilePackageLock = "boss-lock.json"
 const FilePackageLockOld = "boss.lock"
 
 const FolderDependencies = "modules"
+const FolderEnv = "env"
+
+var FolderEnvBpl = filepath.Join(FolderEnv, "bpl")
+
 const FolderBossHome = ".boss"
 
 const BinFolder string = ".bin"
@@ -27,7 +31,7 @@ const XmlTagNamePropertyAttributeValue string = "'$(Base)'!=''"
 
 const XmlTagNameLibraryPath string = "DCC_UnitSearchPath"
 
-const Version string = "v3.0.0-alpha9"
+const Version string = "v3.0.0"
 
 const BossInternalDir = "internal."
 const BossInternalDirOld = "{internal}"
@@ -36,6 +40,6 @@ const BplIdentifierName = "BplIdentifier.exe"
 
 const RegexArtifacts = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$)"
 
-const RegistyBasePath = `Software\Embarcadero\BDS\`
+const RegistryBasePath = `Software\Embarcadero\BDS\`
 
 var DefaultPaths = []string{BplFolder, DcuFolder, DcpFolder, BinFolder}

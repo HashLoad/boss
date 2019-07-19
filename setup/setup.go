@@ -25,7 +25,7 @@ func Initialize() {
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
 
-	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath(), "%BOSS_PROJECT%"}
+	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath(), env.GetGlobalEnvBpl()}
 	modules := []string{"bpl-identifier"}
 
 	msg.Debug("\tExecuting migrations")
@@ -43,11 +43,20 @@ func Initialize() {
 	}
 	msg.Debug("\tInstalling internal modules")
 	installModules(modules)
+	msg.Debug("\tCreating paths")
+	createPaths()
 
 	env.Global = OldGlobal
 	env.Internal = false
 	msg.Debug("finish boss system initialization")
 
+}
+
+func createPaths() {
+	_, err := os.Stat(env.GetGlobalEnvBpl())
+	if os.IsNotExist(err) {
+		_ = os.MkdirAll(env.GetGlobalEnvBpl(), os.ModePerm)
+	}
 }
 
 func getPath(arr []penv.NameValue) string {

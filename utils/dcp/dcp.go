@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
@@ -28,7 +29,6 @@ func InjectDpcs(pkg *models.Package) {
 			file := readFile(fileName)
 			file = processFile(file, getDpcNames())
 			writeFile(fileName, file)
-
 		}
 	}
 }
@@ -120,7 +120,7 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 	var result = filecontent[:resultRegexIndexes[0][3]]
 
 	for _, value := range currentRequires {
-		if strings.Contains(value, CommentBoss) {
+		if strings.Contains(value, CommentBoss) || utils.Contains(dcps, value) {
 			continue
 		}
 		result += "\n  " + value + ","
