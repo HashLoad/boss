@@ -49,7 +49,7 @@ func updateLibraryPathProject(dprojName string) {
 	}
 
 	doc.WriteSettings.CanonicalAttrVal = true
-	doc.WriteSettings.CanonicalEndTags = true
+	doc.WriteSettings.CanonicalEndTags = false
 	doc.WriteSettings.CanonicalText = true
 
 	if err := doc.WriteToFile(dprojName); err != nil {
