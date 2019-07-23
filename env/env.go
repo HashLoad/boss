@@ -79,6 +79,12 @@ func GetCurrentDir() string {
 func GetGlobalEnvBpl() string {
 	return filepath.Join(GetBossHome(), consts.FolderEnvBpl)
 }
+func GetGlobalEnvDcp() string {
+	return filepath.Join(GetBossHome(), consts.FolderEnvDcp)
+}
+func GetGlobalEnvDcu() string {
+	return filepath.Join(GetBossHome(), consts.FolderEnvDcu)
+}
 
 func GetGlobalBinPath() string {
 	return filepath.Join(GetBossHome(), consts.FolderDependencies, consts.BinFolder)

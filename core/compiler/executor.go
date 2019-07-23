@@ -52,7 +52,8 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 	readFileStr := string(readFile)
 	project, _ := filepath.Abs(dprojPath)
 
-	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + getNewPathsDep(dep, abs) + " "
+	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + filepath.Join(env.GetModulesDir(), consts.DcuFolder) +
+		";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder) //+ ";" + getNewPathsDep(dep, abs) + " "
 	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
 	for _, value := range []string{"Win32"} {
 		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep, value)
@@ -134,4 +135,20 @@ func getPaths(path string, basePath string) string {
 		return nil
 	})
 	return strings.Join(paths, ";") + ";"
+}
+
+func buildDCU(path string) {
+	msg.Info("  Building %s", filepath.Base(path))
+	var unitScopes = "-NSWinapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;System;Xml;Data;Datasnap;Web" +
+		";Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell"
+	var unitInputDir = "-U" + filepath.Join(env.GetModulesDir(), consts.DcuFolder)
+	var unitOutputDir = "-NU" + filepath.Join(env.GetModulesDir(), consts.DcuFolder)
+	command := exec.Command("cmd", "/c dcc32.exe "+unitScopes+" "+unitInputDir+" "+unitOutputDir+" "+path)
+	command.Dir = filepath.Dir(path)
+	if out, err := command.Output(); err != nil {
+		msg.Err("  - Failed to compile")
+		msg.Err(string(out))
+	} else {
+		msg.Info("  - Success!")
+	}
 }

@@ -25,7 +25,8 @@ func Initialize() {
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
 
-	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath(), env.GetGlobalEnvBpl()}
+	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath(), env.GetGlobalEnvBpl(), env.GetGlobalEnvDcu(), env.GetGlobalEnvDcp()}
+
 	modules := []string{"bpl-identifier"}
 
 	msg.Debug("\tExecuting migrations")

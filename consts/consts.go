@@ -4,12 +4,16 @@ import "path/filepath"
 
 const FilePackage = "boss.json"
 const FilePackageLock = "boss-lock.json"
+const FileBplOrder = "bpl_order.txt"
+const FileExtensionBpl = ".bpl"
 const FilePackageLockOld = "boss.lock"
-
 const FolderDependencies = "modules"
+
 const FolderEnv = "env"
 
 var FolderEnvBpl = filepath.Join(FolderEnv, "bpl")
+var FolderEnvDcp = filepath.Join(FolderEnv, "dcp")
+var FolderEnvDcu = filepath.Join(FolderEnv, "dcu")
 
 const FolderBossHome = ".boss"
 
@@ -31,7 +35,7 @@ const XmlTagNamePropertyAttributeValue string = "'$(Base)'!=''"
 
 const XmlTagNameLibraryPath string = "DCC_UnitSearchPath"
 
-const Version string = "v3.0.0"
+const Version string = "v3.0.0-alpha10"
 
 const BossInternalDir = "internal."
 const BossInternalDirOld = "{internal}"
