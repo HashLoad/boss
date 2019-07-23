@@ -29,7 +29,7 @@ func saveLoadOrder(queue graphs.NodeQueue) {
 		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.GetName(), consts.FilePackage)
 		if dependencyPackage, err := models.LoadPackageOther(dependencyPath); err == nil {
 			for _, value := range dependencyPackage.Projects {
-				projects += strings.TrimSuffix(value, filepath.Ext(value)) + consts.FileExtensionBpl + "\n"
+				projects += strings.TrimSuffix(filepath.Base(value), filepath.Ext(value)) + consts.FileExtensionBpl + "\n"
 			}
 		}
 	}
@@ -78,9 +78,9 @@ func buildOrderedPackages(pkg *models.Package) {
 					if !compile(s, env.GetModulesDir(), &node.Dep) {
 						dependency.Failed = true
 					}
-					ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
-					moveArtifacts(node.Dep, env.GetModulesDir())
 				}
+				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
+				moveArtifacts(node.Dep, env.GetModulesDir())
 			} else {
 				buildAllDCUs(dependency, dependencyPackage)
 			}

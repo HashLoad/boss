@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"strings"
 	"sync"
 )
 
@@ -13,7 +14,7 @@ type Node struct {
 }
 
 func NewNode(dependency *models.Dependency) *Node {
-	return &Node{Dep: *dependency, Value: dependency.GetName()}
+	return &Node{Dep: *dependency, Value: strings.ToLower(dependency.GetName())}
 }
 
 func (n *Node) String() string {
