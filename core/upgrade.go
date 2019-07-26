@@ -29,7 +29,6 @@ func DoBossUpgrade(preRelease bool) {
 		link, size, version = getDownloadLink(latestRelease)
 	} else {
 		tag := getLastTag()
-
 		link, size, version = getDownloadLink(fmt.Sprintf(releaseTag, tag))
 	}
 

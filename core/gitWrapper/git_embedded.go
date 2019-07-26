@@ -47,9 +47,12 @@ func UpdateCacheEmbedded(dep models.Dependency) *git.Repository {
 		})
 	}
 
-	_ = repository.Fetch(&git.FetchOptions{
+	err = repository.Fetch(&git.FetchOptions{
 		Force: true,
 		Auth:  env.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
+	if err != nil && err.Error() != "already up-to-date" {
+		msg.Debug("Error to fetch repository of %s: %s", dep.Repository, err)
+	}
 	initSubmodules(dep, repository)
 	return repository
 }

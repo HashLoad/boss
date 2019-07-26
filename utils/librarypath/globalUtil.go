@@ -16,10 +16,10 @@ func updateGlobalLibraryPath() {
 	if ideVersion == "" {
 		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
 	}
-	library, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistyBasePath+ideVersion+`\Library`, registry.ALL_ACCESS)
+	library, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library`, registry.ALL_ACCESS)
 
 	if err != nil {
-		msg.Err(`Registry path` + consts.RegistyBasePath + ideVersion + `\Library not exists`)
+		msg.Err(`Registry path` + consts.RegistryBasePath + ideVersion + `\Library not exists`)
 		return
 	}
 
@@ -35,7 +35,7 @@ func updateGlobalLibraryPath() {
 	}
 
 	for _, platform := range platforms {
-		delphiPlatform, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistyBasePath+ideVersion+`\Library\`+platform, registry.ALL_ACCESS)
+		delphiPlatform, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library\`+platform, registry.ALL_ACCESS)
 		utils.HandleError(err)
 		paths, _, err := delphiPlatform.GetStringValue(SearchPathRegistry)
 		if err != nil {
