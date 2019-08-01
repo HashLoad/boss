@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
+	"github.com/hashload/boss/utils/dcp"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -37,8 +38,15 @@ func getCompilerParameters(rootPath string, dep *models.Dependency, platform str
 		"/P:platform=" + platform + " "
 }
 
-func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
+func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLock) bool {
 	msg.Info("  Building " + filepath.Base(dprojPath))
+
+	bossPackagePath := filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage)
+
+	if dependencyPackage, err := models.LoadPackageOther(bossPackagePath); err == nil {
+		dcp.InjectDpcsFile(dprojPath, dependencyPackage, rootLock)
+	}
+
 	dccDir := env.GetDcc32Dir()
 	rsvars := filepath.Join(dccDir, "rsvars.bat")
 	fileRes := "build_boss_" + strings.TrimSuffix(filepath.Base(dprojPath), filepath.Ext(dprojPath))
@@ -56,7 +64,7 @@ func compile(dprojPath string, rootPath string, dep *models.Dependency) bool {
 		";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder) //+ ";" + getNewPathsDep(dep, abs) + " "
 	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
 	for _, value := range []string{"Win32"} {
-		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(rootPath, dep, value)
+		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(env.GetModulesDir(), dep, value)
 	}
 	readFileStr += " > \"" + buildLog + "\""
 
@@ -137,7 +145,7 @@ func getPaths(path string, basePath string) string {
 	return strings.Join(paths, ";") + ";"
 }
 
-func buildDCU(path string) {
+func buildDCU_(path string) {
 	msg.Info("  Building %s", filepath.Base(path))
 	var unitScopes = "-NSWinapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;System;Xml;Data;Datasnap;Web" +
 		";Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell"

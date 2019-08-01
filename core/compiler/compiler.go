@@ -38,8 +38,9 @@ func saveLoadOrder(queue graphs.NodeQueue) {
 	utils.HandleError(ioutil.WriteFile(outDir, []byte(projects), os.ModePerm))
 }
 
-func buildAllDCUs(dependency models.LockedDependency, pkg *models.Package) {
-	modulePath := filepath.Join(env.GetModulesDir(), dependency.Name)
+func buildAllDCUs(dependency models.Dependency, locked *models.LockedDependency, pkg *models.Package, rootPkg *models.Package) {
+	var pasFiles []string
+	modulePath := filepath.Join(env.GetModulesDir(), dependency.GetName())
 	if pkg != nil {
 		modulePath = filepath.Join(modulePath, pkg.MainSrc)
 	}
@@ -48,12 +49,18 @@ func buildAllDCUs(dependency models.LockedDependency, pkg *models.Package) {
 			if os.IsNotExist(err) {
 				return nil
 			} else if !info.IsDir() && filepath.Ext(info.Name()) == ".pas" {
-
-				buildDCU(path)
+				pasFiles = append(pasFiles, path)
 			}
 			return nil
 		})
 	utils.HandleError(err)
+
+	//dpkPath := filepath.Join(env.GetModulesDir(), dependency.GetName(), dependency.GetName())
+	//if generateProject(pasFiles, dependency.GetName(), dpkPath+consts.FileExtensionDpk) {
+	//	if !compile(dpkPath+consts.FileExtensionDproj, &dependency, rootPkg.Lock) {
+	//		locked.Failed = true
+	//	}
+	//}
 }
 
 func buildOrderedPackages(pkg *models.Package) {
@@ -74,18 +81,22 @@ func buildOrderedPackages(pkg *models.Package) {
 			dprojs := dependencyPackage.Projects
 			if len(dprojs) > 0 {
 				for _, dproj := range dprojs {
-					s, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.GetName(), dproj))
-					if !compile(s, env.GetModulesDir(), &node.Dep) {
+					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.GetName(), dproj))
+					if !compile(dprojPath, &node.Dep, pkg.Lock) {
 						dependency.Failed = true
 					}
 				}
 				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
 				moveArtifacts(node.Dep, env.GetModulesDir())
 			} else {
-				buildAllDCUs(dependency, dependencyPackage)
+				buildAllDCUs(node.Dep, &dependency, dependencyPackage, pkg)
+				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
+				moveArtifacts(node.Dep, env.GetModulesDir())
 			}
 		} else {
-			buildAllDCUs(dependency, nil)
+			buildAllDCUs(node.Dep, &dependency, nil, pkg)
+			ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
+			moveArtifacts(node.Dep, env.GetModulesDir())
 		}
 		pkg.Lock.SetInstalled(node.Dep, dependency)
 

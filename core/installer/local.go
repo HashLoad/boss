@@ -8,5 +8,5 @@ import (
 func LocalInstall(args []string, pkg *models.Package, lockedVersion bool) {
 	EnsureDependencyOfArgs(pkg, args)
 	DoInstall(pkg, lockedVersion)
-	dcp.InjectDpcs(pkg)
+	dcp.InjectDpcs(pkg, pkg.Lock)
 }
