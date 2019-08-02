@@ -61,9 +61,12 @@ func (p *Package) GetParsedDependencies() []Dependency {
 func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
 		deps := p.Dependencies.(map[string]interface{})
-		if i := deps[dep]; i != nil {
-			delete(deps, dep)
+		for key := range deps {
+			if strings.ToLower(key) == strings.ToLower(dep) {
+				delete(deps, key)
+			}
 		}
+		p.Dependencies = deps
 	}
 }
 
