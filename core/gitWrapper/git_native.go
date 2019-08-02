@@ -6,6 +6,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	git2 "gopkg.in/src-d/go-git.v4"
 	"io"
 	"io/ioutil"
@@ -38,9 +39,18 @@ func getWrapperClone(dep models.Dependency) {
 	checkHasGitClient()
 
 	paths.EnsureCacheDir(dep)
-	dir := "--separate-git-dir=" + filepath.Join(env.GetCacheDir(), dep.GetHashName())
+
 	dirModule := filepath.Join(env.GetModulesDir(), dep.GetName())
-	_ = os.RemoveAll(dir)
+	dir := "--separate-git-dir=" + filepath.Join(env.GetCacheDir(), dep.GetHashName())
+
+	err := os.RemoveAll(dirModule)
+	if !os.IsNotExist(err) {
+		utils.HandleError(err)
+	}
+	err = os.Remove(dirModule)
+	if !os.IsNotExist(err) {
+		utils.HandleError(err)
+	}
 
 	cmd := exec.Command("git", "clone", dir, dep.GetURL(), dirModule)
 
@@ -61,10 +71,15 @@ func writeDotGitFile(dep models.Dependency) {
 
 func getWrapperFetch(dep models.Dependency) {
 	checkHasGitClient()
-	writeDotGitFile(dep)
 
 	dirModule := filepath.Join(env.GetModulesDir(), dep.GetName())
 
+	if _, err := os.Stat(dirModule); os.IsNotExist(err) {
+		err := os.MkdirAll(dirModule, os.ModePerm)
+		utils.HandleError(err)
+	}
+
+	writeDotGitFile(dep)
 	cmdReset := exec.Command("git", "reset", "--hard")
 	cmdReset.Dir = dirModule
 	if err := runCommand(cmdReset); err != nil {
