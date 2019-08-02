@@ -54,13 +54,14 @@ func buildAllDCUs(dependency models.Dependency, locked *models.LockedDependency,
 			return nil
 		})
 	utils.HandleError(err)
-
-	//dpkPath := filepath.Join(env.GetModulesDir(), dependency.GetName(), dependency.GetName())
-	//if generateProject(pasFiles, dependency.GetName(), dpkPath+consts.FileExtensionDpk) {
-	//	if !compile(dpkPath+consts.FileExtensionDproj, &dependency, rootPkg.Lock) {
-	//		locked.Failed = true
-	//	}
-	//}
+	/*
+		dpkPath := filepath.Join(env.GetModulesDir(), dependency.GetName(), dependency.GetName())
+		if generateProject(pasFiles, dependency.GetName(), dpkPath+consts.FileExtensionDpk) {
+			if !compile(dpkPath+consts.FileExtensionDproj, &dependency, rootPkg.Lock) {
+				locked.Failed = true
+			}
+		}
+	*/
 }
 
 func buildOrderedPackages(pkg *models.Package) {
