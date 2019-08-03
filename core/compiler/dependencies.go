@@ -22,15 +22,13 @@ func loadOrderGraphDep(dep *models.Dependency) (queue *graphs.NodeQueue, err err
 
 func loadOrderGraph(pkg *models.Package) graphs.NodeQueue {
 	var graph graphs.GraphItem
-	rawDeps := pkg.Dependencies.(map[string]interface{})
-	deps := models.GetDependencies(rawDeps)
+	deps := pkg.GetParsedDependencies()
 	loadGraph(&graph, nil, deps, nil)
 	return graph.Queue(pkg, false)
 }
 func LoadOrderGraphAll(pkg *models.Package) graphs.NodeQueue {
 	var graph graphs.GraphItem
-	rawDeps := pkg.Dependencies.(map[string]interface{})
-	deps := models.GetDependencies(rawDeps)
+	deps := pkg.GetParsedDependencies()
 	loadGraph(&graph, nil, deps, nil)
 	return graph.Queue(pkg, true)
 }
@@ -54,8 +52,7 @@ func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.De
 				graph.AddEdge(localFather, node)
 			}
 		} else {
-			rawDeps := pkgModule.Dependencies.(map[string]interface{})
-			deps := models.GetDependencies(rawDeps)
+			deps := pkgModule.GetParsedDependencies()
 			loadGraph(graph, &dep, deps, localFather)
 		}
 	}

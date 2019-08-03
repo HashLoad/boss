@@ -155,7 +155,6 @@ func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) NodeQueue {
 		}
 	}
 
-	//Ord
 	for {
 		if len(nodes) == 0 {
 			break
@@ -179,7 +178,6 @@ type NodeQueue struct {
 	lock  sync.RWMutex
 }
 
-// New creates a new NodeQueue
 func (s *NodeQueue) New() *NodeQueue {
 	s.lock.Lock()
 	s.items = []Node{}

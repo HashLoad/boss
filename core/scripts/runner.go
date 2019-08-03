@@ -49,7 +49,11 @@ func Run(args []string) {
 	if pkgJson, e := models.LoadPackage(true); e != nil {
 		msg.Err(e.Error())
 	} else {
+		if pkgJson.Scripts == nil {
+			msg.Die(errors.New("script not exists").Error())
+		}
 		scripts := pkgJson.Scripts.(map[string]interface{})
+
 		if command, ok := scripts[args[0]]; !ok {
 			msg.Err(errors.New("script not exists").Error())
 		} else {

@@ -31,9 +31,8 @@ func PrintDependencies() {
 		}
 	}
 
-	rawDeps := pkg.Dependencies.(map[string]interface{})
 	master := tree.AddBranch(pkg.Name + ":")
-	deps := models.GetDependencies(rawDeps)
+	deps := pkg.GetParsedDependencies()
 	printDeps(nil, deps, pkg.Lock, master)
 	print(tree.String())
 }
@@ -52,8 +51,7 @@ func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.Pac
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree)
 		} else {
-			rawDeps := pkgModule.Dependencies.(map[string]interface{})
-			deps := models.GetDependencies(rawDeps)
+			deps := pkgModule.GetParsedDependencies()
 			printDeps(&dep, deps, lock, localTree)
 		}
 	}

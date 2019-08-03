@@ -127,14 +127,16 @@ func installModules(modules []string) {
 }
 
 func moveBptIdentifier() {
+	var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
+	if _, err := os.Stat(OutExeCompilation); os.IsNotExist(err) {
+		return
+	}
 
 	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
 	err := os.MkdirAll(filepath.Dir(exePath), os.ModePerm)
 	if err != nil {
 		msg.Err(err.Error())
 	}
-
-	var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
 
 	err = os.Rename(OutExeCompilation, exePath)
 	if err != nil {

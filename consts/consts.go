@@ -6,6 +6,10 @@ const FilePackage = "boss.json"
 const FilePackageLock = "boss-lock.json"
 const FileBplOrder = "bpl_order.txt"
 const FileExtensionBpl = ".bpl"
+const FileExtensionDcp = ".dcp"
+const FileExtensionDpk = ".dpk"
+const FileExtensionDproj = ".dproj"
+
 const FilePackageLockOld = "boss.lock"
 const FolderDependencies = "modules"
 
@@ -34,7 +38,7 @@ const XmlTagNamePropertyAttribute string = "Condition"
 const XmlTagNamePropertyAttributeValue string = "'$(Base)'!=''"
 
 const XmlTagNameLibraryPath string = "DCC_UnitSearchPath"
-const Version string = "v3.0.0-alpha10"
+const Version string = "v3.0.0-alpha13"
 
 const BossInternalDir = "internal."
 const BossInternalDirOld = "{internal}"

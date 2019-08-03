@@ -1,12 +1,11 @@
 package core
 
 import (
-	"os"
-
 	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"os"
 )
 
 func InstallModules(args []string, lockedVersion bool) {
@@ -38,7 +37,8 @@ func UninstallModules(args []string) {
 	}
 
 	for e := range args {
-		pkg.UninstallDependency(installer.ParseDependency(installer.ParseDependency(args[e])))
+		dependencyRepository := installer.ParseDependency(args[e])
+		pkg.UninstallDependency(dependencyRepository)
 	}
 	pkg.Save()
 	//TODO implement remove without reinstall process

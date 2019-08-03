@@ -3,9 +3,7 @@ package dcp
 import (
 	"fmt"
 	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/text/encoding/charmap"
@@ -13,7 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -21,13 +18,21 @@ import (
 
 var encode = charmap.Windows1252
 
-func InjectDpcs(pkg *models.Package) {
+func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
 	dprojNames := librarypath.GetDprojNames(pkg)
 
 	for _, value := range dprojNames {
 		if fileName, exists := getDprDpkFromDproj(filepath.Base(value)); exists {
-			file := readFile(fileName)
-			file = processFile(file, getDpcNames())
+			InjectDpcsFile(fileName, pkg, lock)
+		}
+	}
+}
+
+func InjectDpcsFile(fileName string, pkg *models.Package, lock models.PackageLock) {
+	if fileName, exists := getDprDpkFromDproj(fileName); exists {
+		file := readFile(fileName)
+		requiresList := getRequiresList(pkg, lock)
+		if file, needWrite := processFile(file, requiresList); needWrite {
 			writeFile(fileName, file)
 		}
 	}
@@ -65,31 +70,12 @@ func writeFile(filename string, content string) {
 
 func getDprDpkFromDproj(dprojName string) (filename string, find bool) {
 	baseName := strings.TrimSuffix(dprojName, filepath.Ext(dprojName))
-	dpkName := baseName + ".dpk"
+	dpkName := baseName + consts.FileExtensionDpk
 
 	if _, err := os.Stat(dpkName); !os.IsNotExist(err) {
 		return dpkName, true
 	}
 	return "", false
-}
-
-func getDpcNames() []string {
-	fileInfos, err := ioutil.ReadDir(filepath.Join(env.GetModulesDir(), consts.DcpFolder))
-	if err != nil {
-		if !os.IsNotExist(err) {
-			msg.Err("Failed on load dcps")
-		}
-		return []string{}
-	}
-
-	var dpcs []string
-
-	for _, value := range fileInfos {
-		if strings.ToLower(filepath.Ext(value.Name())) == ".dcp" {
-			dpcs = append(dpcs, strings.TrimSuffix(value.Name(), path.Ext(value.Name())))
-		}
-	}
-	return dpcs
 }
 
 const CommentBoss = "{BOSS}"
@@ -130,12 +116,12 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 	return result, true
 }
 
-func processFile(content string, dcps []string) string {
+func processFile(content string, dcps []string) (newContent string, hasNew bool) {
 	if len(dcps) == 0 {
-		return content
+		return content, false
 	}
 	if content, success := injectDcps(content, dcps); success {
-		return content
+		return content, true
 	}
 
 	lines := strings.Split(content, "\n")
@@ -152,6 +138,6 @@ func processFile(content string, dcps []string) string {
 
 	content = strings.Join(lines[:containsindex], "\n\n") +
 		"requires" + dpcLine + ";\n\n" + strings.Join(lines[containsindex:], "\n")
-	return content
+	return content, true
 
 }

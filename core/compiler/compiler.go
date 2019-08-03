@@ -38,24 +38,6 @@ func saveLoadOrder(queue graphs.NodeQueue) {
 	utils.HandleError(ioutil.WriteFile(outDir, []byte(projects), os.ModePerm))
 }
 
-func buildAllDCUs(dependency models.LockedDependency, pkg *models.Package) {
-	modulePath := filepath.Join(env.GetModulesDir(), dependency.Name)
-	if pkg != nil {
-		modulePath = filepath.Join(modulePath, pkg.MainSrc)
-	}
-	err := filepath.Walk(modulePath,
-		func(path string, info os.FileInfo, err error) error {
-			if os.IsNotExist(err) {
-				return nil
-			} else if !info.IsDir() && filepath.Ext(info.Name()) == ".pas" {
-
-				buildDCU(path)
-			}
-			return nil
-		})
-	utils.HandleError(err)
-}
-
 func buildOrderedPackages(pkg *models.Package) {
 	pkg.Lock.Save()
 	queue := loadOrderGraph(pkg)
@@ -74,18 +56,14 @@ func buildOrderedPackages(pkg *models.Package) {
 			dprojs := dependencyPackage.Projects
 			if len(dprojs) > 0 {
 				for _, dproj := range dprojs {
-					s, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.GetName(), dproj))
-					if !compile(s, env.GetModulesDir(), &node.Dep) {
+					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.GetName(), dproj))
+					if !compile(dprojPath, &node.Dep, pkg.Lock) {
 						dependency.Failed = true
 					}
 				}
 				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
 				moveArtifacts(node.Dep, env.GetModulesDir())
-			} else {
-				buildAllDCUs(dependency, dependencyPackage)
 			}
-		} else {
-			buildAllDCUs(dependency, nil)
 		}
 		pkg.Lock.SetInstalled(node.Dep, dependency)
 

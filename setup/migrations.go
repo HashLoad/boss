@@ -7,6 +7,7 @@ import (
 	"github.com/hashload/boss/utils"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func incVersion() {
@@ -46,5 +47,9 @@ func migration() {
 
 	executeUpdate(3, func() {
 		env.GlobalConfiguration.GitEmbedded = true
+	})
+
+	executeUpdate(4, func() {
+		env.GlobalConfiguration.LastInternalUpdate = time.Now().AddDate(-1000, 0, 0)
 	})
 }

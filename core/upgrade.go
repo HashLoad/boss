@@ -48,6 +48,7 @@ func DoBossUpgrade(preRelease bool) {
 		msg.Warn("Failed on rename " + exePath + " to " + exePath + "_0")
 	}
 	if err := downloadFile(exePath+"_n", link, size); err != nil {
+		msg.Err("Failed on download ", err.Error())
 		if err := os.Rename(exePath+"_o", exePath); err != nil {
 			msg.Err("Failed on rename "+exePath+"_o"+" to "+exePath, err.Error())
 		}
