@@ -38,32 +38,6 @@ func saveLoadOrder(queue graphs.NodeQueue) {
 	utils.HandleError(ioutil.WriteFile(outDir, []byte(projects), os.ModePerm))
 }
 
-func buildAllDCUs(dependency models.Dependency, locked *models.LockedDependency, pkg *models.Package, rootPkg *models.Package) {
-	var pasFiles []string
-	modulePath := filepath.Join(env.GetModulesDir(), dependency.GetName())
-	if pkg != nil {
-		modulePath = filepath.Join(modulePath, pkg.MainSrc)
-	}
-	err := filepath.Walk(modulePath,
-		func(path string, info os.FileInfo, err error) error {
-			if os.IsNotExist(err) {
-				return nil
-			} else if !info.IsDir() && filepath.Ext(info.Name()) == ".pas" {
-				pasFiles = append(pasFiles, path)
-			}
-			return nil
-		})
-	utils.HandleError(err)
-	/*
-		dpkPath := filepath.Join(env.GetModulesDir(), dependency.GetName(), dependency.GetName())
-		if generateProject(pasFiles, dependency.GetName(), dpkPath+consts.FileExtensionDpk) {
-			if !compile(dpkPath+consts.FileExtensionDproj, &dependency, rootPkg.Lock) {
-				locked.Failed = true
-			}
-		}
-	*/
-}
-
 func buildOrderedPackages(pkg *models.Package) {
 	pkg.Lock.Save()
 	queue := loadOrderGraph(pkg)
@@ -89,15 +63,7 @@ func buildOrderedPackages(pkg *models.Package) {
 				}
 				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
 				moveArtifacts(node.Dep, env.GetModulesDir())
-			} else {
-				buildAllDCUs(node.Dep, &dependency, dependencyPackage, pkg)
-				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
-				moveArtifacts(node.Dep, env.GetModulesDir())
 			}
-		} else {
-			buildAllDCUs(node.Dep, &dependency, nil, pkg)
-			ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
-			moveArtifacts(node.Dep, env.GetModulesDir())
 		}
 		pkg.Lock.SetInstalled(node.Dep, dependency)
 
