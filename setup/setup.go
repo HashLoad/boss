@@ -123,7 +123,6 @@ func installModules(modules []string) {
 
 	installer.GlobalInstall(modules, pkg, false)
 	moveBptIdentifier()
-
 }
 
 func moveBptIdentifier() {
@@ -155,9 +154,9 @@ func initializeDelphiVersion() {
 		return
 	}
 
-	byRegisty := dcc32.GetDelphiPathsByRegisty()
-	if len(byRegisty) != 0 {
-		env.GlobalConfiguration.DelphiPath = byRegisty[len(byRegisty)-1]
+	byRegistry := dcc32.GetDelphiPathsByRegisty()
+	if len(byRegistry) != 0 {
+		env.GlobalConfiguration.DelphiPath = byRegistry[len(byRegistry)-1]
 		env.GlobalConfiguration.SaveConfiguration()
 		return
 	}

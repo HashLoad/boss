@@ -21,7 +21,7 @@ type Configuration struct {
 	path                string
 	Key                 string           `json:"id"`
 	Auth                map[string]*Auth `json:"auth"`
-	PurgeTime           int              `json:"purgeAfter"`
+	PurgeTime           int              `json:"purge_after"`
 	InternalRefreshRate int              `json:"internal_refresh_rate"`
 	LastPurge           time.Time        `json:"last_purge_cache"`
 	LastInternalUpdate  time.Time        `json:"last_internal_update"`

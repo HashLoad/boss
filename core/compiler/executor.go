@@ -62,6 +62,7 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 
 	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + filepath.Join(env.GetModulesDir(), consts.DcuFolder) +
 		";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder) //+ ";" + getNewPathsDep(dep, abs) + " "
+
 	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
 	for _, value := range []string{"Win32"} {
 		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(env.GetModulesDir(), dep, value)
@@ -90,7 +91,7 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 	}
 }
 
-func getNewPathsDep(dep *models.Dependency, basePath string) string {
+func _(dep *models.Dependency, basePath string) string {
 	if graphDep, err := loadOrderGraphDep(dep); err == nil {
 		var result = filepath.Join(env.GetModulesDir(), consts.DcpFolder) + ";"
 		for {
@@ -145,7 +146,7 @@ func getPaths(path string, basePath string) string {
 	return strings.Join(paths, ";") + ";"
 }
 
-func buildDCU_(path string) {
+func buildDCU(path string) {
 	msg.Info("  Building %s", filepath.Base(path))
 	var unitScopes = "-NSWinapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;System;Xml;Data;Datasnap;Web" +
 		";Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell"

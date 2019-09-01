@@ -15,8 +15,10 @@ var updatedDependencies []string
 
 func GetDependency(dep models.Dependency) {
 	if utils.Contains(updatedDependencies, dep.GetHashName()) {
-		msg.Debug("Using cached of %s", dep.Repository)
+		msg.Debug("Using cached of %s", dep.GetName())
 		return
+	} else {
+		msg.Info("Updating cache of dependency %s", dep.GetName())
 	}
 
 	updatedDependencies = append(updatedDependencies, dep.GetHashName())

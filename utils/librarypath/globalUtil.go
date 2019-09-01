@@ -39,7 +39,7 @@ func updateGlobalLibraryPath() {
 		utils.HandleError(err)
 		paths, _, err := delphiPlatform.GetStringValue(SearchPathRegistry)
 		if err != nil {
-			msg.Warn("Failed to update library path from platform %s with delphi %s", platform, ideVersion)
+			msg.Debug("Failed to update library path from platform %s with delphi %s", platform, ideVersion)
 			continue
 		}
 
