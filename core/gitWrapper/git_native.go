@@ -30,7 +30,6 @@ func CloneCacheNative(dep models.Dependency) *git2.Repository {
 }
 
 func UpdateCacheNative(dep models.Dependency) *git2.Repository {
-	msg.Info("Updating dependency %s", dep.GetName())
 	getWrapperFetch(dep)
 	return GetRepository(dep)
 }
