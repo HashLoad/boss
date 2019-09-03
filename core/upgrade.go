@@ -3,11 +3,11 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
-	"gopkg.in/cheggaaa/pb.v2"
 	"io"
 	"io/ioutil"
 	"math"
