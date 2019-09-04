@@ -123,16 +123,16 @@ func (m *Messenger) Msg(msg string, args ...interface{}) {
 	if !strings.HasSuffix(msg, "\n") {
 		msg += "\n"
 	}
-	/*
-		if len(args) == 0 {
-			if _, err := fmt.Fprint(m.Stderr, msg); err != nil {
-				println("[Fault] %s", err.Error())
-			}
-		} else {
-			if _, err := fmt.Fprintf(m.Stderr, msg, args...); err != nil {
-				println("[Fault] %s", err.Error())
-			}
-		}*/
+
+	if len(args) == 0 {
+		if _, err := fmt.Fprint(m.Stderr, msg); err != nil {
+			println("[Fault] %s", err.Error())
+		}
+	} else {
+		if _, err := fmt.Fprintf(m.Stderr, msg, args...); err != nil {
+			println("[Fault] %s", err.Error())
+		}
+	}
 }
 
 func (m *Messenger) Puts(msg string, args ...interface{}) {

@@ -3,11 +3,11 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
+	"github.com/vbauerster/mpb/v4"
 	"io"
 	"io/ioutil"
 	"math"
@@ -146,11 +146,11 @@ func downloadFile(filepath string, url string, size float64) (err error) {
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	bar := pb.New(int(math.Round(size)))
-	bar.Start()
-	proxyReader := bar.NewProxyReader(resp.Body)
+	p := mpb.New()
+	bar := p.AddBar(int64(math.Round(size)))
+	proxyReader := bar.ProxyReader(resp.Body)
+	defer proxyReader.Close()
 	_, err = io.Copy(out, proxyReader)
-	bar.Finish()
 
 	utils.HandleError(out.Close())
 	utils.HandleError(resp.Body.Close())
