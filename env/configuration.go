@@ -21,7 +21,7 @@ type Configuration struct {
 	path                string
 	Key                 string           `json:"id"`
 	Auth                map[string]*Auth `json:"auth"`
-	PurgeTime           int              `json:"purgeAfter"`
+	PurgeTime           int              `json:"purge_after"`
 	InternalRefreshRate int              `json:"internal_refresh_rate"`
 	LastPurge           time.Time        `json:"last_purge_cache"`
 	LastInternalUpdate  time.Time        `json:"last_internal_update"`
@@ -94,7 +94,10 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		if e != nil {
 			msg.Die("Fail to open ssh key %s", e)
 		}
-		signer, e := ssh.ParsePrivateKey(pem)
+		var signer ssh.Signer
+
+		signer, e = ssh.ParsePrivateKey(pem)
+
 		if e != nil {
 			panic(e)
 		}

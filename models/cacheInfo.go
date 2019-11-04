@@ -13,13 +13,15 @@ import (
 type RepoInfo struct {
 	Key        string    `json:"key"`
 	LastUpdate time.Time `json:"last_update"`
+	Versions   []string  `json:"versions"`
 }
 
-func SaveRepoData(key string) {
+func SaveRepoData(key string, versions []string) {
 	location := env.GetCacheDir()
 	data := &RepoInfo{}
 	data.Key = key
 	data.LastUpdate = time.Now()
+	data.Versions = versions
 	d, err := json.Marshal(data)
 	if err != nil {
 		msg.Err(err.Error())

@@ -5,27 +5,8 @@ import (
 	"github.com/hashload/boss/core/compiler/graphs"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
 	"path/filepath"
 )
-
-//Use to print graph
-func _() {
-	pkg, err := models.LoadPackage(false)
-	if err != nil {
-		msg.Die(err.Error())
-	}
-	msg.Info("Compiling order:")
-	queue := loadOrderGraph(pkg)
-	index := 1
-	for {
-		if queue.IsEmpty() {
-			break
-		}
-		msg.Info("  %d. %s", index, queue.Dequeue().Value)
-		index++
-	}
-}
 
 func loadOrderGraphDep(dep *models.Dependency) (queue *graphs.NodeQueue, err error) {
 	if pkg, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage)); err != nil {
@@ -41,10 +22,15 @@ func loadOrderGraphDep(dep *models.Dependency) (queue *graphs.NodeQueue, err err
 
 func loadOrderGraph(pkg *models.Package) graphs.NodeQueue {
 	var graph graphs.GraphItem
-	rawDeps := pkg.Dependencies.(map[string]interface{})
-	deps := models.GetDependencies(rawDeps)
+	deps := pkg.GetParsedDependencies()
 	loadGraph(&graph, nil, deps, nil)
 	return graph.Queue(pkg, false)
+}
+func LoadOrderGraphAll(pkg *models.Package) graphs.NodeQueue {
+	var graph graphs.GraphItem
+	deps := pkg.GetParsedDependencies()
+	loadGraph(&graph, nil, deps, nil)
+	return graph.Queue(pkg, true)
 }
 
 func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.Dependency, father *graphs.Node) {
@@ -66,8 +52,7 @@ func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.De
 				graph.AddEdge(localFather, node)
 			}
 		} else {
-			rawDeps := pkgModule.Dependencies.(map[string]interface{})
-			deps := models.GetDependencies(rawDeps)
+			deps := pkgModule.GetParsedDependencies()
 			loadGraph(graph, &dep, deps, localFather)
 		}
 	}

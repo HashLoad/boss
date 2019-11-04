@@ -4,9 +4,20 @@ import "path/filepath"
 
 const FilePackage = "boss.json"
 const FilePackageLock = "boss-lock.json"
-const FilePackageLockOld = "boss.lock"
+const FileBplOrder = "bpl_order.txt"
+const FileExtensionBpl = ".bpl"
+const FileExtensionDcp = ".dcp"
+const FileExtensionDpk = ".dpk"
 
+const FilePackageLockOld = "boss.lock"
 const FolderDependencies = "modules"
+
+const FolderEnv = "env"
+
+var FolderEnvBpl = filepath.Join(FolderEnv, "bpl")
+var FolderEnvDcp = filepath.Join(FolderEnv, "dcp")
+var FolderEnvDcu = filepath.Join(FolderEnv, "dcu")
+
 const FolderBossHome = ".boss"
 
 const BinFolder string = ".bin"
@@ -36,6 +47,6 @@ const BplIdentifierName = "BplIdentifier.exe"
 
 const RegexArtifacts = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$)"
 
-const RegistyBasePath = `Software\Embarcadero\BDS\`
+const RegistryBasePath = `Software\Embarcadero\BDS\`
 
 var DefaultPaths = []string{BplFolder, DcuFolder, DcpFolder, BinFolder}

@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-func GlobalInstall(args []string, pkg *models.Package) {
+func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool) {
 	EnsureDependencyOfArgs(pkg, args)
-	DoInstall(pkg)
+	DoInstall(pkg, lockedVersion)
 	DoInstallPackages()
 }
 
@@ -29,7 +29,7 @@ func find(array []string, value string) int {
 }
 
 func addPathBpl(ideVersion string) {
-	idePath, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistyBasePath+ideVersion+`\Environment Variables`,
+	idePath, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Environment Variables`,
 		registry.ALL_ACCESS)
 	if err != nil {
 		msg.Err("Cannot add automatic bpl path dir")
@@ -51,12 +51,12 @@ func addPathBpl(ideVersion string) {
 }
 
 func DoInstallPackages() {
-	var ideVersion = env.GetCurrentDelphiVersionFromRegisty()
+	var ideVersion = env.GetCurrentDelphiVersionFromRegistry()
 	var bplDir = filepath.Join(env.GetModulesDir(), consts.BplFolder)
 
 	addPathBpl(ideVersion)
 
-	knowPackages, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistyBasePath+ideVersion+`\Known Packages`,
+	knowPackages, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Known Packages`,
 		registry.ALL_ACCESS)
 
 	if err != nil {

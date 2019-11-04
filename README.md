@@ -53,9 +53,10 @@ boss update
 ###### Aliases: up
 
 ### > Upgrade
-This command upgrade the client version
+This command upgrade the client latest version. Add `--dev` to upgrade to the latest pre-release.
 ```
 boss upgrade
+boss upgrade --dev
 ```
 
 ## Flags

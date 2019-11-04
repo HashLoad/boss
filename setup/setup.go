@@ -25,7 +25,8 @@ func Initialize() {
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
 
-	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath(), "%BOSS_PROJECT%"}
+	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath(), env.GetGlobalEnvBpl(), env.GetGlobalEnvDcu(), env.GetGlobalEnvDcp()}
+
 	modules := []string{"bpl-identifier"}
 
 	msg.Debug("\tExecuting migrations")
@@ -43,11 +44,20 @@ func Initialize() {
 	}
 	msg.Debug("\tInstalling internal modules")
 	installModules(modules)
+	msg.Debug("\tCreating paths")
+	createPaths()
 
 	env.Global = OldGlobal
 	env.Internal = false
 	msg.Debug("finish boss system initialization")
 
+}
+
+func createPaths() {
+	_, err := os.Stat(env.GetGlobalEnvBpl())
+	if os.IsNotExist(err) {
+		_ = os.MkdirAll(env.GetGlobalEnvBpl(), os.ModePerm)
+	}
 }
 
 func getPath(arr []penv.NameValue) string {
@@ -111,20 +121,21 @@ func installModules(modules []string) {
 	env.GlobalConfiguration.LastInternalUpdate = time.Now()
 	env.GlobalConfiguration.SaveConfiguration()
 
-	installer.GlobalInstall(modules, pkg)
+	installer.GlobalInstall(modules, pkg, false)
 	moveBptIdentifier()
-
 }
 
 func moveBptIdentifier() {
+	var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
+	if _, err := os.Stat(OutExeCompilation); os.IsNotExist(err) {
+		return
+	}
 
 	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
 	err := os.MkdirAll(filepath.Dir(exePath), os.ModePerm)
 	if err != nil {
 		msg.Err(err.Error())
 	}
-
-	var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
 
 	err = os.Rename(OutExeCompilation, exePath)
 	if err != nil {
@@ -143,9 +154,9 @@ func initializeDelphiVersion() {
 		return
 	}
 
-	byRegisty := dcc32.GetDelphiPathsByRegisty()
-	if len(byRegisty) != 0 {
-		env.GlobalConfiguration.DelphiPath = byRegisty[len(byRegisty)-1]
+	byRegistry := dcc32.GetDelphiPathsByRegistry()
+	if len(byRegistry) != 0 {
+		env.GlobalConfiguration.DelphiPath = byRegistry[len(byRegistry)-1]
 		env.GlobalConfiguration.SaveConfiguration()
 		return
 	}

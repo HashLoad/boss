@@ -35,7 +35,7 @@ func GetDcc32DirByCmd() []string {
 func GetDelphiVersionFromRegistry() map[string]string {
 	var result = make(map[string]string)
 
-	delphiVersions, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistyBasePath, registry.ALL_ACCESS)
+	delphiVersions, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath, registry.ALL_ACCESS)
 	if err != nil {
 		msg.Err("Cannot open registry to IDE version")
 		return result
@@ -50,7 +50,7 @@ func GetDelphiVersionFromRegistry() map[string]string {
 	utils.HandleError(err)
 
 	for _, value := range names {
-		delphiInfo, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistyBasePath+value, registry.QUERY_VALUE)
+		delphiInfo, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+value, registry.QUERY_VALUE)
 		utils.HandleError(err)
 
 		appPath, _, err := delphiInfo.GetStringValue("App")
@@ -73,7 +73,7 @@ func GetDelphiVersionNumberName(currentPath string) string {
 	return ""
 }
 
-func GetDelphiPathsByRegisty() []string {
+func GetDelphiPathsByRegistry() []string {
 	var paths []string
 	for _, path := range GetDelphiVersionFromRegistry() {
 		paths = append(paths, filepath.Dir(path))

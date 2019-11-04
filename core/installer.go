@@ -1,12 +1,11 @@
 package core
 
 import (
-	"os"
-
 	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"os"
 )
 
 func InstallModules(args []string, lockedVersion bool) {
@@ -21,9 +20,9 @@ func InstallModules(args []string, lockedVersion bool) {
 	}
 
 	if env.Global {
-		installer.GlobalInstall(args, pkg)
+		installer.GlobalInstall(args, pkg, lockedVersion)
 	} else {
-		installer.LocalInstall(args, pkg)
+		installer.LocalInstall(args, pkg, lockedVersion)
 	}
 }
 
@@ -38,7 +37,8 @@ func UninstallModules(args []string) {
 	}
 
 	for e := range args {
-		pkg.UninstallDependency(installer.ParseDependency(installer.ParseDependency(args[e])))
+		dependencyRepository := installer.ParseDependency(args[e])
+		pkg.UninstallDependency(dependencyRepository)
 	}
 	pkg.Save()
 	//TODO implement remove without reinstall process

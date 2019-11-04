@@ -50,12 +50,23 @@ func (p *Package) AddProject(project string) {
 	p.Projects = append(p.Projects, project)
 }
 
+func (p *Package) GetParsedDependencies() []Dependency {
+	dependencies := p.Dependencies.(map[string]interface{})
+	if len(dependencies) == 0 {
+		return []Dependency{}
+	}
+	return GetDependencies(dependencies)
+}
+
 func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
 		deps := p.Dependencies.(map[string]interface{})
-		if i := deps[dep]; i != nil {
-			delete(deps, dep)
+		for key := range deps {
+			if strings.ToLower(key) == strings.ToLower(dep) {
+				delete(deps, key)
+			}
 		}
+		p.Dependencies = deps
 	}
 }
 

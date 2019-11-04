@@ -27,8 +27,11 @@ func HashDelphiPath() string {
 }
 
 func GetInternalGlobalDir() string {
-	return filepath.Join(GetBossHome(), consts.FolderDependencies, consts.BossInternalDir+HashDelphiPath())
-
+	internalOld := Internal
+	Internal = true
+	result := filepath.Join(GetBossHome(), consts.FolderDependencies, HashDelphiPath())
+	Internal = internalOld
+	return result
 }
 
 func getwd() string {
@@ -76,6 +79,16 @@ func GetCurrentDir() string {
 	return getwd()
 }
 
+func GetGlobalEnvBpl() string {
+	return filepath.Join(GetBossHome(), consts.FolderEnvBpl)
+}
+func GetGlobalEnvDcp() string {
+	return filepath.Join(GetBossHome(), consts.FolderEnvDcp)
+}
+func GetGlobalEnvDcu() string {
+	return filepath.Join(GetBossHome(), consts.FolderEnvDcu)
+}
+
 func GetGlobalBinPath() string {
 	return filepath.Join(GetBossHome(), consts.FolderDependencies, consts.BinFolder)
 }
@@ -93,6 +106,6 @@ func GetDcc32Dir() string {
 	return ""
 }
 
-func GetCurrentDelphiVersionFromRegisty() string {
+func GetCurrentDelphiVersionFromRegistry() string {
 	return dcc32.GetDelphiVersionNumberName(GlobalConfiguration.DelphiPath)
 }
