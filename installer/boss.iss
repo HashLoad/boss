@@ -1,5 +1,5 @@
 #define BossName "Boss"
-#define BossVersion "3.0.1"
+#define BossVersion "3.0.2"
 #define BossPublisher "Hashload"
 #define BossURL "https://github.com/HashLoad/boss"
 
@@ -14,7 +14,7 @@ AppPublisher={#BossPublisher}
 AppPublisherURL={#BossURL}
 AppSupportURL={#BossURL}
 AppUpdatesURL={#BossURL}
-DefaultDirName={pf}\{#BossName}
+DefaultDirName={commonpf}\{#BossName}
 DefaultGroupName={#BossName}
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE.txt

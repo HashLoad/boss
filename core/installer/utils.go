@@ -13,7 +13,7 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 		dependency := ParseDependency(args[e])
 		dependency = strings.ToLower(dependency)
 
-		re := regexp.MustCompile(`(?m)(?P<host>.*)(\:(?P<version>[\^~]?[\d.]{1,5}))|(?P<host_only>.*)$`)
+		re := regexp.MustCompile(`(?m)(?:(?P<host>.*)(?::(?P<version>[\^~]?(?:(?:(?:[0-9]+)(?:\.[0-9]+)(?:\.[0-9]+)?))))$|(?P<host_only>.*))`)
 		match := make(map[string]string)
 		split := re.FindStringSubmatch(dependency)
 
