@@ -12,7 +12,7 @@ import (
 const SearchPathRegistry = "Search Path"
 
 func updateGlobalLibraryPath() {
-	ideVersion := env.GetCurrentDelphiVersionFromRegisty()
+	ideVersion := env.GetCurrentDelphiVersionFromRegistry()
 	if ideVersion == "" {
 		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
 	}

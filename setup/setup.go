@@ -154,7 +154,7 @@ func initializeDelphiVersion() {
 		return
 	}
 
-	byRegistry := dcc32.GetDelphiPathsByRegisty()
+	byRegistry := dcc32.GetDelphiPathsByRegistry()
 	if len(byRegistry) != 0 {
 		env.GlobalConfiguration.DelphiPath = byRegistry[len(byRegistry)-1]
 		env.GlobalConfiguration.SaveConfiguration()

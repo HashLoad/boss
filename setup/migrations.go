@@ -69,4 +69,9 @@ func migration() {
 		installer.GlobalInstall([]string{}, modules, false)
 		env.Internal = true
 	})
+
+	executeUpdate(6, func() {
+		err := os.RemoveAll(env.GetInternalGlobalDir())
+		utils.HandleError(err)
+	})
 }

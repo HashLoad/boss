@@ -51,7 +51,7 @@ func addPathBpl(ideVersion string) {
 }
 
 func DoInstallPackages() {
-	var ideVersion = env.GetCurrentDelphiVersionFromRegisty()
+	var ideVersion = env.GetCurrentDelphiVersionFromRegistry()
 	var bplDir = filepath.Join(env.GetModulesDir(), consts.BplFolder)
 
 	addPathBpl(ideVersion)

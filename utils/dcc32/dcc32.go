@@ -73,7 +73,7 @@ func GetDelphiVersionNumberName(currentPath string) string {
 	return ""
 }
 
-func GetDelphiPathsByRegisty() []string {
+func GetDelphiPathsByRegistry() []string {
 	var paths []string
 	for _, path := range GetDelphiVersionFromRegistry() {
 		paths = append(paths, filepath.Dir(path))
