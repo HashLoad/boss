@@ -1,4 +1,4 @@
-
+![Go](https://github.com/HashLoad/boss/workflows/Go/badge.svg)
 
 # Dependency Manager for Delphi
 
