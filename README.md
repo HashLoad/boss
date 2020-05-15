@@ -32,7 +32,7 @@ boss uninstall <dependency>
 ###### Aliases: remove, rm, r, un, unlink
 
 ### > Cache
-This command removes the cache used by the boss
+This command removes the cache
 ```
  boss config cache rm
 ```
