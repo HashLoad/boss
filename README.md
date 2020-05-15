@@ -31,6 +31,13 @@ boss uninstall <dependency>
 ```
 ###### Aliases: remove, rm, r, un, unlink
 
+### > Cache
+This command removes the cache
+```
+ boss config cache rm
+```
+###### Aliases: remove, rm, r
+
 ### > Dependencies
 This command print all dependencies and your versions
 ```
