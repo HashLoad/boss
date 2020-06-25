@@ -1,15 +1,16 @@
 package librarypath
 
 import (
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/utils"
 )
 
 func UpdateLibraryPath(pkg *models.Package) {
@@ -39,6 +40,25 @@ func cleanPath(paths []string, fullPath bool) []string {
 	return processedPaths
 }
 
+func ExistsInArray(array []string, item string) bool {
+	for _, value := range array {
+		if strings.Contains(strings.ToLower(item), strings.ToLower(value)) {
+			return true
+		}
+	}
+	return false
+}
+
+func RemoveIgnoredPath(paths []string, ignoredPaths []string) []string {
+	var result []string
+	for _, value := range paths {
+		if !ExistsInArray(ignoredPaths, value) {
+			result = append(result, value)
+		}
+	}
+	return result
+}
+
 func GetNewPaths(paths []string, fullPath bool) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
@@ -48,6 +68,7 @@ func GetNewPaths(paths []string, fullPath bool) []string {
 	for _, value := range matches {
 
 		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
+
 		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
 
 			other, _ := models.LoadPackageOther(packagePath)
@@ -57,6 +78,7 @@ func GetNewPaths(paths []string, fullPath bool) []string {
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath)
 		}
 	}
+
 	return paths
 }
 

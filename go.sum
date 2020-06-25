@@ -79,6 +79,9 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/vbauerster/mpb/v4 v4.9.2 h1:/niWWc4MsgvOaCXJCdrWq2vOyN5inuQIq/Spn4Fi1XI=
 github.com/vbauerster/mpb/v4 v4.9.2/go.mod h1:svMK4M+/dWn+xLRlw1Hq4MzYq+5yX2moH6tktD+lIk0=
+github.com/vsantos-desenv/boss v1.6.0 h1:JZ2Xqgq4S00XZtBFSyKNfImbVJDY3Yc9n0mCH1aDDIY=
+github.com/vsantos-desenv/boss v3.0.2+incompatible h1:O5RRdU5o8lduXFjL+wmd7UJXCcnS6A2qWRNLJK81iFQ=
+github.com/vsantos-desenv/boss v3.0.2+incompatible/go.mod h1:BstAeKDlWdtzRuMrBrA/FHar8DYY11fijqpnEcDCYnw=
 github.com/xanzy/ssh-agent v0.2.0/go.mod h1:0NyE30eGUDliuLEHJgYte/zncp2zdTStcOnWhgSqHD8=
 github.com/xanzy/ssh-agent v0.2.1 h1:TCbipTQL2JiiCprBWx9frJ2eJlCYT00NmctrHxVAr70=
 github.com/xanzy/ssh-agent v0.2.1/go.mod h1:mLlQY/MoOhWBj+gOGMQkOeiEvkx+8pJSI+0Bx9h2kr4=

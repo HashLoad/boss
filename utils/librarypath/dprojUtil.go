@@ -1,28 +1,30 @@
 package librarypath
 
 import (
-	"github.com/beevik/etree"
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
-	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/beevik/etree"
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 )
 
 func updateDprojLibraryPath(pkg *models.Package) {
 	var dprojsNames = GetDprojNames(pkg)
 	for _, dprojName := range dprojsNames {
-		updateLibraryPathProject(dprojName)
+
+		updateLibraryPathProject(dprojName, pkg.IgnorePath)
 	}
 }
 
-func updateLibraryPathProject(dprojName string) {
+func updateLibraryPathProject(dprojName string, ignorePath []string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(dprojName)
 	if os.IsNotExist(err) || info.IsDir() {
@@ -44,7 +46,7 @@ func updateLibraryPathProject(dprojName string) {
 			if child == nil {
 				child = createTag(children)
 			}
-			processCurrentPath(child)
+			processCurrentPath(child, ignorePath)
 		}
 	}
 
@@ -90,10 +92,12 @@ func GetDprojNames(pkg *models.Package) []string {
 	return result
 }
 
-func processCurrentPath(node *etree.Element) {
+func processCurrentPath(node *etree.Element, ignorePath []string) {
 	currentPaths := strings.Split(node.Text(), ";")
 
 	currentPaths = GetNewPaths(currentPaths, false)
+
+	currentPaths = RemoveIgnoredPath(currentPaths, ignorePath)
 
 	node.SetText(strings.Join(currentPaths, ";"))
 }

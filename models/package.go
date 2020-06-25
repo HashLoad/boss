@@ -2,10 +2,11 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/utils/parser"
 	. "io/ioutil"
 	"strings"
+
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/utils/parser"
 )
 
 type Package struct {
@@ -19,6 +20,7 @@ type Package struct {
 	Projects     []string    `json:"projects"`
 	Scripts      interface{} `json:"scripts,omitempty"`
 	Dependencies interface{} `json:"dependencies"`
+	IgnorePath   []string    `json:"ignorepath"`
 	Lock         PackageLock `json:"-"`
 }
 
@@ -76,6 +78,7 @@ func getNew(file string) *Package {
 	res.IsNew = true
 
 	res.Dependencies = make(map[string]interface{})
+	res.IgnorePath = []string{}
 	res.Projects = []string{}
 	res.Lock = LoadPackageLock(res)
 	return res
