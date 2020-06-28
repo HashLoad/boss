@@ -14,7 +14,6 @@ require (
 	github.com/snakeice/penv v0.0.0-20190326182452-4eb344cfbb6b
 	github.com/spf13/cobra v0.0.5
 	github.com/vbauerster/mpb/v4 v4.9.2
-	github.com/vsantos-desenv/boss v3.0.2+incompatible // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4

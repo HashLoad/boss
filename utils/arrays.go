@@ -10,3 +10,13 @@ func Contains(a []string, x string) bool {
 	}
 	return false
 }
+
+func Filter(a []string, condition func(string) bool) []string {
+	var result []string
+	for _, n := range a {
+		if condition(n) {
+			result = append(result, n)
+		}
+	}
+	return result
+}

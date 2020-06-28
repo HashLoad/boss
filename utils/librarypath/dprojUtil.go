@@ -19,7 +19,6 @@ import (
 func updateDprojLibraryPath(pkg *models.Package) {
 	var dprojsNames = GetDprojNames(pkg)
 	for _, dprojName := range dprojsNames {
-
 		updateLibraryPathProject(dprojName, pkg.IgnorePath)
 	}
 }

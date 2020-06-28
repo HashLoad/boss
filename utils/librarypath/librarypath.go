@@ -40,22 +40,18 @@ func cleanPath(paths []string, fullPath bool) []string {
 	return processedPaths
 }
 
-func ExistsInArray(array []string, item string) bool {
-	for _, value := range array {
-		if strings.Contains(strings.ToLower(item), strings.ToLower(value)) {
-			return true
-		}
-	}
-	return false
-}
-
 func RemoveIgnoredPath(paths []string, ignoredPaths []string) []string {
 	var result []string
-	for _, value := range paths {
-		if !ExistsInArray(ignoredPaths, value) {
-			result = append(result, value)
+	result = utils.Filter(paths, func(s string) bool {
+		var result bool = false
+		for _, value := range ignoredPaths {
+			result = strings.Contains(strings.ToUpper(s), strings.ToUpper(value))
+			if result {
+				break
+			}
 		}
-	}
+		return !result
+	})
 	return result
 }
 
