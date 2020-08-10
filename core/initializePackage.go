@@ -3,12 +3,13 @@ package core
 import (
 	"bufio"
 	"fmt"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
 )
 
 func printHead() {
@@ -38,7 +39,7 @@ func getParamOrDef(msg string, def string) string {
 	return def
 }
 
-func doInitialization() {
+func doInitialization(quiet bool) {
 	printHead()
 	pkgJson, _ := models.LoadPackage(true)
 
@@ -49,15 +50,21 @@ func doInitialization() {
 		folderName = allString[0][1]
 	}
 
-	pkgJson.Name = getParamOrDef("package name: ("+folderName+")", folderName)
-	pkgJson.Homepage = getParamOrDef("homepage", "")
-	pkgJson.Version = getParamOrDef("version: (1.0.0)", "1.0.0")
-	pkgJson.Description = getParamOrDef("description", "")
-	pkgJson.MainSrc = getParamOrDef("source folder: (./)", "./")
+	if quiet {
+		pkgJson.Name = folderName
+		pkgJson.Version = "1.0.0"
+		pkgJson.MainSrc = "./"
+	} else {
+		pkgJson.Name = getParamOrDef("package name: ("+folderName+")", folderName)
+		pkgJson.Homepage = getParamOrDef("homepage", "")
+		pkgJson.Version = getParamOrDef("version: (1.0.0)", "1.0.0")
+		pkgJson.Description = getParamOrDef("description", "")
+		pkgJson.MainSrc = getParamOrDef("source folder: (./)", "./")
+	}
 
 	pkgJson.Save()
 }
 
-func InitializeBossPackage() {
-	doInitialization()
+func InitializeBossPackage(quiet bool) {
+	doInitialization(quiet)
 }
