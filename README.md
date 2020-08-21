@@ -12,9 +12,10 @@ Installation:
 ## Available Commands
 
 ### > Init
-This command initialize a new project
+This command initialize a new project. Add `--q` to initialize the boss with default values
 ```
 boss init
+boss init --q 
 ```
 
 ### > Install
