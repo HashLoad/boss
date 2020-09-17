@@ -100,4 +100,11 @@ boss install -g delphi-docker
 boss install -g boss-ide
 ```
 
-###### For use yor project in boss create a tag with [semantic version](https://semver.org/). 
+## Using [semantic versioning](https://semver.org/) to specify update types your package can accept 
+
+You can specify which update types your package can accept from dependencies in your package’s boss.json file.
+
+For example, to specify acceptable version ranges up to 1.0.4, use the following syntax:
+ * Patch releases: 1.0 or 1.0.x or ~1.0.4
+ * Minor releases: 1 or 1.x or ^1.0.4
+ * Major releases: * or x
