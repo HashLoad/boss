@@ -3,17 +3,18 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/msg"
-	"github.com/hashload/boss/utils"
-	"github.com/masterminds/semver"
-	"github.com/vbauerster/mpb/v4"
 	"io"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
+	"github.com/masterminds/semver"
+	"github.com/snakeice/gogress"
 )
 
 const latestRelease string = "https://api.github.com/repos/HashLoad/boss/releases/latest"
@@ -146,9 +147,9 @@ func downloadFile(filepath string, url string, size float64) (err error) {
 		return fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	p := mpb.New()
-	bar := p.AddBar(int64(math.Round(size)))
-	proxyReader := bar.ProxyReader(resp.Body)
+	bar := gogress.New64(int64(math.Round(size)))
+	bar.Start()
+	proxyReader := bar.NewProxyReader(resp.Body)
 	defer proxyReader.Close()
 	_, err = io.Copy(out, proxyReader)
 
