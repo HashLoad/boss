@@ -1,15 +1,16 @@
 package librarypath
 
 import (
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/utils"
 )
 
 func UpdateLibraryPath(pkg *models.Package) {
@@ -79,6 +80,10 @@ func getDefaultPath(fullPath bool) []string {
 	} else {
 		paths = append(paths, filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcpFolder))
 		paths = append(paths, filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcuFolder))
+	}
+
+	if isLazarus() {
+		return paths
 	}
 
 	return append(paths, "$(DCC_UnitSearchPath)")

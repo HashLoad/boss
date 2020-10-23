@@ -1,25 +1,68 @@
 package librarypath
 
 import (
-	"github.com/beevik/etree"
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
-	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/beevik/etree"
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 )
 
 func updateDprojLibraryPath(pkg *models.Package) {
-	var dprojsNames = GetDprojNames(pkg)
-	for _, dprojName := range dprojsNames {
-		updateLibraryPathProject(dprojName)
+	var isLazarus = isLazarus()
+	var projectNames = GetProjectNames(pkg)
+	for _, projectName := range projectNames {
+		if isLazarus {
+			updateOtherUnitFilesProject(projectName)
+		} else {
+			updateLibraryPathProject(projectName)
+		}
 	}
+}
+
+func updateOtherUnitFilesProject(lpiName string) {
+	doc := etree.NewDocument()
+	info, err := os.Stat(lpiName)
+	if os.IsNotExist(err) || info.IsDir() {
+		msg.Err(".lpi not found.")
+		return
+	}
+	e := doc.ReadFromFile(lpiName)
+	if e != nil {
+		msg.Err("Error on read lpi: %s", e)
+		return
+	}
+	root := doc.Root()
+	compilerOptions := root.SelectElement(consts.XmlTagNameCompilerOptions)
+	searchPaths := compilerOptions.SelectElement(consts.XmlTagNameSearchPaths)
+	otherUnitFiles := searchPaths.SelectElement(consts.XmlTagNameOtherUnitFiles)
+	if otherUnitFiles == nil {
+		otherUnitFiles = createTagOtherUnitFiles(searchPaths)
+	}
+	value := otherUnitFiles.SelectAttr("Value")
+	currentPaths := strings.Split(value.Value, ";")
+	currentPaths = GetNewPaths(currentPaths, false)
+	value.Value = strings.Join(currentPaths, ";")
+	doc.WriteSettings.CanonicalAttrVal = true
+	doc.WriteSettings.CanonicalEndTags = false
+	doc.WriteSettings.CanonicalText = true
+	if err := doc.WriteToFile(lpiName); err != nil {
+		panic(err)
+	}
+}
+
+func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
+	child := node.CreateElement(consts.XmlTagNameOtherUnitFiles)
+	child.CreateAttr("Value", "")
+	return child
 }
 
 func updateLibraryPathProject(dprojName string) {
@@ -42,7 +85,7 @@ func updateLibraryPathProject(dprojName string) {
 		if attribute != nil && attribute.Value == consts.XmlTagNamePropertyAttributeValue {
 			child := children.SelectElement(consts.XmlTagNameLibraryPath)
 			if child == nil {
-				child = createTag(children)
+				child = createTagLibraryPath(children)
 			}
 			processCurrentPath(child)
 		}
@@ -55,15 +98,14 @@ func updateLibraryPathProject(dprojName string) {
 	if err := doc.WriteToFile(dprojName); err != nil {
 		panic(err)
 	}
-
 }
 
-func createTag(node *etree.Element) *etree.Element {
+func createTagLibraryPath(node *etree.Element) *etree.Element {
 	child := node.CreateElement(consts.XmlTagNameLibraryPath)
 	return child
 }
 
-func GetDprojNames(pkg *models.Package) []string {
+func GetProjectNames(pkg *models.Package) []string {
 	var result []string
 	var matches = 0
 
@@ -79,7 +121,7 @@ func GetDprojNames(pkg *models.Package) []string {
 			panic(err)
 		}
 		for _, file := range files {
-			matched, e := regexp.MatchString(".*.dproj$", file.Name())
+			matched, e := regexp.MatchString(".*.dproj|.*.lpi$", file.Name())
 			if e == nil && matched {
 				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
 				matches++
@@ -88,6 +130,20 @@ func GetDprojNames(pkg *models.Package) []string {
 	}
 
 	return result
+}
+
+func isLazarus() bool {
+	files, err := ioutil.ReadDir(env.GetCurrentDir())
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		matched, e := regexp.MatchString(".*.lpi$", file.Name())
+		if e == nil && matched {
+			return true
+		}
+	}
+	return false
 }
 
 func processCurrentPath(node *etree.Element) {
