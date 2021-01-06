@@ -2,24 +2,25 @@ package dcp
 
 import (
 	"fmt"
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/utils"
-	"github.com/hashload/boss/utils/librarypath"
-	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/utils"
+	"github.com/hashload/boss/utils/librarypath"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 )
 
 var encode = charmap.Windows1252
 
 func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
-	dprojNames := librarypath.GetDprojNames(pkg)
+	dprojNames := librarypath.GetProjectNames(pkg)
 
 	for _, value := range dprojNames {
 		if fileName, exists := getDprDpkFromDproj(filepath.Base(value)); exists {
