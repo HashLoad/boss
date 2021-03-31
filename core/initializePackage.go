@@ -40,7 +40,10 @@ func getParamOrDef(msg string, def string) string {
 }
 
 func doInitialization(quiet bool) {
-	printHead()
+	if !quiet {
+		printHead()
+	}
+
 	pkgJson, _ := models.LoadPackage(true)
 
 	var folderName = ""
