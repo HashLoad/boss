@@ -32,19 +32,17 @@ func PrintDependencies(showVersion bool) {
 		}
 	}
 
-	// TODO showVersion
-
 	master := tree.AddBranch(pkg.Name + ":")
 	deps := pkg.GetParsedDependencies()
-	printDeps(nil, deps, pkg.Lock, master)
+	printDeps(nil, deps, pkg.Lock, master, showVersion)
 	print(tree.String())
 }
 
-func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.PackageLock, tree treeprint.Tree) {
+func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.PackageLock, tree treeprint.Tree, showVersion bool) {
 	var localTree treeprint.Tree
 
 	if dep != nil {
-		localTree = printSingleDependency(dep, lock, tree)
+		localTree = printSingleDependency(dep, lock, tree, showVersion)
 	} else {
 		localTree = tree
 	}
@@ -52,18 +50,22 @@ func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.Pac
 	for _, dep := range deps {
 		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage))
 		if err != nil {
-			printSingleDependency(&dep, lock, localTree)
+			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {
 			deps := pkgModule.GetParsedDependencies()
-			printDeps(&dep, deps, lock, localTree)
+			printDeps(&dep, deps, lock, localTree, showVersion)
 		}
 	}
 }
 
-func printSingleDependency(dep *models.Dependency, lock models.PackageLock, tree treeprint.Tree) treeprint.Tree {
+func printSingleDependency(dep *models.Dependency, lock models.PackageLock, tree treeprint.Tree, showVersion bool) treeprint.Tree {
 	var output = dep.GetName()
-	output += "@"
-	output += lock.GetInstalled(*dep).Version
+
+	if showVersion {
+		output += "@"
+		output += lock.GetInstalled(*dep).Version
+	}
+
 	switch isOutdated(*dep, lock.GetInstalled(*dep).Version) {
 	case outdated:
 		output += " outdated"
