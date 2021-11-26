@@ -24,7 +24,8 @@ tmp/
 
 # End of https://www.gitignore.io/api/go
 
-# Boss files
+# Boss 
+/modules
 boss-lock.json
 boss.json
 
