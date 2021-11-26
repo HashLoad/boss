@@ -1,5 +1,5 @@
 #define BossName "Boss"
-#define BossVersion "3.0.3"
+#define BossVersion "3.0.5"
 #define BossPublisher "Hashload"
 #define BossURL "https://github.com/HashLoad/boss"
 
@@ -21,6 +21,11 @@ LicenseFile=LICENSE.txt
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
+
+;"ArchitecturesAllowed=x64" specifies that Setup cannot run on anything but x64.
+ArchitecturesAllowed=x64
+;"ArchitecturesInstallIn64BitMode=x64" requests that the install be done in "64-bit mode" on x64, meaning it should use the native 64-bit Program Files directory and the 64-bit view of the registry.
+ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -69,7 +74,7 @@ end;
 Name: "{app}"; Permissions: everyone-full
 
 [Files]
-Source: "..\boss.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "boss.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath('{app}')
