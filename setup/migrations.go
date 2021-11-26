@@ -1,15 +1,16 @@
 package setup
 
 import (
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 func updateVersion(newVersion int64) {
@@ -66,7 +67,7 @@ func migration() {
 			return
 		}
 
-		installer.GlobalInstall([]string{}, modules, false)
+		installer.GlobalInstall([]string{}, modules, false, false)
 		env.Internal = true
 	})
 

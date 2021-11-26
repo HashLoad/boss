@@ -11,7 +11,7 @@ var updateCmd = &cobra.Command{
 	Long:    `This command update installed dependencies`,
 	Aliases: []string{"up"},
 	Run: func(cmd *cobra.Command, args []string) {
-		core.InstallModules(args, false)
+		core.InstallModules(args, false, false)
 	},
 }
 

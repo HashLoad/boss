@@ -2,10 +2,11 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/utils/parser"
 	. "io/ioutil"
 	"strings"
+
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/utils/parser"
 )
 
 type Package struct {
@@ -22,12 +23,12 @@ type Package struct {
 	Lock         PackageLock `json:"-"`
 }
 
-func (p *Package) Save() {
+// Save save changes of boss.json file
+func (p *Package) Save() []byte {
 	marshal, _ := parser.JSONMarshal(p, true)
-
 	_ = WriteFile(p.fileName, marshal, 664)
-
 	p.Lock.Save()
+	return marshal
 }
 
 func (p *Package) AddDependency(dep string, ver string) {

@@ -1,19 +1,21 @@
 package installer
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 )
 
-func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool) {
+func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool, noSave bool) {
+	// TODO noSave
 	EnsureDependencyOfArgs(pkg, args)
 	DoInstall(pkg, lockedVersion)
 	DoInstallPackages()

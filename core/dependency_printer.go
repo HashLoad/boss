@@ -1,6 +1,9 @@
 package core
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
@@ -9,8 +12,6 @@ import (
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
 	"github.com/xlab/treeprint"
-	"os"
-	"path/filepath"
 )
 
 var tree = treeprint.New()
@@ -21,7 +22,7 @@ const (
 	usingMaster = 2
 )
 
-func PrintDependencies() {
+func PrintDependencies(showVersion bool) {
 	pkg, err := models.LoadPackage(false)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -30,6 +31,8 @@ func PrintDependencies() {
 			msg.Die("Fail on open dependencies file: %s", err)
 		}
 	}
+
+	// TODO showVersion
 
 	master := tree.AddBranch(pkg.Name + ":")
 	deps := pkg.GetParsedDependencies()

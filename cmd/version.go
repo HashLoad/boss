@@ -10,6 +10,8 @@ var versionCmd = &cobra.Command{
 	Short:   "Show cli version",
 	Long:    `This command show the client version`,
 	Aliases: []string{"v"},
+	Example: `  Print version:
+  boss version`,
 	Run: func(cmd *cobra.Command, args []string) {
 		println(consts.Version)
 	},

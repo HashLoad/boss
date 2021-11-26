@@ -20,7 +20,8 @@ It only covers the most common items, and tries to guess sensible defaults.
 Use 'boss install <pkg>' afterwards to install a package and
 save it as a dependency in the boss.json file.
 
-Press ^C at any time to quit.`)
+Press ^C at any time to quit.
+`)
 }
 
 func getParamOrDef(msg string, def string) string {
@@ -58,14 +59,15 @@ func doInitialization(quiet bool) {
 		pkgJson.Version = "1.0.0"
 		pkgJson.MainSrc = "./"
 	} else {
-		pkgJson.Name = getParamOrDef("package name: ("+folderName+")", folderName)
-		pkgJson.Homepage = getParamOrDef("homepage", "")
-		pkgJson.Version = getParamOrDef("version: (1.0.0)", "1.0.0")
-		pkgJson.Description = getParamOrDef("description", "")
-		pkgJson.MainSrc = getParamOrDef("source folder: (./)", "./")
+		pkgJson.Name = getParamOrDef("Package name ("+folderName+")", folderName)
+		pkgJson.Homepage = getParamOrDef("Homepage", "")
+		pkgJson.Version = getParamOrDef("Version (1.0.0)", "1.0.0")
+		pkgJson.Description = getParamOrDef("Description", "")
+		pkgJson.MainSrc = getParamOrDef("Source folder (./src)", "./src")
 	}
 
-	pkgJson.Save()
+	json := pkgJson.Save()
+	fmt.Println("\n" + string([]byte(json)))
 }
 
 func InitializeBossPackage(quiet bool) {

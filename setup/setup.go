@@ -1,6 +1,11 @@
 package setup
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
@@ -8,10 +13,6 @@ import (
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils/dcc32"
 	"github.com/snakeice/penv"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 const PATH string = "PATH"
@@ -121,7 +122,7 @@ func installModules(modules []string) {
 	env.GlobalConfiguration.LastInternalUpdate = time.Now()
 	env.GlobalConfiguration.SaveConfiguration()
 
-	installer.GlobalInstall(modules, pkg, false)
+	installer.GlobalInstall(modules, pkg, false, false)
 	moveBptIdentifier()
 }
 

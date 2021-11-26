@@ -1,14 +1,15 @@
 package core
 
 import (
+	"os"
+
 	"github.com/hashload/boss/core/installer"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
-	"os"
 )
 
-func InstallModules(args []string, lockedVersion bool) {
+func InstallModules(args []string, lockedVersion bool, noSave bool) {
 	_ = lockedVersion
 	pkg, e := models.LoadPackage(env.Global)
 	if e != nil {
@@ -20,14 +21,15 @@ func InstallModules(args []string, lockedVersion bool) {
 	}
 
 	if env.Global {
-		installer.GlobalInstall(args, pkg, lockedVersion)
+		installer.GlobalInstall(args, pkg, lockedVersion, noSave)
 	} else {
-		installer.LocalInstall(args, pkg, lockedVersion)
+		installer.LocalInstall(args, pkg, lockedVersion, noSave)
 	}
 }
 
-func UninstallModules(args []string) {
+func UninstallModules(args []string, noSave bool) {
 	pkg, e := models.LoadPackage(false)
+
 	if e != nil {
 		msg.Err(e.Error())
 	}
@@ -40,7 +42,11 @@ func UninstallModules(args []string) {
 		dependencyRepository := installer.ParseDependency(args[e])
 		pkg.UninstallDependency(dependencyRepository)
 	}
+
 	pkg.Save()
-	//TODO implement remove without reinstall process
-	InstallModules([]string{}, false)
+
+	// TODO noSave
+	// TODO implement remove without reinstall process
+
+	InstallModules([]string{}, false, false)
 }

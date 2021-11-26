@@ -23,3 +23,13 @@ tmp/
 .idea/
 
 # End of https://www.gitignore.io/api/go
+
+# Boss files
+boss-lock.json
+boss.json
+
+# Lazarus project
+/lib
+*.lpi
+*.lpr
+*.lps
