@@ -40,11 +40,12 @@ This command removes the cache
 ###### Aliases: remove, rm, r
 
 ### > Dependencies
-This command print all dependencies and your versions
+This command print all dependencies and your versions. To see versions, add aliases `-v`
 ```
-boss dependencies
+boss dependencies 
+boss dependencies -v
 ```
-###### Aliases: dep
+###### Aliases: dep, ls, list, ll, la
 
 ### > Version
 This command show the client version
