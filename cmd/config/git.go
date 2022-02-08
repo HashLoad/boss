@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 var gitCmd = &cobra.Command{

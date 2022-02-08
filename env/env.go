@@ -3,13 +3,14 @@ package env
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils/dcc32"
 	"github.com/mitchellh/go-homedir"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var Global bool
@@ -104,8 +105,4 @@ func GetDcc32Dir() string {
 	}
 
 	return ""
-}
-
-func GetCurrentDelphiVersionFromRegistry() string {
-	return dcc32.GetDelphiVersionNumberName(GlobalConfiguration.DelphiPath)
 }

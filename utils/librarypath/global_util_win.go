@@ -1,18 +1,24 @@
+//go:build windows
+// +build windows
+
 package librarypath
 
 import (
+	"strings"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
-	"strings"
+
+	bossRegistry "github.com/hashload/boss/core/registry"
 )
 
 const SearchPathRegistry = "Search Path"
 
 func updateGlobalLibraryPath() {
-	ideVersion := env.GetCurrentDelphiVersionFromRegistry()
+	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
 		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
 	}

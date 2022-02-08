@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/hashload/boss/core"
 	"github.com/hashload/boss/utils"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 var purgeCacheCmd = &cobra.Command{

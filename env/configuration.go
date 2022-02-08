@@ -2,6 +2,11 @@ package env
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils/crypto"
@@ -9,10 +14,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	sshGit "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 var machineID = []byte(crypto.GetMachineID()[:16])

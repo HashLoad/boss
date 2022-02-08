@@ -1,6 +1,10 @@
 package installer
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/compiler"
 	"github.com/hashload/boss/core/gitWrapper"
@@ -13,9 +17,6 @@ import (
 	"github.com/masterminds/semver"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 var processed = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}

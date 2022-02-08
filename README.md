@@ -1,13 +1,13 @@
-![Go](https://github.com/HashLoad/boss/workflows/Go/badge.svg)
+![Go](https://github.com/hashload/boss/workflows/Go/badge.svg)
 
 # Dependency Manager for Delphi and Lazarus (Windows)
 
 ### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13) 
 
 Installation: 
- * Download [setup](https://github.com/HashLoad/boss/releases)
+ * Download [setup](https://github.com/hashload/boss/releases)
  * Just type `boss` in cmd
- * (Optional) Install a [Boss Delphi IDE complement](https://github.com/HashLoad/boss-ide)
+ * (Optional) Install a [Boss Delphi IDE complement](https://github.com/hashload/boss-ide)
 
 ## Available Commands
 

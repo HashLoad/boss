@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/installer"
+	"github.com/hashload/boss/core/registry"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
@@ -155,7 +156,7 @@ func initializeDelphiVersion() {
 		return
 	}
 
-	byRegistry := dcc32.GetDelphiPathsByRegistry()
+	byRegistry := registry.GetDelphiPaths()
 	if len(byRegistry) != 0 {
 		env.GlobalConfiguration.DelphiPath = byRegistry[len(byRegistry)-1]
 		env.GlobalConfiguration.SaveConfiguration()

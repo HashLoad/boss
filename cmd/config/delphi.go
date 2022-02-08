@@ -2,12 +2,13 @@ package config
 
 import (
 	"errors"
+	"os"
+	"strconv"
+
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils/dcc32"
 	"github.com/spf13/cobra"
-	"os"
-	"strconv"
 )
 
 var cmdDelphi = &cobra.Command{

@@ -1,18 +1,19 @@
 package compiler
 
 import (
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
-	"github.com/hashload/boss/utils"
-	"github.com/hashload/boss/utils/dcp"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
+	"github.com/hashload/boss/utils/dcp"
 )
 
 func getCompilerParameters(rootPath string, dep *models.Dependency, platform string) string {
@@ -88,30 +89,6 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 		utils.HandleError(err)
 
 		return true
-	}
-}
-
-func _(dep *models.Dependency, basePath string) string {
-	if graphDep, err := loadOrderGraphDep(dep); err == nil {
-		var result = filepath.Join(env.GetModulesDir(), consts.DcpFolder) + ";"
-		for {
-			if graphDep.IsEmpty() {
-				break
-			}
-			dequeue := graphDep.Dequeue()
-			var modulePath = filepath.Join(env.GetModulesDir(), dequeue.Dep.GetName())
-			if modulePath == basePath {
-				continue
-			}
-			if depPkg, err := models.LoadPackageOther(filepath.Join(modulePath, consts.FilePackage)); err == nil {
-				result += getPaths(filepath.Join(modulePath, depPkg.MainSrc), basePath)
-			} else {
-				result += getPaths(modulePath, basePath)
-			}
-		}
-		return result
-	} else {
-		return getNewPathsAll(basePath) + ";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder)
 	}
 }
 

@@ -1,14 +1,15 @@
 package paths
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.PackageLock) {

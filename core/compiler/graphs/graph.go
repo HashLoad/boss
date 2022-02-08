@@ -2,10 +2,11 @@ package graphs
 
 import (
 	"fmt"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
 	"strings"
 	"sync"
+
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
 )
 
 type Node struct {

@@ -1,10 +1,11 @@
 package dcp
 
 import (
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/models"
 	"path/filepath"
 	"strings"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/models"
 )
 
 func getRequiresList(pkg *models.Package, rootLock models.PackageLock) []string {
