@@ -20,9 +20,9 @@ import (
 	"github.com/snakeice/gogress"
 )
 
-const latestRelease string = "https://api.github.com/repos/HashLoad/boss/releases/latest"
-const releaseTag string = "https://api.github.com/repos/HashLoad/boss/releases/tags/%s"
-const tags string = "https://api.github.com/repos/HashLoad/boss/tags"
+const latestRelease string = "https://api.github.com/repos/hashload/boss/releases/latest"
+const releaseTag string = "https://api.github.com/repos/hashload/boss/releases/tags/%s"
+const tags string = "https://api.github.com/repos/hashload/boss/tags"
 
 func DoBossUpgrade(preRelease bool) {
 	var link string
@@ -38,7 +38,7 @@ func DoBossUpgrade(preRelease bool) {
 	}
 
 	if !checkVersion(version, preRelease) {
-		// return
+		return
 	}
 
 	ex, err := os.Executable()
