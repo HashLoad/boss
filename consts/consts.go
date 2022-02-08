@@ -42,8 +42,6 @@ const XmlTagNameCompilerOptions string = "CompilerOptions"
 const XmlTagNameSearchPaths string = "SearchPaths"
 const XmlTagNameOtherUnitFiles string = "OtherUnitFiles"
 
-const Version string = "3.0.5"
-
 const BossInternalDir = "internal."
 const BossInternalDirOld = "{internal}"
 

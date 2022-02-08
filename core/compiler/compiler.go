@@ -17,7 +17,7 @@ import (
 func Build(pkg *models.Package) {
 	buildOrderedPackages(pkg)
 	graph := LoadOrderGraphAll(pkg)
-	saveLoadOrder(&graph)
+	saveLoadOrder(graph)
 }
 
 func saveLoadOrder(queue *graphs.NodeQueue) {

@@ -40,7 +40,7 @@ func Initialize() {
 		tester <- "ok"
 	}()
 	select {
-	case _ = <-tester:
+	case <-tester:
 	case <-time.After(time.Second * 10):
 		msg.Warn("Failed to update paths, please run with administrator privileges")
 	}

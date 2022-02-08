@@ -87,7 +87,7 @@ func (p PackageLock) Save() {
 		log.Fatalf("error %v", err)
 	}
 
-	_ = ioutil.WriteFile(p.fileName, marshal, 664)
+	_ = ioutil.WriteFile(p.fileName, marshal, 0664)
 }
 
 func (p PackageLock) AddInstalled(dep Dependency, version string) {

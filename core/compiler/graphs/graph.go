@@ -1,7 +1,6 @@
 package graphs
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 
@@ -19,7 +18,7 @@ func NewNode(dependency *models.Dependency) *Node {
 }
 
 func (n *Node) String() string {
-	return fmt.Sprintf("%s", n.Dep.GetName())
+	return n.Dep.GetName()
 }
 
 type GraphItem struct {
@@ -122,7 +121,7 @@ func removeNode(nodes []*Node, key int) []*Node {
 	}
 }
 
-func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) NodeQueue {
+func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) *NodeQueue {
 	g.lock()
 	queue := NodeQueue{}
 	queue.New()
@@ -171,7 +170,7 @@ func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) NodeQueue {
 		}
 	}
 	g.unlock()
-	return queue
+	return &queue
 }
 
 type NodeQueue struct {

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 
-	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/internal/version"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
@@ -25,16 +28,17 @@ func DoBossUpgrade(preRelease bool) {
 	var link string
 	var size float64
 	var version string
+	var fileName string
 
 	if !preRelease {
-		link, size, version = getDownloadLink(latestRelease)
+		link, size, version, fileName = getDownloadLink(latestRelease)
 	} else {
 		tag := getLastTag()
-		link, size, version = getDownloadLink(fmt.Sprintf(releaseTag, tag))
+		link, size, version, fileName = getDownloadLink(fmt.Sprintf(releaseTag, tag))
 	}
 
 	if !checkVersion(version, preRelease) {
-		return
+		// return
 	}
 
 	ex, err := os.Executable()
@@ -48,32 +52,77 @@ func DoBossUpgrade(preRelease bool) {
 	if err := os.Rename(exePath, exePath+"_o"); err != nil {
 		msg.Warn("Failed on rename " + exePath + " to " + exePath + "_0")
 	}
-	if err := downloadFile(exePath+"_n", link, size); err != nil {
+
+	downloadPath := filepath.Join(os.TempDir(), fileName)
+
+	if err := downloadFile(downloadPath, link, size); err != nil {
 		msg.Err("Failed on download ", err.Error())
-		if err := os.Rename(exePath+"_o", exePath); err != nil {
-			msg.Err("Failed on rename "+exePath+"_o"+" to "+exePath, err.Error())
-		}
+		return
 	} else {
-		if err := os.Rename(exePath+"_n", exePath); err != nil {
-			msg.Err("Failed on rename "+exePath+"_n"+" to "+exePath, err.Error())
+		defer os.Remove(downloadPath)
+	}
+
+	zipReader, err := zip.OpenReader(downloadPath)
+	if err != nil {
+		msg.Err("Failed on open zip ", err.Error())
+		return
+	}
+	defer zipReader.Close()
+
+	for _, f := range zipReader.File {
+		// get file name from path
+		tmpFilename := filepath.Base(f.Name)
+
+		if strings.HasPrefix(tmpFilename, "boss") {
+			rc, err := f.Open()
+			if err != nil {
+				msg.Err("Failed on open zip file ", err.Error())
+				return
+			}
+			defer rc.Close()
+
+			newExePath := exePath + "_n"
+
+			outFile, err := os.Create(newExePath)
+			if err != nil {
+				msg.Err("Failed on create new version ", err.Error())
+				return
+			}
+			defer outFile.Close()
+
+			_, err = io.Copy(outFile, rc)
+			if err != nil {
+				msg.Err("Failed on copy new version ", err.Error())
+				return
+			}
+
+			if err := os.Rename(exePath, exePath+"_o"); err != nil {
+				msg.Warn("Failed on rename " + exePath + " to " + exePath + "_0")
+			}
+
+			if err := os.Rename(newExePath, exePath); err != nil {
+				msg.Err("Failed on rename " + newExePath + " to " + exePath)
+			}
+			break
 		}
 	}
+	msg.Info("Upgrade to version " + version + " success")
 }
 
 func checkVersion(newVersion string, preRelease bool) bool {
-	version, _ := semver.NewVersion(newVersion)
-	current, _ := semver.NewVersion(consts.Version)
+	new, _ := semver.NewVersion(newVersion)
+	current, _ := semver.NewVersion(version.Get().Version)
 
-	needUpdate := version.GreaterThan(current)
+	needUpdate := new.GreaterThan(current)
 
 	if !needUpdate && preRelease {
-		needUpdate = current.Prerelease() == "" && version.Prerelease() != ""
+		needUpdate = current.Prerelease() == "" && new.Prerelease() != ""
 	} else if !needUpdate && !preRelease {
-		needUpdate = current.Prerelease() != "" && version.Prerelease() == ""
+		needUpdate = current.Prerelease() != "" && new.Prerelease() == ""
 	}
 
 	if needUpdate {
-		println(consts.Version, " -> ", newVersion)
+		println(version.Get().Version, " -> ", newVersion)
 	} else {
 		println(newVersion)
 		println("already up to date!")
@@ -81,12 +130,14 @@ func checkVersion(newVersion string, preRelease bool) bool {
 	return needUpdate
 }
 
-func getDownloadLink(releaseUrl string) (link string, size float64, version string) {
+func getDownloadLink(releaseUrl string) (string, float64, string, string) {
 	resp := makeRequest(releaseUrl)
 	contents, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		msg.Die(err.Error())
 	}
+
+	fileName := "boss-" + runtime.GOOS + "-" + runtime.GOARCH + ".zip"
 
 	var obj map[string]interface{}
 	if err := json.Unmarshal(contents, &obj); err != nil {
@@ -94,13 +145,13 @@ func getDownloadLink(releaseUrl string) (link string, size float64, version stri
 	}
 	for _, value := range obj["assets"].([]interface{}) {
 		bossExe := value.(map[string]interface{})
-		if bossExe["name"].(string) == "boss.exe" {
-			return bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string)
+		if bossExe["name"].(string) == fileName {
+			return bossExe["browser_download_url"].(string), bossExe["size"].(float64), obj["tag_name"].(string), fileName
 		}
 	}
 	utils.HandleError(resp.Body.Close())
-	msg.Die("not found")
-	return "", 0, ""
+	msg.Die("not found " + fileName + " in release " + obj["tag_name"].(string))
+	return "", 0, "", ""
 }
 
 func getLastTag() string {

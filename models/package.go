@@ -26,7 +26,7 @@ type Package struct {
 // Save save changes of boss.json file
 func (p *Package) Save() []byte {
 	marshal, _ := parser.JSONMarshal(p, true)
-	_ = WriteFile(p.fileName, marshal, 664)
+	_ = WriteFile(p.fileName, marshal, 0664)
 	p.Lock.Save()
 	return marshal
 }
@@ -38,7 +38,7 @@ func (p *Package) AddDependency(dep string, ver string) {
 	deps := p.Dependencies.(map[string]interface{})
 
 	for key := range deps {
-		if strings.ToLower(key) == strings.ToLower(dep) {
+		if strings.EqualFold(key, dep) {
 			deps[key] = ver
 			return
 		}
@@ -63,7 +63,7 @@ func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
 		deps := p.Dependencies.(map[string]interface{})
 		for key := range deps {
-			if strings.ToLower(key) == strings.ToLower(dep) {
+			if strings.EqualFold(key, dep) {
 				delete(deps, key)
 			}
 		}

@@ -72,20 +72,6 @@ func (a *Auth) SetPass(pass string) {
 	}
 }
 
-func (c *Configuration) addAuth(repo string, auth *Auth) {
-	if c.Auth == nil {
-		c.Auth = make(map[string]*Auth)
-	}
-	c.Auth[repo] = auth
-}
-
-func (c *Configuration) removeAuth(repo string) {
-	if c.Auth == nil {
-		return
-	}
-	delete(c.Auth, repo)
-}
-
 func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	auth := c.Auth[repo]
 	if auth == nil {

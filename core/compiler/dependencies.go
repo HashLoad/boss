@@ -9,13 +9,13 @@ import (
 	"github.com/hashload/boss/models"
 )
 
-func loadOrderGraph(pkg *models.Package) graphs.NodeQueue {
+func loadOrderGraph(pkg *models.Package) *graphs.NodeQueue {
 	var graph graphs.GraphItem
 	deps := pkg.GetParsedDependencies()
 	loadGraph(&graph, nil, deps, nil)
 	return graph.Queue(pkg, false)
 }
-func LoadOrderGraphAll(pkg *models.Package) graphs.NodeQueue {
+func LoadOrderGraphAll(pkg *models.Package) *graphs.NodeQueue {
 	var graph graphs.GraphItem
 	deps := pkg.GetParsedDependencies()
 	loadGraph(&graph, nil, deps, nil)

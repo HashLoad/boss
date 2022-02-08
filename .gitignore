@@ -34,3 +34,5 @@ boss.json
 *.lpi
 *.lpr
 *.lps
+_dist
+bin/
