@@ -1,18 +1,18 @@
 package compiler
 
 import (
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/dcp"
-	"io/ioutil"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 func getCompilerParameters(rootPath string, dep *models.Dependency, platform string) string {
@@ -88,76 +88,5 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 		utils.HandleError(err)
 
 		return true
-	}
-}
-
-func _(dep *models.Dependency, basePath string) string {
-	if graphDep, err := loadOrderGraphDep(dep); err == nil {
-		var result = filepath.Join(env.GetModulesDir(), consts.DcpFolder) + ";"
-		for {
-			if graphDep.IsEmpty() {
-				break
-			}
-			dequeue := graphDep.Dequeue()
-			var modulePath = filepath.Join(env.GetModulesDir(), dequeue.Dep.GetName())
-			if modulePath == basePath {
-				continue
-			}
-			if depPkg, err := models.LoadPackageOther(filepath.Join(modulePath, consts.FilePackage)); err == nil {
-				result += getPaths(filepath.Join(modulePath, depPkg.MainSrc), basePath)
-			} else {
-				result += getPaths(modulePath, basePath)
-			}
-		}
-		return result
-	} else {
-		return getNewPathsAll(basePath) + ";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder)
-	}
-}
-
-func getNewPathsAll(basePath string) string {
-	return getPaths(env.GetModulesDir(), basePath)
-}
-
-func getPaths(path string, basePath string) string {
-	var ignore = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}
-	var paths []string
-	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		if info == nil {
-			return nil
-		}
-		if info.IsDir() {
-			return nil
-		} else {
-			if utils.Contains(ignore, info.Name()) {
-				return nil
-			}
-		}
-
-		matched, _ := regexp.MatchString(consts.RegexArtifacts, info.Name())
-		dir := filepath.Dir(path)
-		dir, err = filepath.Rel(basePath, dir)
-		utils.HandleError(err)
-		if matched && !utils.Contains(paths, dir) {
-			paths = append(paths, dir)
-		}
-		return nil
-	})
-	return strings.Join(paths, ";") + ";"
-}
-
-func buildDCU(path string) {
-	msg.Info("  Building %s", filepath.Base(path))
-	var unitScopes = "-NSWinapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;System;Xml;Data;Datasnap;Web" +
-		";Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell"
-	var unitInputDir = "-U" + filepath.Join(env.GetModulesDir(), consts.DcuFolder)
-	var unitOutputDir = "-NU" + filepath.Join(env.GetModulesDir(), consts.DcuFolder)
-	command := exec.Command("cmd", "/c dcc32.exe "+unitScopes+" "+unitInputDir+" "+unitOutputDir+" "+path)
-	command.Dir = filepath.Dir(path)
-	if out, err := command.Output(); err != nil {
-		msg.Err("  - Failed to compile")
-		msg.Err(string(out))
-	} else {
-		msg.Info("  - Success!")
 	}
 }

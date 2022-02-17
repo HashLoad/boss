@@ -1,13 +1,14 @@
 package core
 
 import (
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
 )
 
 func RunGC(ignoreLastUpdate bool) {

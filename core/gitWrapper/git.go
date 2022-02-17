@@ -1,6 +1,8 @@
 package gitWrapper
 
 import (
+	"path/filepath"
+
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
@@ -8,7 +10,6 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
-	"path/filepath"
 )
 
 func CloneCache(dep models.Dependency) *git.Repository {

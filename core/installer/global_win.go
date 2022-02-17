@@ -1,12 +1,15 @@
+//go:build windows
+
 package installer
 
 import (
-	"os"
+	"io/fs"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/hashload/boss/consts"
+	bossRegistry "github.com/hashload/boss/core/registry"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
@@ -18,7 +21,7 @@ func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool, noSav
 	// TODO noSave
 	EnsureDependencyOfArgs(pkg, args)
 	DoInstall(pkg, lockedVersion)
-	DoInstallPackages()
+	doInstallPackages()
 }
 
 func find(array []string, value string) int {
@@ -52,8 +55,8 @@ func addPathBpl(ideVersion string) {
 	utils.HandleError(err)
 }
 
-func DoInstallPackages() {
-	var ideVersion = env.GetCurrentDelphiVersionFromRegistry()
+func doInstallPackages() {
+	var ideVersion = bossRegistry.GetCurrentDelphiVersion()
 	var bplDir = filepath.Join(env.GetModulesDir(), consts.BplFolder)
 
 	addPathBpl(ideVersion)
@@ -74,7 +77,7 @@ func DoInstallPackages() {
 
 	var existingBpls []string
 
-	err = filepath.Walk(bplDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.WalkDir(bplDir, func(path string, info fs.DirEntry, err error) error {
 		if info == nil || info.IsDir() {
 			return nil
 		}

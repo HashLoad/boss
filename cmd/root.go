@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/hashload/boss/cmd/config"
 	"github.com/hashload/boss/core"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/setup"
 	"github.com/hashload/boss/utils"
-	"os"
 
 	"github.com/spf13/cobra"
 )

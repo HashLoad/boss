@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/installer"
+	"github.com/hashload/boss/core/registry"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
@@ -39,7 +40,7 @@ func Initialize() {
 		tester <- "ok"
 	}()
 	select {
-	case _ = <-tester:
+	case <-tester:
 	case <-time.After(time.Second * 10):
 		msg.Warn("Failed to update paths, please run with administrator privileges")
 	}
@@ -155,7 +156,7 @@ func initializeDelphiVersion() {
 		return
 	}
 
-	byRegistry := dcc32.GetDelphiPathsByRegistry()
+	byRegistry := registry.GetDelphiPaths()
 	if len(byRegistry) != 0 {
 		env.GlobalConfiguration.DelphiPath = byRegistry[len(byRegistry)-1]
 		env.GlobalConfiguration.SaveConfiguration()

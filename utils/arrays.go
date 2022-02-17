@@ -4,7 +4,7 @@ import "strings"
 
 func Contains(a []string, x string) bool {
 	for _, n := range a {
-		if strings.ToUpper(x) == strings.ToUpper(n) {
+		if strings.EqualFold(x, n) {
 			return true
 		}
 	}

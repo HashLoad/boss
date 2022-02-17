@@ -110,19 +110,18 @@ func GetProjectNames(pkg *models.Package) []string {
 	var matches = 0
 
 	if len(pkg.Projects) > 0 {
-		for _, project := range pkg.Projects {
-			result = append(result, env.GetCurrentDir()+string(filepath.Separator)+project)
-		}
-
 		result = pkg.Projects
 	} else {
 		files, err := ioutil.ReadDir(env.GetCurrentDir())
 		if err != nil {
 			panic(err)
 		}
+
+		regex := regexp.MustCompile(".*.dproj|.*.lpi$")
+
 		for _, file := range files {
-			matched, e := regexp.MatchString(".*.dproj|.*.lpi$", file.Name())
-			if e == nil && matched {
+			matched := regex.MatchString(file.Name())
+			if matched {
 				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
 				matches++
 			}
@@ -137,9 +136,12 @@ func isLazarus() bool {
 	if err != nil {
 		panic(err)
 	}
+
+	r := regexp.MustCompile(".*.lpi$")
+
 	for _, file := range files {
-		matched, e := regexp.MatchString(".*.lpi$", file.Name())
-		if e == nil && matched {
+		matched := r.MatchString(file.Name())
+		if matched {
 			return true
 		}
 	}

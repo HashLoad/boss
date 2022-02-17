@@ -1,16 +1,17 @@
 package compiler
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/compiler/graphs"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 func Build(pkg *models.Package) {
@@ -19,7 +20,7 @@ func Build(pkg *models.Package) {
 	saveLoadOrder(graph)
 }
 
-func saveLoadOrder(queue graphs.NodeQueue) {
+func saveLoadOrder(queue *graphs.NodeQueue) {
 	var projects = ""
 	for {
 		if queue.IsEmpty() {

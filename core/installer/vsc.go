@@ -1,14 +1,15 @@
 package installer
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/hashload/boss/core/gitWrapper"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"gopkg.in/src-d/go-git.v4"
-	"os"
-	"path/filepath"
 )
 
 var updatedDependencies []string

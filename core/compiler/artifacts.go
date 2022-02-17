@@ -1,12 +1,13 @@
 package compiler
 
 import (
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/utils"
 )
 
 func moveArtifacts(dep models.Dependency, rootPath string) {

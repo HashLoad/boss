@@ -4,11 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
-	"github.com/hashload/boss/utils"
-	"github.com/masterminds/semver"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,6 +11,12 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/hashload/boss/consts"
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
+	"github.com/masterminds/semver"
 )
 
 type DependencyArtifacts struct {
@@ -86,7 +87,7 @@ func (p PackageLock) Save() {
 		log.Fatalf("error %v", err)
 	}
 
-	_ = ioutil.WriteFile(p.fileName, marshal, 664)
+	_ = ioutil.WriteFile(p.fileName, marshal, 0664)
 }
 
 func (p PackageLock) AddInstalled(dep Dependency, version string) {

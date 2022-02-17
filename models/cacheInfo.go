@@ -2,12 +2,13 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/hashload/boss/env"
+	"github.com/hashload/boss/msg"
 )
 
 type RepoInfo struct {

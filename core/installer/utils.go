@@ -43,7 +43,7 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 func ParseDependency(dependencyName string) string {
 	re := regexp.MustCompile(`(?m)(([?^/]).*)`)
 	if !re.Match([]byte(dependencyName)) {
-		return "github.com/HashLoad/" + dependencyName
+		return "github.com/hashload/" + dependencyName
 	}
 	re = regexp.MustCompile(`(?m)([?^/].*)(([?^/]).*)`)
 	if !re.Match([]byte(dependencyName)) {

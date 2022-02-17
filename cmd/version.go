@@ -1,7 +1,9 @@
 package cmd
 
 import (
-	"github.com/hashload/boss/consts"
+	"fmt"
+
+	"github.com/hashload/boss/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -13,10 +15,17 @@ var versionCmd = &cobra.Command{
 	Example: `  Print version:
   boss version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		println(consts.Version)
+		printVersion()
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(versionCmd)
+}
+
+func printVersion() {
+	v := version.Get()
+	fmt.Println("Version        ", v.Version)
+	fmt.Println("Git commit     ", v.GitCommit)
+	fmt.Println("Go version     ", v.GoVersion)
 }

@@ -97,10 +97,8 @@ func printSingleDependency(dep *models.Dependency, lock models.PackageLock, tree
 	switch isOutdated(*dep, lock.GetInstalled(*dep).Version) {
 	case outdated:
 		output += " outdated"
-		break
 	case usingMaster:
 		output += " using master"
-		break
 	}
 
 	return tree.AddBranch(output)

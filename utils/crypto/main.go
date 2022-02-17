@@ -8,9 +8,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"io"
+
 	"github.com/denisbrodbeck/machineid"
 	"github.com/hashload/boss/msg"
-	"io"
 )
 
 func Encrypt(key []byte, message string) (cyphred string, err error) {

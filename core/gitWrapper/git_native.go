@@ -2,17 +2,18 @@ package gitWrapper
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+
 	"github.com/hashload/boss/core/paths"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	git2 "gopkg.in/src-d/go-git.v4"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/exec"
-	"path/filepath"
 )
 
 func checkHasGitClient() {
