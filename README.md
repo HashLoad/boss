@@ -1,6 +1,6 @@
 ![Go](https://github.com/hashload/boss/workflows/Go/badge.svg)
 
-# Dependency Manager for Delphi and Lazarus (Windows)
+# Dependency Manager for Delphi and Lazarus
 
 ### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13) 
 
