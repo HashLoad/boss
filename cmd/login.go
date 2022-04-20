@@ -61,6 +61,7 @@ func login(removeLogin bool, args []string) {
 	auth.UseSsh = getParamBoolean("Use SSH")
 	if auth.UseSsh {
 		auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
+		auth.SetPassPhrase(getPass("PassPhrase"))
 	} else {
 		auth.SetUser(getParamOrDef("Username", ""))
 		auth.SetPass(getPass("Password"))
