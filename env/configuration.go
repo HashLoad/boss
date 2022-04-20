@@ -36,6 +36,7 @@ type Auth struct {
 	Path   string `json:"path,omitempty"`
 	User   string `json:"x,omitempty"`
 	Pass   string `json:"y,omitempty"`
+	PassPhrase string `json:"z,omitempty"`
 }
 
 func (a *Auth) GetUser() string {
@@ -50,6 +51,15 @@ func (a *Auth) GetUser() string {
 func (a *Auth) GetPassword() string {
 	if ret, err := crypto.Decrypt(machineID, a.Pass); err != nil {
 		msg.Err("Fail to decrypt pass.", err)
+		return ""
+	} else {
+		return ret
+	}
+}
+
+func (a *Auth) GetPassPhrase() string {
+	if ret, err := crypto.Decrypt(machineID, a.PassPhrase); err != nil {
+		msg.Err("Fail to decrypt PassPhrase.", err)
 		return ""
 	} else {
 		return ret
@@ -72,6 +82,14 @@ func (a *Auth) SetPass(pass string) {
 	}
 }
 
+func (a *Auth) SetPassPhrase(passphrase string) {
+	if cPassPhrase, err := crypto.Encrypt(machineID, passphrase); err != nil {
+		msg.Err("Fail to crypt PassPhrase.")
+	} else {
+		a.PassPhrase = cPassPhrase
+	}
+}
+
 func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	auth := c.Auth[repo]
 	if auth == nil {
@@ -83,7 +101,11 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		}
 		var signer ssh.Signer
 
-		signer, e = ssh.ParsePrivateKey(pem)
+		if auth.GetPassPhrase() != "" {
+			signer, e = ssh.ParsePrivateKeyWithPassphrase(pem, []byte(auth.GetPassPhrase()))
+		} else {
+			signer, e = ssh.ParsePrivateKey(pem)
+		}
 
 		if e != nil {
 			panic(e)
