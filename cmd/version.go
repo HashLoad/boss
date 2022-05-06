@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashload/boss/internal/version"
@@ -15,7 +16,7 @@ var versionCmd = &cobra.Command{
 	Example: `  Print version:
   boss version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		printVersion()
+		printVersion(true)
 	},
 }
 
@@ -23,9 +24,16 @@ func init() {
 	RootCmd.AddCommand(versionCmd)
 }
 
-func printVersion() {
+func printVersion(withDetails bool) {
 	v := version.Get()
-	fmt.Println("Version        ", v.Version)
-	fmt.Println("Git commit     ", v.GitCommit)
-	fmt.Println("Go version     ", v.GoVersion)
+	if withDetails {
+		jsonVersion, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(string(jsonVersion))
+		}
+	} else {
+		fmt.Println(v.Version)
+	}
 }
