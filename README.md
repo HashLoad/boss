@@ -50,7 +50,10 @@ boss dependencies -v
 ### > Version
 This command show the client version
 ```
+boss v
 boss version
+boss -v
+boss --version
 ```
 ###### Aliases: v
 
