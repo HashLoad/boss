@@ -58,7 +58,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 		}
 	}	
 	
-    doc.WriteSettings.CanonicalAttrVal = true
+	doc.WriteSettings.CanonicalAttrVal = true
 	doc.WriteSettings.CanonicalEndTags = false
 	doc.WriteSettings.CanonicalText = true
 	if err := doc.WriteToFile(lpiName); err != nil {
