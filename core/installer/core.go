@@ -123,12 +123,13 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 			}
 		}
 
-		if !rootLock.NeedUpdate(dep, referenceName.Short()) {
+		switch {
+		case !rootLock.NeedUpdate(dep, referenceName.Short()):
 			msg.Info("  %s already updated", dep.GetName())
 			continue
-		} else if !hasMatch {
+		case !hasMatch:
 			msg.Warn("  No candidate to version for %s. Using master branch", dep.GetVersion())
-		} else {
+		default:
 			msg.Info("  Detected semantic version. Using version %s", bestMatch.Name().Short())
 		}
 

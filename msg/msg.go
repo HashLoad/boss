@@ -1,15 +1,12 @@
 package msg
 
 import (
-	"io"
-	"sync"
-)
-
-import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Messenger struct {

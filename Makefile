@@ -49,7 +49,7 @@ all: build
 
 
 .PHONY: install
-install: 
+install:
 	go install .
 
 .PHONY: build

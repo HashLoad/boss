@@ -9,9 +9,9 @@ func JSONMarshal(v interface{}, safeEncoding bool) ([]byte, error) {
 	b, err := json.MarshalIndent(v, "", "\t")
 
 	if safeEncoding {
-		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
-		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
-		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
+		b = bytes.ReplaceAll(b, []byte("\\u003c"), []byte("<"))
+		b = bytes.ReplaceAll(b, []byte("\\u003e"), []byte(">"))
+		b = bytes.ReplaceAll(b, []byte("\\u0026"), []byte("&"))
 	}
 	return b, err
 }

@@ -32,10 +32,10 @@ type Configuration struct {
 }
 
 type Auth struct {
-	UseSsh bool   `json:"use,omitempty"`
-	Path   string `json:"path,omitempty"`
-	User   string `json:"x,omitempty"`
-	Pass   string `json:"y,omitempty"`
+	UseSsh     bool   `json:"use,omitempty"`
+	Path       string `json:"path,omitempty"`
+	User       string `json:"x,omitempty"`
+	Pass       string `json:"y,omitempty"`
 	PassPhrase string `json:"z,omitempty"`
 }
 
@@ -92,9 +92,11 @@ func (a *Auth) SetPassPhrase(passphrase string) {
 
 func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	auth := c.Auth[repo]
-	if auth == nil {
+
+	switch {
+	case auth == nil:
 		return nil
-	} else if auth.UseSsh {
+	case auth.UseSsh:
 		pem, e := ioutil.ReadFile(auth.Path)
 		if e != nil {
 			msg.Die("Fail to open ssh key %s", e)
@@ -112,7 +114,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		}
 		return &sshGit.PublicKeys{User: "git", Signer: signer}
 
-	} else {
+	default:
 		return &http.BasicAuth{Username: auth.GetUser(), Password: auth.GetPassword()}
 	}
 }

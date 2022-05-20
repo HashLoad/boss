@@ -15,13 +15,15 @@ import (
 func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.PackageLock) {
 	cacheDir := env.GetModulesDir()
 	cacheDirInfo, err := os.Stat(cacheDir)
-	if os.IsNotExist(err) {
+	switch {
+	case os.IsNotExist(err):
 		if err := os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
 			msg.Die("Could not create %s: %s", cacheDir, err)
 		}
-	} else if cacheDirInfo != nil && !cacheDirInfo.IsDir() {
+
+	case cacheDirInfo != nil && !cacheDirInfo.IsDir():
 		msg.Die("modules is not a directory")
-	} else {
+	default:
 		fileInfos, err := ioutil.ReadDir(cacheDir)
 		utils.HandleError(err)
 		dependenciesNames := models.GetDependenciesNames(dependencies)

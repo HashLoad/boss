@@ -2,9 +2,9 @@
 
 # Dependency Manager for Delphi and Lazarus
 
-### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13) 
+### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13)
 
-Installation: 
+Installation:
  * Download [setup](https://github.com/hashload/boss/releases)
  * Just type `boss` in cmd
  * (Optional) Install a [Boss Delphi IDE complement](https://github.com/hashload/boss-ide)
@@ -15,7 +15,7 @@ Installation:
 This command initialize a new project. Add `--q` to initialize the boss with default values.
 ```
 boss init
-boss init --q 
+boss init --q
 ```
 
 ### > Install
@@ -42,7 +42,7 @@ This command removes the cache
 ### > Dependencies
 This command print all dependencies and your versions. To see versions, add aliases `-v`
 ```
-boss dependencies 
+boss dependencies
 boss dependencies -v
 ```
 ###### Aliases: dep, ls, list, ll, la
@@ -96,7 +96,7 @@ publish          Publish package to registry
 run              Run cmd script
 ```
 
-## Samples 
+## Samples
 ```
 boss install horse
 boss install horse:1.0.0
@@ -104,7 +104,7 @@ boss install -g delphi-docker
 boss install -g boss-ide
 ```
 
-## Using [semantic versioning](https://semver.org/) to specify update types your package can accept 
+## Using [semantic versioning](https://semver.org/) to specify update types your package can accept
 
 You can specify which update types your package can accept from dependencies in your package’s boss.json file.
 

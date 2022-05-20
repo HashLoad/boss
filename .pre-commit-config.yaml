@@ -1,0 +1,35 @@
+---
+  repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.1.0
+      hooks:
+        - id: check-added-large-files
+        - id: check-byte-order-marker
+        - id: check-executables-have-shebangs
+        - id: check-merge-conflict
+        - id: end-of-file-fixer
+        - id: mixed-line-ending
+        - id: check-yaml
+        - id: detect-private-key
+        - id: check-symlinks
+        - id: detect-aws-credentials
+        - id: trailing-whitespace
+          args: [--markdown-linebreak-ext=md]
+
+    - repo: https://github.com/dnephin/pre-commit-golang
+      rev: v0.5.0
+      hooks:
+        - id: go-fmt
+        # - id: go-vet
+        - id: go-imports
+        - id: go-cyclo
+          args: [-over=15]
+        - id: validate-toml
+        - id: no-go-testing
+        - id: golangci-lint
+          args:
+            - "--go=1.18"
+        - id: go-critic
+        # - id: go-unit-tests
+        - id: go-build
+        - id: go-mod-tidy

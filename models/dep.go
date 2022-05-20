@@ -73,12 +73,12 @@ func ParseDependency(repo string, info string) Dependency {
 	if re.MatchString(dependency.version) {
 		msg.Warn("Current version for %s is not semantic (x.y.z), for comparison using %s -> %s",
 			dependency.Repository, dependency.version, dependency.version+".0")
-		dependency.version = dependency.version + ".0"
+		dependency.version += ".0"
 	}
 	if re2.MatchString(dependency.version) {
 		msg.Warn("Current version for %s is not semantic (x.y.z), for comparison using %s -> %s",
 			dependency.Repository, dependency.version, dependency.version+".0.0")
-		dependency.version = dependency.version + ".0.0"
+		dependency.version += ".0.0"
 	}
 	if len(parsed) > 1 {
 		dependency.UseSSH = parsed[1] == "ssh"

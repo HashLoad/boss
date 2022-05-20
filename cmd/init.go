@@ -41,12 +41,10 @@ func doInitialization(quiet bool) {
 
 	pkgJson, _ := models.LoadPackage(true)
 
-	var folderName = ""
-	rxp, err := regexp.Compile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
-	if err == nil {
-		allString := rxp.FindAllStringSubmatch(env.GetCurrentDir(), -1)
-		folderName = allString[0][1]
-	}
+	rxp := regexp.MustCompile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
+
+	allString := rxp.FindAllStringSubmatch(env.GetCurrentDir(), -1)
+	folderName := allString[0][1]
 
 	if quiet {
 		pkgJson.Name = folderName
@@ -84,7 +82,7 @@ func printHead() {
 	println(`
 This utility will walk you through creating a boss.json file.
 It only covers the most common items, and tries to guess sensible defaults.
-		 
+
 Use 'boss install <pkg>' afterwards to install a package and
 save it as a dependency in the boss.json file.
 
