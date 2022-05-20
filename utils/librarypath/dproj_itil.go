@@ -40,9 +40,37 @@ func updateOtherUnitFilesProject(lpiName string) {
 		msg.Err("Error on read lpi: %s", e)
 		return
 	}
+	
 	root := doc.Root()
+	
 	compilerOptions := root.SelectElement(consts.XmlTagNameCompilerOptions)
+	processCompilerOptions(compilerOptions)
+	
+	projectOptions := root.SelectElement(consts.XmlTagNameProjectOptions)
+	
+	buildModes := projectOptions.SelectElement(consts.XmlTagNameBuildModes)
+	for _, item := range buildModes.SelectElements(consts.XmlTagNameItem) {
+		attribute := item.SelectAttr(consts.XmlNameAttribute)
+		compilerOptions := item.SelectElement(consts.XmlTagNameCompilerOptions)
+		if compilerOptions != nil {
+		  msg.Info("  Updating %s mode", attribute.Value)		
+  		  processCompilerOptions(compilerOptions)
+		}
+	}	
+	
+	doc.WriteSettings.CanonicalAttrVal = true
+	doc.WriteSettings.CanonicalEndTags = false
+	doc.WriteSettings.CanonicalText = true
+	if err := doc.WriteToFile(lpiName); err != nil {
+		panic(err)
+	}
+}
+
+func processCompilerOptions(compilerOptions *etree.Element) {
 	searchPaths := compilerOptions.SelectElement(consts.XmlTagNameSearchPaths)
+	if searchPaths == nil {
+		return
+	}
 	otherUnitFiles := searchPaths.SelectElement(consts.XmlTagNameOtherUnitFiles)
 	if otherUnitFiles == nil {
 		otherUnitFiles = createTagOtherUnitFiles(searchPaths)
@@ -50,13 +78,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 	value := otherUnitFiles.SelectAttr("Value")
 	currentPaths := strings.Split(value.Value, ";")
 	currentPaths = GetNewPaths(currentPaths, false)
-	value.Value = strings.Join(currentPaths, ";")
-	doc.WriteSettings.CanonicalAttrVal = true
-	doc.WriteSettings.CanonicalEndTags = false
-	doc.WriteSettings.CanonicalText = true
-	if err := doc.WriteToFile(lpiName); err != nil {
-		panic(err)
-	}
+	value.Value = strings.Join(currentPaths, ";")	
 }
 
 func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
