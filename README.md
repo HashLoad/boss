@@ -15,8 +15,9 @@ Installation:
 This command initialize a new project. Add `--q` to initialize the boss with default values.
 ```
 boss init
-boss init --q
+boss init -q
 ```
+###### Aliases: --quiet
 
 ### > Install
 This command install a new dependency
