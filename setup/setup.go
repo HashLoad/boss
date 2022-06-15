@@ -12,6 +12,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/dcc32"
 	"github.com/snakeice/penv"
 )
@@ -34,16 +35,7 @@ func Initialize() {
 	msg.Debug("\tExecuting migrations")
 	migration()
 	msg.Debug("\tAdjusting paths")
-	tester := make(chan string, 1)
-	go func() {
-		addPath(paths)
-		tester <- "ok"
-	}()
-	select {
-	case <-tester:
-	case <-time.After(time.Second * 10):
-		msg.Warn("Failed to update paths, please run with administrator privileges")
-	}
+	addPaths(paths)
 	msg.Debug("\tInstalling internal modules")
 	installModules(modules)
 	msg.Debug("\tCreating paths")
@@ -71,7 +63,7 @@ func getPath(arr []penv.NameValue) string {
 	return ""
 }
 
-func addPath(paths []string) {
+func addPaths(paths []string) {
 	var needAdd = false
 	environment, e := penv.Load()
 	if e != nil {
@@ -80,22 +72,24 @@ func addPath(paths []string) {
 	}
 
 	currentPath := getPath(environment.Setters)
-	pathEnv := ""
+	splitedPath := strings.Split(currentPath, ";")
+
 	for _, path := range paths {
-		if !strings.Contains(currentPath, path) {
-			pathEnv = path + ";"
+		if !utils.Contains(splitedPath, path) {
+			splitedPath = append(splitedPath, path)
 			needAdd = true
 		}
 	}
 
 	if needAdd {
-		if !strings.HasSuffix(currentPath, ";") {
-			pathEnv = ";" + pathEnv
+		newPath := strings.Join(splitedPath, ";")
+		err := penv.AppendEnv(PATH, newPath)
+		if err != nil {
+			msg.Die("Failed to update PATH \n %s", err.Error())
+			return
+
 		}
-		if err := penv.AppendEnv(PATH, pathEnv); err != nil {
-			msg.Err("Failed to set env " + PATH)
-			msg.Die(err.Error())
-		}
+
 		msg.Warn("Please restart your console after complete.")
 	}
 
