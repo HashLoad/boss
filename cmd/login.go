@@ -10,7 +10,7 @@ import (
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 var removeLogin bool
@@ -74,7 +74,7 @@ func login(removeLogin bool, args []string) {
 func getPass(description string) string {
 	fmt.Print(description + ": ")
 
-	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	bytePassword, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		msg.Die("Error on get pass: %s", err)
 	}
