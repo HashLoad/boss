@@ -1,27 +1,30 @@
 package gitWrapper
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/osfs"
+	"github.com/go-git/go-git/v5"
+	cache2 "github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/hashload/boss/core/paths"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
-	"gopkg.in/src-d/go-billy.v4/memfs"
-	"gopkg.in/src-d/go-billy.v4/osfs"
-	"gopkg.in/src-d/go-git.v4"
-	cache2 "gopkg.in/src-d/go-git.v4/plumbing/cache"
-	"gopkg.in/src-d/go-git.v4/storage"
-	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 )
 
 func CloneCacheEmbedded(dep models.Dependency) *git.Repository {
 	msg.Info("Downloading dependency %s", dep.Repository)
 	storageCache := makeStorageCache(dep)
+	wtFs := makeWtFileSystem(dep)
 	url := dep.GetURL()
 	auth := env.GlobalConfiguration.GetAuth(dep.GetURLPrefix())
-	repository, e := git.Clone(storageCache, memfs.New(), &git.CloneOptions{
+
+	repository, e := git.Clone(storageCache, wtFs, &git.CloneOptions{
 		URL:  url,
 		Tags: git.AllTags,
 		Auth: auth,
@@ -36,7 +39,9 @@ func CloneCacheEmbedded(dep models.Dependency) *git.Repository {
 
 func UpdateCacheEmbedded(dep models.Dependency) *git.Repository {
 	storageCache := makeStorageCache(dep)
-	repository, err := git.Open(storageCache, memfs.New())
+	wtFs := makeWtFileSystem(dep)
+
+	repository, err := git.Open(storageCache, wtFs)
 	if err != nil {
 		msg.Warn("Error to open cache of %s: %s", dep.Repository, err)
 		repository = refreshCopy(dep)
@@ -61,7 +66,7 @@ func refreshCopy(dep models.Dependency) *git.Repository {
 	dir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
 	e := os.RemoveAll(dir)
 	if e == nil {
-		return CloneCache(dep)
+		return CloneCacheEmbedded(dep)
 	} else {
 		msg.Err("Error on retry get refresh copy: %s", e)
 	}
@@ -75,5 +80,12 @@ func makeStorageCache(dep models.Dependency) storage.Storer {
 
 	newStorage := filesystem.NewStorage(fs, cache2.NewObjectLRUDefault())
 	return newStorage
+}
 
+func makeWtFileSystem(dep models.Dependency) billy.Filesystem {
+	paths.EnsureCacheDir(dep)
+	dir := filepath.Join(env.GetCacheDir(), fmt.Sprintf("%s_wt", dep.GetHashName()))
+	fs := osfs.New(dir)
+
+	return fs
 }

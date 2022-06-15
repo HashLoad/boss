@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	sshGit "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils/crypto"
 	"golang.org/x/crypto/ssh"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-	sshGit "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 var machineID = []byte(crypto.GetMachineID()[:16])

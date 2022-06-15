@@ -19,8 +19,13 @@ var RootCmd = &cobra.Command{
 	Use:   "boss",
 	Short: "Dependency Manager for Delphi",
 	Long:  "Dependency Manager for Delphi",
-	Run: func(cmd *cobra.Command, args []string) {
-		printVersion(false)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if versionPrint {
+			printVersion(false)
+		} else {
+			return cmd.Help()
+		}
+		return nil
 	},
 }
 
@@ -35,8 +40,9 @@ func Execute() {
 
 	config.InitializeConfig(RootCmd)
 
+	core.RunGC(false)
+
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
-	core.RunGC(false)
 }

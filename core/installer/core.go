@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/core/compiler"
 	"github.com/hashload/boss/core/gitWrapper"
@@ -15,8 +17,6 @@ import (
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
 	"github.com/masterminds/semver"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 var processed = []string{consts.BplFolder, consts.BinFolder, consts.DcpFolder, consts.DcuFolder}

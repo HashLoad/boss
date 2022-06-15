@@ -4,12 +4,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/hashload/boss/core/gitWrapper"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 var updatedDependencies []string

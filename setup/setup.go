@@ -19,6 +19,12 @@ import (
 
 const PATH string = "PATH"
 
+var (
+	defaultModules = []string{
+		"bpl-identifier",
+	}
+)
+
 func Initialize() {
 	var OldGlobal = env.Global
 	env.Internal = true
@@ -28,16 +34,20 @@ func Initialize() {
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
 
-	paths := []string{consts.EnvBossBin, env.GetGlobalBinPath(), env.GetGlobalEnvBpl(), env.GetGlobalEnvDcu(), env.GetGlobalEnvDcp()}
-
-	modules := []string{"bpl-identifier"}
+	paths := []string{
+		consts.EnvBossBin,
+		env.GetGlobalBinPath(),
+		env.GetGlobalEnvBpl(),
+		env.GetGlobalEnvDcu(),
+		env.GetGlobalEnvDcp(),
+	}
 
 	msg.Debug("\tExecuting migrations")
 	migration()
 	msg.Debug("\tAdjusting paths")
 	addPaths(paths)
 	msg.Debug("\tInstalling internal modules")
-	installModules(modules)
+	installModules(defaultModules)
 	msg.Debug("\tCreating paths")
 	createPaths()
 
