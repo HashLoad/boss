@@ -25,3 +25,5 @@ The following logos and graphics are for the promption of the Boss project.
 ![Boss Logo - white helmet wo text.svg](./svg/boss Logo - white helmet wo text.svg)
 [Boss Logo - without text](./svg/boss Logo - wo text.svg)
 ![Boss Logo - wo text.svg](./svg/boss Logo - wo text.svg)
+[Boss Icon - open face](./svg/boss Icon - open.svg)
+![Boss Icon - open.svg](./svg/boss Icon - open.svg)
