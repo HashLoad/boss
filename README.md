@@ -1,7 +1,7 @@
 ![Go](https://github.com/hashload/boss/workflows/Go/badge.svg)
 
 # Dependency Manager for Delphi and Lazarus
-
+![Boss Logo](./img/svg/Boss Logo - wo text.svg)
 ### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13)
 
 Installation:
