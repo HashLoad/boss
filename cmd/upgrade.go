@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/hashload/boss/core"
+	"github.com/hashload/boss/internal/upgrade"
 	"github.com/spf13/cobra"
 )
 
@@ -15,8 +15,8 @@ var upgradeCmd = &cobra.Command{
 
   Upgrade boss with pre-release:
   boss upgrade --dev`,
-	Run: func(cmd *cobra.Command, args []string) {
-		core.DoBossUpgrade(preRelease)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return upgrade.BossUpgrade(preRelease)
 	},
 }
 
