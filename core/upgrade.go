@@ -17,6 +17,7 @@ import (
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
+	"github.com/minio/selfupdate"
 	"github.com/snakeice/gogress"
 )
 
@@ -47,11 +48,7 @@ func DoBossUpgrade(preRelease bool) {
 	}
 	exePath, _ := filepath.Abs(ex)
 
-	_ = os.Remove(exePath + "_o")
-
-	if err := os.Rename(exePath, exePath+"_o"); err != nil {
-		msg.Warn("Failed on rename " + exePath + " to " + exePath + "_0")
-	}
+	_ = os.Remove(exePath + "_bkp")
 
 	downloadPath := filepath.Join(os.TempDir(), fileName)
 
@@ -81,28 +78,15 @@ func DoBossUpgrade(preRelease bool) {
 			}
 			defer rc.Close()
 
-			newExePath := exePath + "_n"
-
-			outFile, err := os.Create(newExePath)
+			err = selfupdate.Apply(rc, selfupdate.Options{
+				OldSavePath: fmt.Sprintf("%s_bkp", exePath),
+				TargetPath:  exePath,
+			})
 			if err != nil {
-				msg.Err("Failed on create new version ", err.Error())
-				return
-			}
-			defer outFile.Close()
-
-			_, err = io.Copy(outFile, rc)
-			if err != nil {
-				msg.Err("Failed on copy new version ", err.Error())
+				msg.Err("Failed on apply update ", err.Error())
 				return
 			}
 
-			if err := os.Rename(exePath, exePath+"_o"); err != nil {
-				msg.Warn("Failed on rename " + exePath + " to " + exePath + "_0")
-			}
-
-			if err := os.Rename(newExePath, exePath); err != nil {
-				msg.Err("Failed on rename " + newExePath + " to " + exePath)
-			}
 			break
 		}
 	}
