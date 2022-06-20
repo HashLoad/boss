@@ -1,7 +1,19 @@
+<p align="center">
+  <a href="https://github.com/HashLoad/boss/blob/master/img/png/sized/Boss%20Logo%20-%20128px.png">
+    <img alt="Boss" src="https://github.com/HashLoad/boss/blob/master/img/png/sized/Boss%20Logo%20-%20128px.png">
+  </a>  
+</p><br>
+<p align="center">
+ <b>Boss</b> is an open source dependency manager inspired by <a href="https://www.npmjs.com/">npm</a><br>for projects developed in <b>Delphi</b> and <b>Lazarus</b>.
+</p><br>
+<p align="center">
+  <a href="https://t.me/hashload">
+    <img src="https://img.shields.io/badge/telegram-join%20channel-7289DA?style=flat-square">
+  </a>
+</p>
+
 ![Go](https://github.com/hashload/boss/workflows/Go/badge.svg)
 
-# Dependency Manager for Delphi and Lazarus
-![Boss Logo](./img/svg/Boss Logo - wo text.svg)
 ### [Getting started](https://medium.com/@matheusarendthunsche/come%C3%A7ando-com-o-boss-72aad9bcc13)
 
 Installation:
