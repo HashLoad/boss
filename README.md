@@ -128,4 +128,7 @@ For example, to specify acceptable version ranges up to 1.0.4, use the following
 
 ## 💻 Code Contributors
 
-<img src="https://opencollective.com/boss/contributors.svg?width=890&button=false" alt="Code Contributors" style="max-width:100%;">
+<a href="https://github.com/Hashload/boss/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Hashload/boss" />
+</a>
+
