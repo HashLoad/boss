@@ -1,0 +1,105 @@
+package upgrade
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"math"
+	"net/http"
+	"os"
+
+	"github.com/google/go-github/v45/github"
+	"github.com/snakeice/gogress"
+)
+
+func getBossReleases() ([]*github.RepositoryRelease, error) {
+	gh := github.NewClient(nil)
+
+	releases := []*github.RepositoryRelease{}
+	page := 0
+	for {
+		listOptions := github.ListOptions{
+			Page:    page,
+			PerPage: 20,
+		}
+
+		releasesPage, resp, err := gh.Repositories.ListReleases(
+			context.Background(),
+			githubOrganization,
+			githubRepository,
+			&listOptions,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to get releases: %w", err)
+		}
+
+		releases = append(releases, releasesPage...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+
+		page = resp.NextPage
+	}
+
+	return releases, nil
+}
+
+func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*github.RepositoryRelease, error) {
+	var bestRelease *github.RepositoryRelease
+
+	for _, release := range releases {
+		if release.GetPrerelease() && !preRelease {
+			continue
+		}
+
+		if bestRelease == nil || release.GetTagName() > bestRelease.GetTagName() {
+			bestRelease = release
+		}
+	}
+
+	if bestRelease == nil {
+		return nil, fmt.Errorf("no releases found")
+	}
+
+	return bestRelease, nil
+}
+
+func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) {
+	for _, asset := range release.Assets {
+		if asset.GetName() == assetName {
+			return asset, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no asset found")
+}
+
+func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
+	resp, err := http.Get(asset.GetBrowserDownloadURL())
+	if err != nil {
+		return nil, fmt.Errorf("failed to download asset: %w", err)
+	}
+	defer resp.Body.Close()
+
+	file, err := ioutil.TempFile("", "boss")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp file: %w", err)
+	}
+	// defer file.Close()
+
+	bar := gogress.New64(int64(math.Round(float64(asset.GetSize()))))
+	bar.Start()
+	defer bar.Finish()
+	proxyReader := bar.NewProxyReader(resp.Body)
+	defer proxyReader.Close()
+
+	_, err = io.Copy(file, proxyReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy asset: %w", err)
+	}
+
+	return file, nil
+}

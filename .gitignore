@@ -36,3 +36,4 @@ boss.json
 *.lps
 _dist
 bin/
+.env
