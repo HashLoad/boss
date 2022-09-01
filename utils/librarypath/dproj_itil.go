@@ -3,6 +3,7 @@ package librarypath
 import (
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -77,7 +78,7 @@ func processCompilerOptions(compilerOptions *etree.Element) {
 	}
 	value := otherUnitFiles.SelectAttr("Value")
 	currentPaths := strings.Split(value.Value, ";")
-	currentPaths = GetNewPaths(currentPaths, false)
+	currentPaths = GetNewPaths(currentPaths, false, env.GetCurrentDir())
 	value.Value = strings.Join(currentPaths, ";")
 }
 
@@ -109,7 +110,11 @@ func updateLibraryPathProject(dprojName string) {
 			if child == nil {
 				child = createTagLibraryPath(children)
 			}
-			processCurrentPath(child)
+			rootPath := filepath.Join(env.GetCurrentDir(), path.Dir(dprojName))
+			if _, err := os.Stat(rootPath); os.IsNotExist(err) {
+				rootPath = env.GetCurrentDir()
+			}
+			processCurrentPath(child, rootPath)
 		}
 	}
 
@@ -170,10 +175,10 @@ func isLazarus() bool {
 	return false
 }
 
-func processCurrentPath(node *etree.Element) {
+func processCurrentPath(node *etree.Element, rootPath string) {
 	currentPaths := strings.Split(node.Text(), ";")
 
-	currentPaths = GetNewPaths(currentPaths, false)
+	currentPaths = GetNewPaths(currentPaths, false, rootPath)
 
 	node.SetText(strings.Join(currentPaths, ";"))
 }

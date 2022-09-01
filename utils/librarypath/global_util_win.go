@@ -50,7 +50,7 @@ func updateGlobalLibraryPath() {
 		}
 
 		splitPaths := strings.Split(paths, ";")
-		newSplitPaths := GetNewPaths(splitPaths, true)
+		newSplitPaths := GetNewPaths(splitPaths, true, env.GetCurrentDir())
 		newPaths := strings.Join(newSplitPaths, ";")
 		err = delphiPlatform.SetStringValue(SearchPathRegistry, newPaths)
 		utils.HandleError(err)

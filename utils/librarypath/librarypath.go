@@ -40,7 +40,7 @@ func cleanPath(paths []string, fullPath bool) []string {
 	return processedPaths
 }
 
-func GetNewPaths(paths []string, fullPath bool) []string {
+func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
 
@@ -52,10 +52,10 @@ func GetNewPaths(paths []string, fullPath bool) []string {
 		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
 
 			other, _ := models.LoadPackageOther(packagePath)
-			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath)
+			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath, rootPath)
 
 		} else {
-			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath)
+			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath, rootPath)
 		}
 	}
 	return paths
@@ -99,7 +99,7 @@ func cleanEmpty(paths []string) []string {
 	return paths
 }
 
-func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
+func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
 	_, e := os.Stat(path)
 	if os.IsNotExist(e) {
 		return paths
@@ -110,7 +110,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool) []string {
 		if matched {
 			dir, _ := filepath.Split(path)
 			if !fullPath {
-				dir, _ = filepath.Rel(env.GetCurrentDir(), dir)
+				dir, _ = filepath.Rel(rootPath, dir)
 			}
 			if !utils.Contains(paths, dir) {
 				paths = append(paths, dir)
