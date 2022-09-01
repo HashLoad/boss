@@ -13,7 +13,7 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 		dependency := ParseDependency(args[e])
 		dependency = strings.ToLower(dependency)
 
-		re := regexp.MustCompile(`(?m)(?:(?P<host>.*)(?::(?P<version>[\^~]?(?:(?:(?:[0-9]+)(?:\.[0-9]+)(?:\.[0-9]+)?))))$|(?P<host_only>.*))`)
+		re := regexp.MustCompile(`(?U)(?m)^(?:http[s]{0,1}://)?(?P<host>.*)(?::(?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+)))?$`)
 		match := make(map[string]string)
 		split := re.FindStringSubmatch(dependency)
 
@@ -24,12 +24,11 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 		}
 		var ver string
 		var dep string
+		dep = match["host"]
 		if len(match["version"]) == 0 {
 			ver = consts.MinimalDependencyVersion
-			dep = match["host_only"]
 		} else {
 			ver = match["version"]
-			dep = match["host"]
 		}
 
 		if strings.HasSuffix(strings.ToLower(dep), ".git") {
