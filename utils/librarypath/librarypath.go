@@ -61,19 +61,19 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	return paths
 }
 
-func getDefaultPath(fullPath bool) []string {
+func getDefaultPath(fullPath bool, rootPath string) []string {
 	var paths []string
 
 	if !fullPath {
 		fullPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcpFolder)
 
-		dir, err := filepath.Rel(env.GetCurrentDir(), fullPath)
+		dir, err := filepath.Rel(rootPath, fullPath)
 		if err == nil {
 			paths = append(paths, dir)
 		}
 
 		fullPath = filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.DcuFolder)
-		dir, err = filepath.Rel(env.GetCurrentDir(), fullPath)
+		dir, err = filepath.Rel(rootPath, fullPath)
 		if err == nil {
 			paths = append(paths, dir)
 		}
@@ -119,7 +119,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath str
 		return nil
 	})
 
-	for _, path := range getDefaultPath(fullPath) {
+	for _, path := range getDefaultPath(fullPath, rootPath) {
 		if !utils.Contains(paths, path) {
 			paths = append(paths, path)
 		}
