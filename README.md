@@ -84,6 +84,17 @@ boss upgrade
 boss upgrade --dev
 ```
 
+### > login
+This command Register login to repo
+```
+boss login <repo>
+boss adduser <repo>
+boss add-user <repo>
+boss login <repo> -u UserName -p Password
+boss login <repo> -k PrivateKey -p PassPhrase
+```
+###### Aliases: adduser, add-user
+
 ## Flags
 
 ### > Global
@@ -104,7 +115,6 @@ boss --help
 ```
 delphi           Configure Delphi version
 gc               Garbage collector  
-login            Register login to repo
 publish          Publish package to registry
 run              Run cmd script
 ```
