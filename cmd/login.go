@@ -6,7 +6,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"syscall"
-
+	
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
@@ -14,6 +14,10 @@ import (
 )
 
 var removeLogin bool
+var useSsh bool
+var privateKey string
+var userName string
+var password string
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
@@ -22,17 +26,21 @@ var loginCmd = &cobra.Command{
   boss login <repo>`,
 	Aliases: []string{"adduser", "add-user"},
 	Run: func(cmd *cobra.Command, args []string) {
-		login(removeLogin, args)
+		login(removeLogin, useSsh, privateKey, userName, password, args)
 	},
 }
 
 func init() {
 	// TODO add example to remove login or add a new command to logout (equals branch refact-steroids)
 	loginCmd.Flags().BoolVarP(&removeLogin, "rm", "r", false, "remove login")
+	loginCmd.Flags().BoolVarP(&useSsh, "ssh", "s", false, "Use SSH")
+	loginCmd.Flags().StringVarP(&privateKey, "key", "k", "", "Path of ssh private key")
+	loginCmd.Flags().StringVarP(&userName, "username", "u", "", "Username")
+	loginCmd.Flags().StringVarP(&password, "password", "p", "", "Password or PassPhrase(with SSH)")
 	RootCmd.AddCommand(loginCmd)
 }
 
-func login(removeLogin bool, args []string) {
+func login(removeLogin bool, useSsh bool, privateKey string, userName string, password string, args []string) {
 	configuration := env.GlobalConfiguration
 
 	if removeLogin {
@@ -57,15 +65,29 @@ func login(removeLogin bool, args []string) {
 	if auth == nil {
 		auth = &env.Auth{}
 	}
-
-	auth.UseSsh = getParamBoolean("Use SSH")
-	if auth.UseSsh {
-		auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
-		auth.SetPassPhrase(getPass("PassPhrase"))
+	
+	if (userName != "") || (privateKey != "") {
+		auth.UseSsh = useSsh
+		if auth.UseSsh || (privateKey != "") {
+			auth.UseSsh = true
+			auth.Path = privateKey
+			auth.SetPassPhrase(password)
+		} else {
+			auth.SetUser(userName)
+			auth.SetPass(password)		
+		}
 	} else {
-		auth.SetUser(getParamOrDef("Username", ""))
-		auth.SetPass(getPass("Password"))
+		auth.UseSsh = getParamBoolean("Use SSH")	  
+		
+		if auth.UseSsh {
+			auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
+			auth.SetPassPhrase(getPass("PassPhrase"))
+		} else {
+			auth.SetUser(getParamOrDef("Username", ""))
+			auth.SetPass(getPass("Password"))
+		}
 	}
+
 	configuration.Auth[repo] = auth
 	configuration.SaveConfiguration()
 
