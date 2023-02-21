@@ -49,7 +49,7 @@ func doInitialization(quiet bool) {
 	if quiet {
 		pkgJson.Name = folderName
 		pkgJson.Version = "1.0.0"
-		pkgJson.MainSrc = "./"
+		pkgJson.MainSrc = "./src"
 	} else {
 		pkgJson.Name = getParamOrDef("Package name ("+folderName+")", folderName)
 		pkgJson.Homepage = getParamOrDef("Homepage", "")
