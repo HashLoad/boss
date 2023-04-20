@@ -14,7 +14,6 @@ import (
 	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/dcc32"
-	"github.com/snakeice/penv"
 )
 
 const PATH string = "PATH"
@@ -64,36 +63,27 @@ func createPaths() {
 	}
 }
 
-func getPath(arr []penv.NameValue) string {
-	for _, nv := range arr {
-		if nv.Name == PATH {
-			return nv.Value
-		}
-	}
-	return ""
-}
-
 func addPaths(paths []string) {
 	var needAdd = false
-	environment, e := penv.Load()
+	currentPath, e := os.Getwd()
 	if e != nil {
-		msg.Die("Failed to load env \n %s", e.Error())
+		msg.Die("Failed to load current working directory \n %s", e.Error())
 		return
 	}
 
-	currentPath := getPath(environment.Setters)
-	splitedPath := strings.Split(currentPath, ";")
+	splitPath := strings.Split(currentPath, ";")
 
 	for _, path := range paths {
-		if !utils.Contains(splitedPath, path) {
-			splitedPath = append(splitedPath, path)
+		if !utils.Contains(splitPath, path) {
+			splitPath = append(splitPath, path)
 			needAdd = true
 		}
 	}
 
 	if needAdd {
-		newPath := strings.Join(splitedPath, ";")
-		err := penv.AppendEnv(PATH, newPath)
+		newPath := strings.Join(splitPath, ";")
+		currentPathEnv := os.Getenv(PATH)
+		err := os.Setenv(PATH, currentPathEnv+";"+newPath)
 		if err != nil {
 			msg.Die("Failed to update PATH \n %s", err.Error())
 			return
