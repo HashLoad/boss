@@ -36,6 +36,13 @@ This command install a new dependency
 ```
 boss install <dependency>
 ```
+The dependency is case insensitive. For example, `boss install horse` is the same as the `boss install HORSE` command.
+```pascal
+boss install horse // By default, look for the Horse project within the GitHub Hashload organization.
+boss install fake/horse // By default, look for the Horse project within the Fake GitHub organization.
+boss install gitlab.com/fake/horse // By default, searches for the Horse project within the Fake GitLab organization.
+boss install https://gitlab.com/fake/horse // You can also pass the full URL for installation
+```
 ###### Aliases: i, add
 
 ### > Uninstall
