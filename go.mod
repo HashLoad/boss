@@ -16,9 +16,9 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/xlab/treeprint v1.1.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
-	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
-	golang.org/x/text v0.3.8
+	golang.org/x/sys v0.5.0
+	golang.org/x/term v0.5.0
+	golang.org/x/text v0.7.0
 )
 
 require (
@@ -43,6 +43,6 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
-	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
