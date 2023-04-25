@@ -38,6 +38,22 @@ func getCompilerParameters(rootPath string, dep *models.Dependency, platform str
 		"/P:platform=" + platform + " "
 }
 
+func buildSearchPath(dep *models.Dependency) string {
+	var searchPath = ""
+
+	if dep != nil {
+		searchPath = filepath.Join(env.GetModulesDir(), dep.GetName())
+
+		if pac, e := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage)); e == nil {
+			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.GetName(), pac.MainSrc)
+			for _, lib := range pac.GetParsedDependencies() {
+				searchPath += buildSearchPath(&lib)
+			}
+		}
+	}
+	return searchPath
+}
+
 func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLock) bool {
 	msg.Info("  Building " + filepath.Base(dprojPath))
 
@@ -62,6 +78,8 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 
 	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + filepath.Join(env.GetModulesDir(), consts.DcuFolder) +
 		";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder) //+ ";" + getNewPathsDep(dep, abs) + " "
+
+	readFileStr += ";" + buildSearchPath(dep)
 
 	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
 	for _, value := range []string{"Win32"} {
