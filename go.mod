@@ -11,8 +11,7 @@ require (
 	github.com/masterminds/semver v1.5.0
 	github.com/minio/selfupdate v0.4.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/snakeice/gogress v1.0.1
-	github.com/snakeice/penv v0.0.0-20190326182452-4eb344cfbb6b
+	github.com/snakeice/gogress v1.0.1	
 	github.com/spf13/cobra v1.4.0
 	github.com/xlab/treeprint v1.1.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
