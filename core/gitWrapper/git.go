@@ -49,13 +49,12 @@ func initSubmodules(dep models.Dependency, repository *git.Repository) {
 
 }
 
-func GetMaster(repository *git.Repository) *config.Branch {
-
-	if branch, err := repository.Branch("master"); err != nil {
-		return nil
-	} else {
-		return branch
+func GetMaster(repository *git.Repository) (*config.Branch, error) {
+	branch, err := repository.Branch("master")
+	if err != nil {
+		branch, err = repository.Branch("main")
 	}
+	return branch, err
 }
 
 func GetVersions(repository *git.Repository) []*plumbing.Reference {
