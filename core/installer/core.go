@@ -113,7 +113,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 		worktree, _ := repository.Worktree()
 
 		if !hasMatch {
-			if masterReference := gitWrapper.GetMaster(repository); masterReference != nil {
+			if masterReference, err := gitWrapper.GetMaster(repository); err == nil {
 				referenceName = plumbing.NewBranchReferenceName(masterReference.Name)
 			}
 		} else {
