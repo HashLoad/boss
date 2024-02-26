@@ -115,6 +115,11 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath str
 			if !utils.Contains(paths, dir) {
 				paths = append(paths, dir)
 			}
+			// add ..\ prefixed path -> @MeroFuruya fix #146
+			prefixedPath := "..\\" + dir
+			if !utils.Contains(paths, prefixedPath) {
+				paths = append(paths, prefixedPath)
+			}
 		}
 		return nil
 	})
@@ -122,6 +127,14 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath str
 	for _, path := range getDefaultPath(fullPath, rootPath) {
 		if !utils.Contains(paths, path) {
 			paths = append(paths, path)
+		}
+		// prevent variables from being prefixed
+		if !strings.HasPrefix(path, "$") {
+			// add ..\ prefixed path -> @MeroFuruya fix #146
+			prefixedPath := "..\\" + path
+			if !utils.Contains(paths, prefixedPath) {
+				paths = append(paths, prefixedPath)
+			}
 		}
 	}
 	return cleanEmpty(paths)
