@@ -16,15 +16,16 @@ func GetDcc32DirByCmd() []string {
 
 	outputStr := strings.ReplaceAll(string(output), "\t", "")
 	outputStr = strings.ReplaceAll(outputStr, "\r", "")
-	outputStr = strings.ReplaceAll(outputStr, "\n", "")
 
-	if len(outputStr) == 0 {
+	if len(strings.ReplaceAll(outputStr, "\n", "")) == 0 {
 		return []string{}
 	}
 
-	installations := strings.Split(outputStr, "\n")
-	for key, value := range installations {
-		installations[key] = filepath.Dir(value)
+	installations := []string{}
+	for _, value := range strings.Split(outputStr, "\n") {
+		if len(strings.TrimSpace(value)) > 0 {
+			installations = append(installations, filepath.Dir(value))
+		}
 	}
 
 	return installations
