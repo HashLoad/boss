@@ -11,7 +11,6 @@ import (
 func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 	for e := range args {
 		dependency := ParseDependency(args[e])
-		dependency = strings.ToLower(dependency)
 
 		re := regexp.MustCompile(`(?U)(?m)^(?:http[s]{0,1}://)?(?P<host>.*)(?::(?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+)))?$`)
 		match := make(map[string]string)
