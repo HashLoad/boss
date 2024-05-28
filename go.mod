@@ -14,9 +14,9 @@ require (
 	github.com/snakeice/gogress v1.0.1
 	github.com/spf13/cobra v1.4.0
 	github.com/xlab/treeprint v1.1.0
-	golang.org/x/crypto v0.17.0
-	golang.org/x/sys v0.15.0
-	golang.org/x/term v0.15.0
+	golang.org/x/crypto v0.21.0
+	golang.org/x/sys v0.18.0
+	golang.org/x/term v0.18.0
 	golang.org/x/text v0.14.0
 )
 
@@ -40,6 +40,6 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
