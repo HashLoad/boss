@@ -35,6 +35,7 @@ func getCompilerParameters(rootPath string, dep *models.Dependency, platform str
 		"/p:DCC_ExeOutput=\"" + binPath + "\" " +
 		"/target:Build " +
 		"/p:config=Debug " +
+		"/p:DCC_UseMSBuildExternally=true " +
 		"/P:platform=" + platform + " "
 }
 
