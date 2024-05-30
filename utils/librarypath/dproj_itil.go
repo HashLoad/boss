@@ -92,7 +92,7 @@ func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
 	return child
 }
 
-func updateGlobalBrowsingByProject(dprojName string) {
+func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
 		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
@@ -126,7 +126,7 @@ func updateGlobalBrowsingByProject(dprojName string) {
 
 		splitPaths := strings.Split(paths, ";")
 		rootPath := filepath.Join(env.GetCurrentDir(), path.Dir(dprojName))
-		newSplitPaths := GetNewBrowsingPaths(splitPaths, false, rootPath)
+		newSplitPaths := GetNewBrowsingPaths(splitPaths, false, rootPath, setReadOnly)
 		newPaths := strings.Join(newSplitPaths, ";")
 		err = delphiPlatform.SetStringValue(BrowsingPathRegistry, newPaths)
 		utils.HandleError(err)
@@ -136,9 +136,9 @@ func updateGlobalBrowsingByProject(dprojName string) {
 func updateGlobalBrowsingPath(pkg *models.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
-	for _, projectName := range projectNames {
+	for i, projectName := range projectNames {
 		if !isLazarus {
-			updateGlobalBrowsingByProject(projectName)
+			updateGlobalBrowsingByProject(projectName, i == 0)
 		}
 	}
 

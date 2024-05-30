@@ -1,8 +1,10 @@
 package librarypath
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -10,6 +12,7 @@ import (
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/msg"
 	"github.com/hashload/boss/utils"
 )
 
@@ -41,7 +44,7 @@ func cleanPath(paths []string, fullPath bool) []string {
 	return processedPaths
 }
 
-func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string) []string {
+func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setReadOnly bool) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
 
@@ -54,7 +57,26 @@ func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string) []strin
 
 			other, _ := models.LoadPackageOther(packagePath)
 			if other.BrowsingPath != "" {
-				paths = getNewBrowsingPathsFromDir(filepath.Join(path, value.Name(), other.BrowsingPath), paths, fullPath, rootPath)
+				dir := filepath.Join(path, value.Name(), other.BrowsingPath)
+				paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
+
+				if setReadOnly {
+					readonlybat := filepath.Join(dir, "readonly.bat")
+					readFileStr := fmt.Sprintf(`attrib +r "%s" /s /d`, filepath.Join(dir, "*"))
+					err = ioutil.WriteFile(readonlybat, []byte(readFileStr), os.ModePerm)
+					if err != nil {
+						msg.Warn("  - error on create build file")
+					}
+
+					cmd := exec.Command(readonlybat)
+
+					if _, err := cmd.Output(); err != nil {
+						msg.Err("  - Failed to set readonly property to folder", dir, " - ", err)
+					} else {
+						os.Remove(readonlybat)
+					}
+				}
+
 			}
 
 		}
@@ -131,6 +153,7 @@ func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, root
 		matched, _ := regexp.MatchString(consts.RegexArtifacts, info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
+
 			if !fullPath {
 				dir, _ = filepath.Rel(rootPath, dir)
 			}
