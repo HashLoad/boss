@@ -18,7 +18,7 @@ func UpdateLibraryPath(pkg *models.Package) {
 		updateGlobalLibraryPath()
 	} else {
 		updateDprojLibraryPath(pkg)
-		updateGlobalBrowsingPath()
+		updateGlobalBrowsingPath(pkg)
 	}
 
 }
