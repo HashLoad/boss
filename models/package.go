@@ -17,6 +17,7 @@ type Package struct {
 	Version      string      `json:"version"`
 	Homepage     string      `json:"homepage"`
 	MainSrc      string      `json:"mainsrc"`
+	BrowsingPath string      `json:"browsingpath"`
 	Projects     []string    `json:"projects"`
 	Scripts      interface{} `json:"scripts,omitempty"`
 	Dependencies interface{} `json:"dependencies"`

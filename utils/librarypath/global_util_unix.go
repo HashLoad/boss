@@ -10,3 +10,7 @@ import (
 func updateGlobalLibraryPath() {
 	msg.Warn("updateGlobalLibraryPath not implemented on this platform")
 }
+
+func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
+	msg.Warn("updateGlobalBrowsingByProject not implemented on this platform")
+}
