@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -43,20 +44,13 @@ func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package, locked
 	}
 	deps := pkg.GetParsedDependencies()
 
-	makeCache(deps)
+	//makeCache(deps)
 
 	ensureModules(rootLock, pkg, deps, lockedVersion)
 
 	deps = append(deps, processOthers(rootLock, lockedVersion)...)
 
 	return deps
-}
-
-func makeCache(deps []models.Dependency) {
-	msg.Info("Building cache files...")
-	for _, dep := range deps {
-		GetDependency(dep)
-	}
 }
 
 func processOthers(rootLock models.PackageLock, lockedVersion bool) []models.Dependency {
@@ -106,8 +100,38 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 	msg.Info("Installing modules")
 	for _, dep := range deps {
 		msg.Info("Processing dependency %s", dep.GetName())
+
+		installed, exists := rootLock.Installed[strings.ToLower(dep.GetURL())]
+
+		if lockedVersion && exists {
+			depv := strings.Replace(strings.Replace(dep.GetVersion(), "^", "", -1), "~", "", -1)
+			requiredVersion, err := semver.NewVersion(depv)
+
+			if err != nil {
+				msg.Warn("  Error '%s' on get required version. Updating...", err)
+
+			} else {
+				installedVersion, err := semver.NewVersion(installed.Version)
+
+				if err != nil {
+					msg.Warn("  Error '%s' on get installed version. Updating...", err)
+				} else {
+					if !installedVersion.LessThan(requiredVersion) {
+						msg.Info("Dependency %s already installed", dep.GetName())
+						continue
+					} else {
+						msg.Info("Dependency %s needs to update", dep.GetName())
+					}
+				}
+			}
+
+		}
+		//git fetch only when necessary
+		GetDependency(dep)
+
 		repository := gitWrapper.GetRepository(dep)
-		hasMatch, bestMatch := getVersion(rootLock, dep, repository, lockedVersion)
+		hasMatch, bestMatch := getVersion(rootLock, dep, repository, false)
+
 		var referenceName plumbing.ReferenceName
 
 		worktree, _ := repository.Worktree()
