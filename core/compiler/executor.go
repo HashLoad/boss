@@ -48,7 +48,7 @@ func buildSearchPath(dep *models.Dependency) string {
 		if pac, e := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage)); e == nil {
 			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.GetName(), pac.MainSrc)
 			for _, lib := range pac.GetParsedDependencies() {
-				searchPath += buildSearchPath(&lib)
+				searchPath += ";" + buildSearchPath(&lib)
 			}
 		}
 	}

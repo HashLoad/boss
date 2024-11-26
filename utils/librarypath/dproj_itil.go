@@ -88,6 +88,17 @@ func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
 	return child
 }
 
+func updateGlobalBrowsingPath(pkg *models.Package) {
+	var isLazarus = isLazarus()
+	var projectNames = GetProjectNames(pkg)
+	for i, projectName := range projectNames {
+		if !isLazarus {
+			updateGlobalBrowsingByProject(projectName, i == 0)
+		}
+	}
+
+}
+
 func updateLibraryPathProject(dprojName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(dprojName)
