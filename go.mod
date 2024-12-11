@@ -14,10 +14,10 @@ require (
 	github.com/snakeice/gogress v1.0.1
 	github.com/spf13/cobra v1.4.0
 	github.com/xlab/treeprint v1.1.0
-	golang.org/x/crypto v0.21.0
-	golang.org/x/sys v0.18.0
-	golang.org/x/term v0.18.0
-	golang.org/x/text v0.14.0
+	golang.org/x/crypto v0.31.0
+	golang.org/x/sys v0.28.0
+	golang.org/x/term v0.27.0
+	golang.org/x/text v0.21.0
 )
 
 require (
