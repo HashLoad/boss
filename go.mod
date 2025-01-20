@@ -40,6 +40,6 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
