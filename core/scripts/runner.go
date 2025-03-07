@@ -52,7 +52,7 @@ func Run(args []string) {
 		if pkgJson.Scripts == nil {
 			msg.Die(errors.New("script not exists").Error())
 		}
-		scripts := pkgJson.Scripts.(map[string]interface{})
+		scripts := pkgJson.Scripts.(map[string]any)
 
 		if command, ok := scripts[args[0]]; !ok {
 			msg.Err(errors.New("script not exists").Error())

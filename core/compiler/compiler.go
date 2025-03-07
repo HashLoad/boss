@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,7 +35,7 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 	}
 	outDir := filepath.Join(env.GetModulesDir(), consts.BplFolder, consts.FileBplOrder)
 
-	utils.HandleError(ioutil.WriteFile(outDir, []byte(projects), os.ModePerm))
+	utils.HandleError(os.WriteFile(outDir, []byte(projects), os.ModePerm))
 }
 
 func buildOrderedPackages(pkg *models.Package) {

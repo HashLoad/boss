@@ -1,7 +1,6 @@
 package librarypath
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -150,7 +149,7 @@ func GetProjectNames(pkg *models.Package) []string {
 	if len(pkg.Projects) > 0 {
 		result = pkg.Projects
 	} else {
-		files, err := ioutil.ReadDir(env.GetCurrentDir())
+		files, err := os.ReadDir(env.GetCurrentDir())
 		if err != nil {
 			panic(err)
 		}
@@ -170,7 +169,7 @@ func GetProjectNames(pkg *models.Package) []string {
 }
 
 func isLazarus() bool {
-	files, err := ioutil.ReadDir(env.GetCurrentDir())
+	files, err := os.ReadDir(env.GetCurrentDir())
 	if err != nil {
 		panic(err)
 	}

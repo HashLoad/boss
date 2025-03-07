@@ -97,7 +97,7 @@ func addPaths(paths []string) {
 
 func installModules(modules []string) {
 	pkg, _ := models.LoadPackage(true)
-	dependencies := pkg.Dependencies.(map[string]interface{})
+	dependencies := pkg.Dependencies.(map[string]any)
 	encountered := 0
 	for _, newPackage := range modules {
 		for installed := range dependencies {

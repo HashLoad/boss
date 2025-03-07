@@ -39,7 +39,6 @@ endif
 
 LDFLAGS += -X github.com/hashload/boss/internal/version.metadata=${VERSION_METADATA}
 LDFLAGS += -X github.com/hashload/boss/internal/version.gitCommit=${GIT_COMMIT}
-LDFLAGS += -X github.com/hashload/boss/internal/version.gitTreeState=${GIT_DIRTY}
 .PHONY: all
 run:
 	@GO111MODULE=on go run  $(word 2, $(MAKECMDGOALS) )

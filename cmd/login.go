@@ -6,7 +6,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"syscall"
-	
+
 	"github.com/hashload/boss/env"
 	"github.com/hashload/boss/msg"
 	"github.com/spf13/cobra"
@@ -65,7 +65,7 @@ func login(removeLogin bool, useSsh bool, privateKey string, userName string, pa
 	if auth == nil {
 		auth = &env.Auth{}
 	}
-	
+
 	if (userName != "") || (privateKey != "") {
 		auth.UseSsh = useSsh
 		if auth.UseSsh || (privateKey != "") {
@@ -74,11 +74,11 @@ func login(removeLogin bool, useSsh bool, privateKey string, userName string, pa
 			auth.SetPassPhrase(password)
 		} else {
 			auth.SetUser(userName)
-			auth.SetPass(password)		
+			auth.SetPass(password)
 		}
 	} else {
-		auth.UseSsh = getParamBoolean("Use SSH")	  
-		
+		auth.UseSsh = getParamBoolean("Use SSH")
+
 		if auth.UseSsh {
 			auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
 			auth.SetPassPhrase(getPass("PassPhrase"))

@@ -4,6 +4,8 @@ import (
 	"strings"
 	"sync"
 
+	"slices"
+
 	"github.com/hashload/boss/models"
 	"github.com/hashload/boss/msg"
 )
@@ -94,7 +96,7 @@ func (g *GraphItem) AddEdge(nLeft, nRight *Node) {
 func (g *GraphItem) String() {
 	g.lock()
 
-	for index := 0; index < len(g.nodes); index++ {
+	for index := range g.nodes {
 		var node = g.nodes[index]
 		var response = ""
 		response += g.nodes[index].String() + " -> \n\t\tDepends: "
@@ -117,7 +119,7 @@ func removeNode(nodes []*Node, key int) []*Node {
 	if key == len(nodes) {
 		return nodes[:key]
 	} else {
-		return append(nodes[:key], nodes[key+1:]...)
+		return slices.Delete(nodes, key, key+1)
 	}
 }
 

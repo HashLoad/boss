@@ -1,7 +1,6 @@
 package installer
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,8 +43,6 @@ func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package, locked
 	}
 	deps := pkg.GetParsedDependencies()
 
-	//makeCache(deps)
-
 	ensureModules(rootLock, pkg, deps, lockedVersion)
 
 	deps = append(deps, processOthers(rootLock, lockedVersion)...)
@@ -54,7 +51,7 @@ func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package, locked
 }
 
 func processOthers(rootLock models.PackageLock, lockedVersion bool) []models.Dependency {
-	infos, e := ioutil.ReadDir(env.GetModulesDir())
+	infos, e := os.ReadDir(env.GetModulesDir())
 	var lenProcessedInitial = len(processed)
 	var result []models.Dependency
 	if e != nil {
@@ -104,7 +101,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 		installed, exists := rootLock.Installed[strings.ToLower(dep.GetURL())]
 
 		if lockedVersion && exists {
-			depv := strings.Replace(strings.Replace(dep.GetVersion(), "^", "", -1), "~", "", -1)
+			depv := strings.NewReplacer("^", "", "~", "").Replace(dep.GetVersion())
 			requiredVersion, err := semver.NewVersion(depv)
 
 			if err != nil {
@@ -126,7 +123,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 			}
 
 		}
-		//git fetch only when necessary
+
 		GetDependency(dep)
 
 		repository := gitWrapper.GetRepository(dep)
@@ -143,7 +140,7 @@ func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []mode
 		} else {
 			referenceName = bestMatch.Name()
 			if dep.GetVersion() == consts.MinimalDependencyVersion {
-				pkg.Dependencies.(map[string]interface{})[dep.Repository] = "^" + referenceName.Short()
+				pkg.Dependencies.(map[string]any)[dep.Repository] = "^" + referenceName.Short()
 			}
 		}
 

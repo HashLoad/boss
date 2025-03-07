@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
@@ -84,7 +83,7 @@ func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
 	}
 	defer resp.Body.Close()
 
-	file, err := ioutil.TempFile("", "boss")
+	file, err := os.CreateTemp("", "boss")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}

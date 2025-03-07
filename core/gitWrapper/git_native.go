@@ -3,7 +3,6 @@ package gitWrapper
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -66,7 +65,7 @@ func getWrapperClone(dep models.Dependency) {
 func writeDotGitFile(dep models.Dependency) {
 	mask := fmt.Sprintf("gitdir: %s\n", filepath.Join(env.GetCacheDir(), dep.GetHashName()))
 	path := filepath.Join(env.GetModulesDir(), dep.GetName(), ".git")
-	_ = ioutil.WriteFile(path, []byte(mask), os.ModePerm)
+	_ = os.WriteFile(path, []byte(mask), os.ModePerm)
 }
 
 func getWrapperFetch(dep models.Dependency) {

@@ -2,7 +2,6 @@ package env
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -97,7 +96,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	case auth == nil:
 		return nil
 	case auth.UseSsh:
-		pem, e := ioutil.ReadFile(auth.Path)
+		pem, e := os.ReadFile(auth.Path)
 		if e != nil {
 			msg.Die("Fail to open ssh key %s", e)
 		}
@@ -163,7 +162,7 @@ func LoadConfiguration(cachePath string) (*Configuration, error) {
 	}
 
 	configFileName := filepath.Join(cachePath, consts.BossConfigFile)
-	buffer, err := ioutil.ReadFile(configFileName)
+	buffer, err := os.ReadFile(configFileName)
 	if err != nil {
 		return makeDefault(cachePath), err
 	}

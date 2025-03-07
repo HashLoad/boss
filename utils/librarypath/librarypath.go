@@ -2,12 +2,13 @@ package librarypath
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"slices"
 
 	"github.com/hashload/boss/consts"
 	"github.com/hashload/boss/env"
@@ -33,7 +34,7 @@ func cleanPath(paths []string, fullPath bool) []string {
 		prefix, _ = filepath.Rel(env.GetCurrentDir(), prefix)
 	}
 
-	for key := 0; key < len(paths); key++ {
+	for key := range paths {
 		if strings.HasPrefix(paths[key], prefix) {
 			continue
 		}
@@ -48,7 +49,7 @@ func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setRead
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
 
-	matches, _ := ioutil.ReadDir(path)
+	matches, _ := os.ReadDir(path)
 
 	for _, value := range matches {
 
@@ -63,7 +64,7 @@ func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setRead
 				if setReadOnly {
 					readonlybat := filepath.Join(dir, "readonly.bat")
 					readFileStr := fmt.Sprintf(`attrib +r "%s" /s /d`, filepath.Join(dir, "*"))
-					err = ioutil.WriteFile(readonlybat, []byte(readFileStr), os.ModePerm)
+					err = os.WriteFile(readonlybat, []byte(readFileStr), os.ModePerm)
 					if err != nil {
 						msg.Warn("  - error on create build file")
 					}
@@ -88,7 +89,7 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
 
-	matches, _ := ioutil.ReadDir(path)
+	matches, _ := os.ReadDir(path)
 
 	for _, value := range matches {
 
@@ -137,7 +138,7 @@ func cleanEmpty(paths []string) []string {
 	for index, value := range paths {
 
 		if value == "" {
-			paths = append(paths[:index], paths[index+1:]...)
+			paths = slices.Delete(paths, index, index+1)
 		}
 	}
 	return paths
@@ -160,11 +161,6 @@ func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, root
 			if !utils.Contains(paths, dir) {
 				paths = append(paths, dir)
 			}
-			// add ..\ prefixed path -> @MeroFuruya fix #146
-			//prefixedPath := "..\\" + dir
-			//if !utils.Contains(paths, prefixedPath) {
-			//	paths = append(paths, prefixedPath)
-			//}
 		}
 		return nil
 	})

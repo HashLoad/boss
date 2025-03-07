@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -70,7 +69,7 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 	abs, _ := filepath.Abs(filepath.Dir(dprojPath))
 	buildLog := filepath.Join(abs, fileRes+".log")
 	buildBat := filepath.Join(abs, fileRes+".bat")
-	readFile, err := ioutil.ReadFile(rsvars)
+	readFile, err := os.ReadFile(rsvars)
 	if err != nil {
 		msg.Err("    error on read rsvars.bat")
 	}
@@ -88,7 +87,7 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 	}
 	readFileStr += " > \"" + buildLog + "\""
 
-	err = ioutil.WriteFile(buildBat, []byte(readFileStr), os.ModePerm)
+	err = os.WriteFile(buildBat, []byte(readFileStr), os.ModePerm)
 	if err != nil {
 		msg.Warn("  - error on create build file")
 		return false

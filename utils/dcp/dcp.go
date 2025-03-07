@@ -2,7 +2,7 @@ package dcp
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -46,7 +46,7 @@ func readFile(filename string) string {
 	}
 	r := transform.NewReader(f, encode.NewDecoder())
 
-	bytes, err := ioutil.ReadAll(r)
+	bytes, err := io.ReadAll(r)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -53,7 +52,7 @@ func RepoData(key string) (*RepoInfo, error) {
 	location := env.GetCacheDir()
 	c := &RepoInfo{}
 	p := filepath.Join(location, "info", key+".json")
-	f, err := ioutil.ReadFile(p)
+	f, err := os.ReadFile(p)
 	if err != nil {
 		return &RepoInfo{}, err
 	}

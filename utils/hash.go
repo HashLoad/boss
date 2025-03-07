@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -23,7 +22,7 @@ func HashDir(dir string) string {
 		if err != nil {
 			return nil
 		}
-		fileBytes, _ := ioutil.ReadFile(path)
+		fileBytes, _ := os.ReadFile(path)
 		fileHash := hashByte(&fileBytes)
 		finHash += fileHash
 		return nil

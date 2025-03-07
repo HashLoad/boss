@@ -86,7 +86,7 @@ func ParseDependency(repo string, info string) Dependency {
 	return dependency
 }
 
-func GetDependencies(deps map[string]interface{}) []Dependency {
+func GetDependencies(deps map[string]any) []Dependency {
 	dependencies := make([]Dependency, 0)
 	for repo, info := range deps {
 		dependencies = append(dependencies, ParseDependency(repo, info.(string)))

@@ -1,7 +1,6 @@
 package paths
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -24,7 +23,7 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 	case cacheDirInfo != nil && !cacheDirInfo.IsDir():
 		msg.Die("modules is not a directory")
 	default:
-		fileInfos, err := ioutil.ReadDir(cacheDir)
+		fileInfos, err := os.ReadDir(cacheDir)
 		utils.HandleError(err)
 		dependenciesNames := models.GetDependenciesNames(dependencies)
 		for _, info := range fileInfos {
@@ -75,7 +74,7 @@ func createPath(path string) {
 }
 
 func cleanArtifacts(dir string, lock models.PackageLock) {
-	fileInfos, err := ioutil.ReadDir(dir)
+	fileInfos, err := os.ReadDir(dir)
 	utils.HandleError(err)
 	artifactList := lock.GetArtifactList()
 	for _, infoArtifact := range fileInfos {

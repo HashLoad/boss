@@ -2,7 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	. "io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/hashload/boss/env"
@@ -19,24 +19,24 @@ type Package struct {
 	MainSrc      string      `json:"mainsrc"`
 	BrowsingPath string      `json:"browsingpath"`
 	Projects     []string    `json:"projects"`
-	Scripts      interface{} `json:"scripts,omitempty"`
-	Dependencies interface{} `json:"dependencies"`
+	Scripts      any         `json:"scripts,omitempty"`
+	Dependencies any         `json:"dependencies"`
 	Lock         PackageLock `json:"-"`
 }
 
 // Save save changes of boss.json file
 func (p *Package) Save() []byte {
 	marshal, _ := parser.JSONMarshal(p, true)
-	_ = WriteFile(p.fileName, marshal, 0664)
+	_ = os.WriteFile(p.fileName, marshal, 0664)
 	p.Lock.Save()
 	return marshal
 }
 
 func (p *Package) AddDependency(dep string, ver string) {
 	if p.Dependencies == nil {
-		p.Dependencies = make(map[string]interface{})
+		p.Dependencies = make(map[string]any)
 	}
-	deps := p.Dependencies.(map[string]interface{})
+	deps := p.Dependencies.(map[string]any)
 
 	for key := range deps {
 		if strings.EqualFold(key, dep) {
@@ -53,7 +53,7 @@ func (p *Package) AddProject(project string) {
 }
 
 func (p *Package) GetParsedDependencies() []Dependency {
-	dependencies := p.Dependencies.(map[string]interface{})
+	dependencies := p.Dependencies.(map[string]any)
 	if len(dependencies) == 0 {
 		return []Dependency{}
 	}
@@ -62,7 +62,7 @@ func (p *Package) GetParsedDependencies() []Dependency {
 
 func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
-		deps := p.Dependencies.(map[string]interface{})
+		deps := p.Dependencies.(map[string]any)
 		for key := range deps {
 			if strings.EqualFold(key, dep) {
 				delete(deps, key)
@@ -77,14 +77,14 @@ func getNew(file string) *Package {
 	res.fileName = file
 	res.IsNew = true
 
-	res.Dependencies = make(map[string]interface{})
+	res.Dependencies = make(map[string]any)
 	res.Projects = []string{}
 	res.Lock = LoadPackageLock(res)
 	return res
 }
 
 func LoadPackage(createNew bool) (*Package, error) {
-	if fileBytes, e := ReadFile(env.GetBossFile()); e != nil {
+	if fileBytes, e := os.ReadFile(env.GetBossFile()); e != nil {
 		if createNew {
 			e = nil
 		}
@@ -101,7 +101,7 @@ func LoadPackage(createNew bool) (*Package, error) {
 }
 
 func LoadPackageOther(path string) (*Package, error) {
-	if fileBytes, e := ReadFile(path); e != nil {
+	if fileBytes, e := os.ReadFile(path); e != nil {
 		return getNew(path), e
 	} else {
 		result := getNew(path)

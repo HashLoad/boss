@@ -148,4 +148,3 @@ For example, to specify acceptable version ranges up to 1.0.4, use the following
 <a href="https://github.com/Hashload/boss/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Hashload/boss" />
 </a>
-

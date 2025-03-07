@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -19,7 +18,7 @@ func moveArtifacts(dep models.Dependency, rootPath string) {
 }
 
 func movePath(old string, new string) {
-	files, err := ioutil.ReadDir(old)
+	files, err := os.ReadDir(old)
 	var hasError = false
 	if err == nil {
 		for _, file := range files {
@@ -46,7 +45,7 @@ func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Depen
 	var moduleName = dep.GetName()
 	lockedDependency.Artifacts.Clean()
 
-	files, err := ioutil.ReadDir(filepath.Join(rootPath, moduleName, consts.BplFolder))
+	files, err := os.ReadDir(filepath.Join(rootPath, moduleName, consts.BplFolder))
 	if err == nil {
 		for _, file := range files {
 			if !file.IsDir() {
@@ -55,7 +54,7 @@ func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Depen
 		}
 	}
 
-	files, err = ioutil.ReadDir(filepath.Join(rootPath, moduleName, consts.DcuFolder))
+	files, err = os.ReadDir(filepath.Join(rootPath, moduleName, consts.DcuFolder))
 	if err == nil {
 		for _, file := range files {
 			if !file.IsDir() {
@@ -64,7 +63,7 @@ func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Depen
 		}
 	}
 
-	files, err = ioutil.ReadDir(filepath.Join(rootPath, moduleName, consts.BinFolder))
+	files, err = os.ReadDir(filepath.Join(rootPath, moduleName, consts.BinFolder))
 	if err == nil {
 		for _, file := range files {
 			if !file.IsDir() {
@@ -73,7 +72,7 @@ func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Depen
 		}
 	}
 
-	files, err = ioutil.ReadDir(filepath.Join(rootPath, moduleName, consts.DcpFolder))
+	files, err = os.ReadDir(filepath.Join(rootPath, moduleName, consts.DcpFolder))
 	if err == nil {
 		for _, file := range files {
 			if !file.IsDir() {

@@ -12,7 +12,6 @@
         - id: check-yaml
         - id: detect-private-key
         - id: check-symlinks
-        - id: detect-aws-credentials
         - id: trailing-whitespace
           args: [--markdown-linebreak-ext=md]
 

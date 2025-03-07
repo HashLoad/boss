@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -54,7 +53,7 @@ func removeOld(parentPackage *Package) {
 func LoadPackageLock(parentPackage *Package) PackageLock {
 	removeOld(parentPackage)
 	packageLockPath := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
-	if fileBytes, err := ioutil.ReadFile(packageLockPath); err != nil {
+	if fileBytes, err := os.ReadFile(packageLockPath); err != nil {
 		hash := md5.New()
 		if _, err := io.WriteString(hash, parentPackage.Name); err != nil {
 			msg.Warn("Failed on  write machine id to hash")
@@ -87,7 +86,7 @@ func (p PackageLock) Save() {
 		log.Fatalf("error %v", err)
 	}
 
-	_ = ioutil.WriteFile(p.fileName, marshal, 0664)
+	_ = os.WriteFile(p.fileName, marshal, 0664)
 }
 
 func (p PackageLock) AddInstalled(dep Dependency, version string) {

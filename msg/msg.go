@@ -34,15 +34,15 @@ func NewMessenger() *Messenger {
 var DebugEnable bool
 var Default = NewMessenger()
 
-func Die(msg string, args ...interface{}) {
+func Die(msg string, args ...any) {
 	Default.Die(msg, args...)
 }
 
-func Msg(msg string, args ...interface{}) {
+func Msg(msg string, args ...any) {
 	Default.Msg(msg, args...)
 }
 
-func Puts(msg string, args ...interface{}) {
+func Puts(msg string, args ...any) {
 	Default.Puts(msg, args...)
 }
 
@@ -58,43 +58,43 @@ func PromptUntilYorN() bool {
 	return Default.PromptUntilYorN()
 }
 
-func Info(msg string, args ...interface{}) {
+func Info(msg string, args ...any) {
 	Default.Info(msg, args...)
 }
 
-func Debug(msg string, args ...interface{}) {
+func Debug(msg string, args ...any) {
 	Default.Debug(msg, args...)
 }
 
-func Warn(msg string, args ...interface{}) {
+func Warn(msg string, args ...any) {
 	Default.Warn(msg, args...)
 }
 
-func Err(msg string, args ...interface{}) {
+func Err(msg string, args ...any) {
 	Default.Err(msg, args...)
 }
 
-func (m *Messenger) Err(msg string, args ...interface{}) {
+func (m *Messenger) Err(msg string, args ...any) {
 	m.Msg("[ERROR]\t"+msg, args...)
 	m.hasErrored = true
 }
 
-func (m *Messenger) Warn(msg string, args ...interface{}) {
+func (m *Messenger) Warn(msg string, args ...any) {
 	m.Msg("[WARN ]\t"+msg, args...)
 }
 
-func (m *Messenger) Info(msg string, args ...interface{}) {
+func (m *Messenger) Info(msg string, args ...any) {
 	m.Msg("[INFO ]\t"+msg, args...)
 }
 
-func (m *Messenger) Debug(msg string, args ...interface{}) {
+func (m *Messenger) Debug(msg string, args ...any) {
 	if !DebugEnable {
 		return
 	}
 	m.Msg("[DEBUG]\t"+msg, args...)
 }
 
-func (m *Messenger) Die(msg string, args ...interface{}) {
+func (m *Messenger) Die(msg string, args ...any) {
 	m.Err(msg, args...)
 	if m.PanicOnDie {
 		panic("trapped a Die() call")
@@ -114,7 +114,7 @@ func ExitCode(e int) int {
 	return Default.ExitCode(e)
 }
 
-func (m *Messenger) Msg(msg string, args ...interface{}) {
+func (m *Messenger) Msg(msg string, args ...any) {
 	m.Lock()
 	defer m.Unlock()
 	if !strings.HasSuffix(msg, "\n") {
@@ -132,7 +132,7 @@ func (m *Messenger) Msg(msg string, args ...interface{}) {
 	}
 }
 
-func (m *Messenger) Puts(msg string, args ...interface{}) {
+func (m *Messenger) Puts(msg string, args ...any) {
 	m.Lock()
 	defer m.Unlock()
 	if _, err := fmt.Fprintf(m.Stderr, msg, args...); err != nil {

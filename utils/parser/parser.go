@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-func JSONMarshal(v interface{}, safeEncoding bool) ([]byte, error) {
+func JSONMarshal(v any, safeEncoding bool) ([]byte, error) {
 	b, err := json.MarshalIndent(v, "", "\t")
 
 	if safeEncoding {
