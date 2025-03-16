@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/hashload/boss/core"
+	"github.com/hashload/boss/pkg/installer"
 	"github.com/spf13/cobra"
 )
 
@@ -21,11 +21,11 @@ var installCmd = &cobra.Command{
   Install a dependency without add it from the boss.json file:
   boss install <pkg> --no-save`,
 	Run: func(cmd *cobra.Command, args []string) {
-		core.InstallModules(args, true, noSaveInstall)
+		installer.InstallModules(args, true, noSaveInstall)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(installCmd)
+	root.AddCommand(installCmd)
 	installCmd.Flags().BoolVar(&noSaveInstall, "no-save", false, "prevents saving to dependencies")
 }

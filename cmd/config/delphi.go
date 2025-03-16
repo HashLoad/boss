@@ -5,8 +5,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils/dcc32"
 	"github.com/spf13/cobra"
 )
@@ -68,10 +68,4 @@ var cmdDelphiUse = &cobra.Command{
 		config.SaveConfiguration()
 		msg.Info("Successful!")
 	},
-}
-
-func init() {
-	CmdConfig.AddCommand(cmdDelphi)
-	cmdDelphi.AddCommand(cmdDelphiList)
-	cmdDelphi.AddCommand(cmdDelphiUse)
 }

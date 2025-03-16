@@ -14,4 +14,7 @@ var CmdConfig = &cobra.Command{
 
 func InitializeConfig(root *cobra.Command) {
 	root.AddCommand(CmdConfig)
+	CmdConfig.AddCommand(cmdDelphi)
+	cmdDelphi.AddCommand(cmdDelphiList)
+	cmdDelphi.AddCommand(cmdDelphiUse)
 }

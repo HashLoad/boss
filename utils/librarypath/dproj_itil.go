@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 )
 
@@ -43,15 +43,15 @@ func updateOtherUnitFilesProject(lpiName string) {
 
 	root := doc.Root()
 
-	compilerOptions := root.SelectElement(consts.XmlTagNameCompilerOptions)
+	compilerOptions := root.SelectElement(consts.XMLTagNameCompilerOptions)
 	processCompilerOptions(compilerOptions)
 
-	projectOptions := root.SelectElement(consts.XmlTagNameProjectOptions)
+	projectOptions := root.SelectElement(consts.XMLTagNameProjectOptions)
 
-	buildModes := projectOptions.SelectElement(consts.XmlTagNameBuildModes)
-	for _, item := range buildModes.SelectElements(consts.XmlTagNameItem) {
-		attribute := item.SelectAttr(consts.XmlNameAttribute)
-		compilerOptions := item.SelectElement(consts.XmlTagNameCompilerOptions)
+	buildModes := projectOptions.SelectElement(consts.XMLTagNameBuildModes)
+	for _, item := range buildModes.SelectElements(consts.XMLTagNameItem) {
+		attribute := item.SelectAttr(consts.XMLNameAttribute)
+		compilerOptions := item.SelectElement(consts.XMLTagNameCompilerOptions)
 		if compilerOptions != nil {
 			msg.Info("  Updating %s mode", attribute.Value)
 			processCompilerOptions(compilerOptions)
@@ -67,11 +67,11 @@ func updateOtherUnitFilesProject(lpiName string) {
 }
 
 func processCompilerOptions(compilerOptions *etree.Element) {
-	searchPaths := compilerOptions.SelectElement(consts.XmlTagNameSearchPaths)
+	searchPaths := compilerOptions.SelectElement(consts.XMLTagNameSearchPaths)
 	if searchPaths == nil {
 		return
 	}
-	otherUnitFiles := searchPaths.SelectElement(consts.XmlTagNameOtherUnitFiles)
+	otherUnitFiles := searchPaths.SelectElement(consts.XMLTagNameOtherUnitFiles)
 	if otherUnitFiles == nil {
 		otherUnitFiles = createTagOtherUnitFiles(searchPaths)
 	}
@@ -82,7 +82,7 @@ func processCompilerOptions(compilerOptions *etree.Element) {
 }
 
 func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
-	child := node.CreateElement(consts.XmlTagNameOtherUnitFiles)
+	child := node.CreateElement(consts.XMLTagNameOtherUnitFiles)
 	child.CreateAttr("Value", "")
 	return child
 }
@@ -112,11 +112,11 @@ func updateLibraryPathProject(dprojName string) {
 	}
 	root := doc.Root()
 
-	childrens := root.FindElements(consts.XmlTagNameProperty)
+	childrens := root.FindElements(consts.XMLTagNameProperty)
 	for _, children := range childrens {
-		attribute := children.SelectAttr(consts.XmlTagNamePropertyAttribute)
-		if attribute != nil && attribute.Value == consts.XmlTagNamePropertyAttributeValue {
-			child := children.SelectElement(consts.XmlTagNameLibraryPath)
+		attribute := children.SelectAttr(consts.XMLTagNamePropertyAttribute)
+		if attribute != nil && attribute.Value == consts.XMLTagNamePropertyAttributeValue {
+			child := children.SelectElement(consts.XMLTagNameLibraryPath)
 			if child == nil {
 				child = createTagLibraryPath(children)
 			}
@@ -138,7 +138,7 @@ func updateLibraryPathProject(dprojName string) {
 }
 
 func createTagLibraryPath(node *etree.Element) *etree.Element {
-	child := node.CreateElement(consts.XmlTagNameLibraryPath)
+	child := node.CreateElement(consts.XMLTagNameLibraryPath)
 	return child
 }
 
@@ -213,7 +213,7 @@ func _(dprojName string) []string {
 	utils.HandleError(err)
 	platforms := root.FindElementPath(path)
 	for _, platform := range platforms.ChildElements() {
-		value := platform.SelectAttr(consts.XmlValueAttribute)
+		value := platform.SelectAttr(consts.XMLValueAttribute)
 		activePlatform, err := strconv.ParseBool(platform.Text())
 		utils.HandleError(err)
 

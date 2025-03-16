@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/msg"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -37,10 +38,10 @@ func init() {
 	loginCmd.Flags().StringVarP(&privateKey, "key", "k", "", "Path of ssh private key")
 	loginCmd.Flags().StringVarP(&userName, "username", "u", "", "Username")
 	loginCmd.Flags().StringVarP(&password, "password", "p", "", "Password or PassPhrase(with SSH)")
-	RootCmd.AddCommand(loginCmd)
+	root.AddCommand(loginCmd)
 }
 
-func login(removeLogin bool, useSsh bool, privateKey string, userName string, password string, args []string) {
+func login(removeLogin bool, useSSH bool, privateKey string, userName string, password string, args []string) {
 	configuration := env.GlobalConfiguration
 
 	if removeLogin {
@@ -67,30 +68,37 @@ func login(removeLogin bool, useSsh bool, privateKey string, userName string, pa
 	}
 
 	if (userName != "") || (privateKey != "") {
-		auth.UseSsh = useSsh
-		if auth.UseSsh || (privateKey != "") {
-			auth.UseSsh = true
-			auth.Path = privateKey
-			auth.SetPassPhrase(password)
-		} else {
-			auth.SetUser(userName)
-			auth.SetPass(password)
-		}
+		setAuthWithParams(auth, useSSH, privateKey, userName, password)
 	} else {
-		auth.UseSsh = getParamBoolean("Use SSH")
-
-		if auth.UseSsh {
-			auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
-			auth.SetPassPhrase(getPass("PassPhrase"))
-		} else {
-			auth.SetUser(getParamOrDef("Username", ""))
-			auth.SetPass(getPass("Password"))
-		}
+		setAuthInteractively(auth)
 	}
 
 	configuration.Auth[repo] = auth
 	configuration.SaveConfiguration()
+}
 
+func setAuthWithParams(auth *env.Auth, useSsh bool, privateKey, userName, password string) {
+	auth.UseSSH = useSsh
+	if auth.UseSSH || (privateKey != "") {
+		auth.UseSSH = true
+		auth.Path = privateKey
+		auth.SetPassPhrase(password)
+	} else {
+		auth.SetUser(userName)
+		auth.SetPass(password)
+	}
+}
+
+func setAuthInteractively(auth *env.Auth) {
+	auth.UseSSH = getParamBoolean("Use SSH")
+
+	if auth.UseSSH {
+		auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
+		auth.SetPassPhrase(getPass("PassPhrase"))
+	} else {
+		auth.SetUser(getParamOrDef("Username", ""))
+		auth.SetPass(getPass("Password"))
+	}
 }
 
 func getPass(description string) string {
@@ -111,7 +119,7 @@ func getSshKeyPath() string {
 	return filepath.Join(usr.HomeDir, ".ssh", "id_rsa")
 }
 
-func getParamBoolean(msgS string) bool {
-	msg.Print(msgS + "(y or n): ")
-	return msg.PromptUntilYorN()
+func getParamBoolean(msg string) bool {
+	result, _ := pterm.DefaultInteractiveConfirm.Show(msg)
+	return result
 }

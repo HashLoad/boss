@@ -4,11 +4,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/core/installer"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/installer"
+	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
 	"github.com/spf13/cobra"
@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	updated     = 0
-	outdated    = 1
-	usingMaster = 2
+	updated   = 0
+	outdated  = 1
+	usingMain = 2
 )
 
 var showVersion bool
@@ -46,7 +46,7 @@ var dependenciesCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(dependenciesCmd)
+	root.AddCommand(dependenciesCmd)
 	dependenciesCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show dependency version")
 }
 
@@ -60,9 +60,9 @@ func printDependencies(showVersion bool) {
 		}
 	}
 
-	master := tree.AddBranch(pkg.Name + ":")
+	main := tree.AddBranch(pkg.Name + ":")
 	deps := pkg.GetParsedDependencies()
-	printDeps(nil, deps, pkg.Lock, master, showVersion)
+	printDeps(nil, deps, pkg.Lock, main, showVersion)
 	print(tree.String())
 }
 
@@ -97,8 +97,8 @@ func printSingleDependency(dep *models.Dependency, lock models.PackageLock, tree
 	switch isOutdated(*dep, lock.GetInstalled(*dep).Version) {
 	case outdated:
 		output += " outdated"
-	case usingMaster:
-		output += " using master"
+	case usingMain:
+		output += " using main"
 	}
 
 	return tree.AddBranch(output)
@@ -112,7 +112,7 @@ func isOutdated(dependency models.Dependency, version string) int {
 	} else {
 		locked, err := semver.NewVersion(version)
 		if err != nil {
-			return usingMaster
+			return usingMain
 		}
 		constraint, _ := semver.NewConstraint(dependency.GetVersion())
 		for _, value := range info.Versions {

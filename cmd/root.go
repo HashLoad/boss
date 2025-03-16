@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/hashload/boss/cmd/config"
-	"github.com/hashload/boss/core"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/gc"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/setup"
 	"github.com/hashload/boss/utils"
 
@@ -15,13 +15,13 @@ import (
 
 var versionPrint bool
 
-var RootCmd = &cobra.Command{
+var root = &cobra.Command{
 	Use:   "boss",
 	Short: "Dependency Manager for Delphi",
 	Long:  "Dependency Manager for Delphi",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if versionPrint {
-			printVersion(false)
+			printVersion()
 		} else {
 			return cmd.Help()
 		}
@@ -30,19 +30,20 @@ var RootCmd = &cobra.Command{
 }
 
 func Execute() {
-	RootCmd.PersistentFlags().BoolVarP(&env.Global, "global", "g", false, "global environment")
-	RootCmd.PersistentFlags().BoolVarP(&msg.DebugEnable, "debug", "d", false, "debug")
-	RootCmd.Flags().BoolVarP(&versionPrint, "version", "v", false, "show cli version")
+	root.PersistentFlags().BoolVarP(&env.Global, "global", "g", false, "global environment")
+	root.PersistentFlags().BoolVarP(&msg.DebugEnable, "debug", "d", false, "debug")
+	root.Flags().BoolVarP(&versionPrint, "version", "v", false, "show cli version")
 
 	msg.DebugEnable = utils.Contains(os.Args, "-d")
 
 	setup.Initialize()
 
-	config.InitializeConfig(RootCmd)
+	config.InitializeConfig(root)
 
-	core.RunGC(false)
+	gc.RunGC(false)
 
-	if err := RootCmd.Execute(); err != nil {
+	config.RegisterCmd(root)
+	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
 }

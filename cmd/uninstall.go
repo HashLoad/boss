@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/hashload/boss/core"
+	"github.com/hashload/boss/pkg/installer"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +18,11 @@ var uninstallCmd = &cobra.Command{
   Uninstall a package without removing it from the boss.json file:
   boss uninstall <pkg> --no-save`,
 	Run: func(cmd *cobra.Command, args []string) {
-		core.UninstallModules(args, noSaveUninstall)
+		installer.UninstallModules(args, noSaveUninstall)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(uninstallCmd)
+	root.AddCommand(uninstallCmd)
 	uninstallCmd.Flags().BoolVar(&noSaveUninstall, "no-save", false, "package will not be removed from your boss.json file")
 }

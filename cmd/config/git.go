@@ -1,11 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/spf13/cobra"
 )
 
@@ -22,9 +21,9 @@ var gitCmd = &cobra.Command{
 func boolToMode(embedded bool) string {
 	if embedded {
 		return "embedded"
-	} else {
-		return "native"
 	}
+
+	return "native"
 }
 
 var gitModeCmd = &cobra.Command{
@@ -38,12 +37,10 @@ var gitModeCmd = &cobra.Command{
 			err = cobra.ExactArgs(1)(cmd, args)
 		}
 		if err != nil {
-			println(err.Error())
-			println()
-			println("Current: ", boolToMode(env.GlobalConfiguration.GitEmbedded))
-			println()
-			fmt.Printf("Valid args:\n\t%s\n", strings.Join(cmd.ValidArgs, "\n\t"))
-			println()
+			msg.Warn(err.Error())
+			msg.Info("Current: %s\n\nValid args:\n\t%s\n",
+				boolToMode(env.GlobalConfiguration.GitEmbedded),
+				strings.Join(cmd.ValidArgs, "\n\t"))
 			return err
 		}
 		return nil

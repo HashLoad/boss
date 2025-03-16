@@ -8,7 +8,7 @@ import (
 	"runtime"
 
 	"github.com/hashload/boss/internal/version"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/minio/selfupdate"
 )
 

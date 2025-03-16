@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/hashload/boss/core/scripts"
+	"github.com/hashload/boss/pkg/scripts"
 	"github.com/spf13/cobra"
 )
 
@@ -15,5 +15,5 @@ var runScript = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(runScript)
+	root.AddCommand(runScript)
 }

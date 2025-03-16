@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v69/github"
 	"github.com/snakeice/gogress"
 )
 
@@ -87,7 +87,6 @@ func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
-	// defer file.Close()
 
 	bar := gogress.New64(int64(math.Round(float64(asset.GetSize()))))
 	bar.Start()

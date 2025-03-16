@@ -1,15 +1,13 @@
 package cmd
 
 import (
-	"bufio"
-	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/pkg/msg"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +28,7 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(initCmd)
+	root.AddCommand(initCmd)
 	initCmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "without asking questions")
 }
 
@@ -59,27 +57,23 @@ func doInitialization(quiet bool) {
 	}
 
 	json := pkgJson.Save()
-	fmt.Println("\n" + string([]byte(json)))
+	msg.Info("\n" + string(json))
 }
 
-func getParamOrDef(msg string, def string) string {
-	fmt.Print(msg + ": ")
-	rr := bufio.NewReader(os.Stdin)
-	if res, e := rr.ReadString('\n'); e == nil && res != "\n" {
-		res = strings.ReplaceAll(res, "\t", "")
-		res = strings.ReplaceAll(res, "\n", "")
-		res = strings.ReplaceAll(res, "\r", "")
-		if res == "" {
-			return def
-		} else {
-			return res
-		}
+func getParamOrDef(msg string, def ...string) string {
+	input := &pterm.DefaultInteractiveTextInput
+
+	if len(def) > 0 {
+		input = input.WithDefaultValue(def[0])
 	}
-	return def
+
+	result, _ := input.Show(msg)
+
+	return result
 }
 
 func printHead() {
-	println(`
+	msg.Info(`
 This utility will walk you through creating a boss.json file.
 It only covers the most common items, and tries to guess sensible defaults.
 

@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/text/encoding/charmap"

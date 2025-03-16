@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/core/installer"
-	"github.com/hashload/boss/core/registry"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/installer"
+	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/registry"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/dcc32"
 )
@@ -89,7 +89,6 @@ func addPaths(paths []string) {
 			return
 
 		}
-
 		msg.Warn("Please restart your console after complete.")
 	}
 
