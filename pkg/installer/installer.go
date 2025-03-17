@@ -10,7 +10,7 @@ import (
 
 func InstallModules(args []string, lockedVersion bool, noSave bool) {
 	_ = lockedVersion
-	pkg, e := models.LoadPackage(env.Global)
+	pkg, e := models.LoadPackage(env.GetGlobal())
 	if e != nil {
 		if os.IsNotExist(e) {
 			msg.Die("boss.json not exists in " + env.GetCurrentDir())
@@ -19,14 +19,14 @@ func InstallModules(args []string, lockedVersion bool, noSave bool) {
 		}
 	}
 
-	if env.Global {
+	if env.GetGlobal() {
 		GlobalInstall(args, pkg, lockedVersion, noSave)
 	} else {
 		LocalInstall(args, pkg, lockedVersion, noSave)
 	}
 }
 
-func UninstallModules(args []string, noSave bool) {
+func UninstallModules(args []string, _ /* noSave */ bool) {
 	pkg, e := models.LoadPackage(false)
 
 	if e != nil {

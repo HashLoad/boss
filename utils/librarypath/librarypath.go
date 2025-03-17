@@ -18,13 +18,12 @@ import (
 )
 
 func UpdateLibraryPath(pkg *models.Package) {
-	if env.Global {
+	if env.GetGlobal() {
 		updateGlobalLibraryPath()
 	} else {
 		updateDprojLibraryPath(pkg)
 		updateGlobalBrowsingPath(pkg)
 	}
-
 }
 
 func cleanPath(paths []string, fullPath bool) []string {
@@ -52,37 +51,49 @@ func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setRead
 	matches, _ := os.ReadDir(path)
 
 	for _, value := range matches {
+		paths = processBrowsingPath(value, paths, path, fullPath, rootPath, setReadOnly)
+	}
+	return paths
+}
 
-		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
-		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-
-			other, _ := models.LoadPackageOther(packagePath)
-			if other.BrowsingPath != "" {
-				dir := filepath.Join(path, value.Name(), other.BrowsingPath)
-				paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
-
-				if setReadOnly {
-					readonlybat := filepath.Join(dir, "readonly.bat")
-					readFileStr := fmt.Sprintf(`attrib +r "%s" /s /d`, filepath.Join(dir, "*"))
-					err = os.WriteFile(readonlybat, []byte(readFileStr), os.ModePerm)
-					if err != nil {
-						msg.Warn("  - error on create build file")
-					}
-
-					cmd := exec.Command(readonlybat)
-
-					if _, err := cmd.Output(); err != nil {
-						msg.Err("  - Failed to set readonly property to folder", dir, " - ", err)
-					} else {
-						os.Remove(readonlybat)
-					}
-				}
-
+func processBrowsingPath(
+	value os.DirEntry,
+	paths []string,
+	basePath string,
+	fullPath bool,
+	rootPath string,
+	setReadOnly bool,
+) []string {
+	var packagePath = filepath.Join(basePath, value.Name(), consts.FilePackage)
+	if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
+		other, _ := models.LoadPackageOther(packagePath)
+		if other.BrowsingPath != "" {
+			dir := filepath.Join(basePath, value.Name(), other.BrowsingPath)
+			paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
+			if setReadOnly {
+				setReadOnlyProperty(dir)
 			}
-
 		}
 	}
 	return paths
+}
+
+func setReadOnlyProperty(dir string) {
+	readonlybat := filepath.Join(dir, "readonly.bat")
+	readFileStr := fmt.Sprintf(`attrib +r "%s" /s /d`, filepath.Join(dir, "*"))
+	err := os.WriteFile(readonlybat, []byte(readFileStr), 0600)
+	if err != nil {
+		msg.Warn("  - error on create build file")
+	}
+
+	cmd := exec.Command(readonlybat)
+
+	_, err = cmd.Output()
+	if err != nil {
+		msg.Err("  - Failed to set readonly property to folder", dir, " - ", err)
+	} else {
+		os.Remove(readonlybat)
+	}
 }
 
 func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
@@ -92,13 +103,10 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	matches, _ := os.ReadDir(path)
 
 	for _, value := range matches {
-
 		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
 		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-
 			other, _ := models.LoadPackageOther(packagePath)
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath, rootPath)
-
 		} else {
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath, rootPath)
 		}
@@ -136,7 +144,6 @@ func getDefaultPath(fullPath bool, rootPath string) []string {
 
 func cleanEmpty(paths []string) []string {
 	for index, value := range paths {
-
 		if value == "" {
 			paths = slices.Delete(paths, index, index+1)
 		}
@@ -150,7 +157,7 @@ func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, root
 		return paths
 	}
 
-	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(path, func(path string, info os.FileInfo, _ error) error {
 		matched, _ := regexp.MatchString(consts.RegexArtifacts, info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)
@@ -173,7 +180,7 @@ func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath str
 		return paths
 	}
 
-	_ = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(path, func(path string, info os.FileInfo, _ error) error {
 		matched, _ := regexp.MatchString(consts.RegexArtifacts, info.Name())
 		if matched {
 			dir, _ := filepath.Split(path)

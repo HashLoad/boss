@@ -1,6 +1,8 @@
 package models
 
 import (
+
+	//nolint:gosec // We are not using this for security purposes
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -54,6 +56,7 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 	packageLockPath := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
 	fileBytes, err := os.ReadFile(packageLockPath)
 	if err != nil {
+		//nolint:gosec // We are not using this for security purposes
 		hash := md5.New()
 		if _, err := io.WriteString(hash, parentPackage.Name); err != nil {
 			msg.Warn("Failed on  write machine id to hash")
@@ -78,10 +81,9 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 		utils.HandleError(err)
 	}
 	return lockfile
-
 }
 
-func (p PackageLock) Save() {
+func (p *PackageLock) Save() {
 	marshal, err := json.MarshalIndent(&p, "", "\t")
 	if err != nil {
 		msg.Die("error %v", err)
@@ -90,8 +92,7 @@ func (p PackageLock) Save() {
 	_ = os.WriteFile(p.fileName, marshal, 0600)
 }
 
-func (p PackageLock) AddInstalled(dep Dependency, version string) {
-
+func (p *PackageLock) AddInstalled(dep Dependency, version string) {
 	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
 
 	hash := utils.HashDir(dependencyDir)
@@ -116,7 +117,7 @@ func (p PackageLock) AddInstalled(dep Dependency, version string) {
 	}
 }
 
-func (p Dependency) internalNeedUpdate(lockedDependency LockedDependency, version string) bool {
+func (p *Dependency) internalNeedUpdate(lockedDependency LockedDependency, version string) bool {
 	if lockedDependency.Failed {
 		return true
 	}
@@ -142,7 +143,6 @@ func (p Dependency) internalNeedUpdate(lockedDependency LockedDependency, versio
 		return version != lockedDependency.Version
 	}
 	return parsedNewVersion.GreaterThan(parsedVersion)
-
 }
 
 func (p *DependencyArtifacts) Clean() {
@@ -151,7 +151,7 @@ func (p *DependencyArtifacts) Clean() {
 	p.Dcp = []string{}
 	p.Dcu = []string{}
 }
-func (p LockedDependency) checkArtifactsType(directory string, artifacts []string) bool {
+func (p *LockedDependency) checkArtifactsType(directory string, artifacts []string) bool {
 	for _, value := range artifacts {
 		bpl := filepath.Join(directory, value)
 		_, err := os.Stat(bpl)
@@ -162,7 +162,7 @@ func (p LockedDependency) checkArtifactsType(directory string, artifacts []strin
 	return true
 }
 
-func (p LockedDependency) checkArtifacts(lock PackageLock) bool {
+func (p *LockedDependency) checkArtifacts(lock *PackageLock) bool {
 	baseModulesDir := filepath.Join(filepath.Dir(lock.fileName), consts.FolderDependencies)
 
 	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.BplFolder), p.Artifacts.Bpl) {
@@ -184,8 +184,7 @@ func (p LockedDependency) checkArtifacts(lock PackageLock) bool {
 	return true
 }
 
-func (p PackageLock) NeedUpdate(dep Dependency, version string) bool {
-
+func (p *PackageLock) NeedUpdate(dep Dependency, version string) bool {
 	lockedDependency, ok := p.Installed[strings.ToLower(dep.Repository)]
 	if !ok {
 		return true
@@ -206,11 +205,11 @@ func (p PackageLock) NeedUpdate(dep Dependency, version string) bool {
 	return needUpdate
 }
 
-func (p PackageLock) GetInstalled(dep Dependency) LockedDependency {
+func (p *PackageLock) GetInstalled(dep Dependency) LockedDependency {
 	return p.Installed[strings.ToLower(dep.Repository)]
 }
 
-func (p PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
+func (p *PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
 	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
 	hash := utils.HashDir(dependencyDir)
 	locked.Hash = hash
@@ -218,7 +217,7 @@ func (p PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
 	p.Installed[strings.ToLower(dep.Repository)] = locked
 }
 
-func (p PackageLock) CleanRemoved(deps []Dependency) {
+func (p *PackageLock) CleanRemoved(deps []Dependency) {
 	var repositories []string
 	for _, dep := range deps {
 		repositories = append(repositories, strings.ToLower(dep.Repository))
@@ -231,7 +230,7 @@ func (p PackageLock) CleanRemoved(deps []Dependency) {
 	}
 }
 
-func (p PackageLock) GetArtifactList() []string {
+func (p *PackageLock) GetArtifactList() []string {
 	var result []string
 
 	for _, installed := range p.Installed {
@@ -240,7 +239,7 @@ func (p PackageLock) GetArtifactList() []string {
 	return result
 }
 
-func (p LockedDependency) GetArtifacts() []string {
+func (p *LockedDependency) GetArtifacts() []string {
 	var result []string
 	result = append(result, p.Artifacts.Dcp...)
 	result = append(result, p.Artifacts.Dcu...)

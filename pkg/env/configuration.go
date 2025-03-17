@@ -15,8 +15,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-var machineID = []byte(crypto.GetMachineID()[:16])
-
 type Configuration struct {
 	path                string
 	Key                 string           `json:"id"`
@@ -39,16 +37,16 @@ type Auth struct {
 }
 
 func (a *Auth) GetUser() string {
-	if ret, err := crypto.Decrypt(machineID, a.User); err != nil {
+	ret, err := crypto.Decrypt(machineID(), a.User)
+	if err != nil {
 		msg.Err("Fail to decrypt user.")
 		return ""
-	} else {
-		return ret
 	}
+	return ret
 }
 
 func (a *Auth) GetPassword() string {
-	ret, err := crypto.Decrypt(machineID, a.Pass)
+	ret, err := crypto.Decrypt(machineID(), a.Pass)
 	if err != nil {
 		msg.Err("Fail to decrypt pass.", err)
 		return ""
@@ -58,24 +56,24 @@ func (a *Auth) GetPassword() string {
 }
 
 func (a *Auth) GetPassPhrase() string {
-	if ret, err := crypto.Decrypt(machineID, a.PassPhrase); err != nil {
+	ret, err := crypto.Decrypt(machineID(), a.PassPhrase)
+	if err != nil {
 		msg.Err("Fail to decrypt PassPhrase.", err)
 		return ""
-	} else {
-		return ret
 	}
+	return ret
 }
 
 func (a *Auth) SetUser(user string) {
-	if cUSer, err := crypto.Encrypt(machineID, user); err != nil {
+	if encryptedUser, err := crypto.Encrypt(machineID(), user); err != nil {
 		msg.Err("Fail to crypt user.", err)
 	} else {
-		a.User = cUSer
+		a.User = encryptedUser
 	}
 }
 
 func (a *Auth) SetPass(pass string) {
-	if cPass, err := crypto.Encrypt(machineID, pass); err != nil {
+	if cPass, err := crypto.Encrypt(machineID(), pass); err != nil {
 		msg.Err("Fail to crypt pass.")
 	} else {
 		a.Pass = cPass
@@ -83,7 +81,7 @@ func (a *Auth) SetPass(pass string) {
 }
 
 func (a *Auth) SetPassPhrase(passphrase string) {
-	if cPassPhrase, err := crypto.Encrypt(machineID, passphrase); err != nil {
+	if cPassPhrase, err := crypto.Encrypt(machineID(), passphrase); err != nil {
 		msg.Err("Fail to crypt PassPhrase.")
 	} else {
 		a.PassPhrase = cPassPhrase
@@ -97,20 +95,20 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	case auth == nil:
 		return nil
 	case auth.UseSSH:
-		pem, e := os.ReadFile(auth.Path)
-		if e != nil {
-			msg.Die("Fail to open ssh key %s", e)
+		pem, err := os.ReadFile(auth.Path)
+		if err != nil {
+			msg.Die("Fail to open ssh key %s", err)
 		}
 		var signer ssh.Signer
 
 		if auth.GetPassPhrase() != "" {
-			signer, e = ssh.ParsePrivateKeyWithPassphrase(pem, []byte(auth.GetPassPhrase()))
+			signer, err = ssh.ParsePrivateKeyWithPassphrase(pem, []byte(auth.GetPassPhrase()))
 		} else {
-			signer, e = ssh.ParsePrivateKey(pem)
+			signer, err = ssh.ParsePrivateKey(pem)
 		}
 
-		if e != nil {
-			panic(e)
+		if err != nil {
+			panic(err)
 		}
 		return &sshGit.PublicKeys{User: "git", Signer: signer}
 
@@ -181,4 +179,8 @@ func LoadConfiguration(cachePath string) (*Configuration, error) {
 	configuration.path = cachePath
 
 	return configuration, nil
+}
+
+func machineID() []byte {
+	return []byte(crypto.GetMachineID()[:16])
 }

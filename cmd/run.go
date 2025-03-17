@@ -5,15 +5,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var runScript = &cobra.Command{
-	Use:   "run",
-	Short: "Run cmd script",
-	Long:  `Run cmd script`,
-	Run: func(cmd *cobra.Command, args []string) {
-		scripts.Run(args)
-	},
-}
+func runCmdRegister(root *cobra.Command) {
+	var runScript = &cobra.Command{
+		Use:   "run",
+		Short: "Run cmd script",
+		Long:  `Run cmd script`,
+		Run: func(_ *cobra.Command, args []string) {
+			scripts.Run(args)
+		},
+	}
 
-func init() {
 	root.AddCommand(runScript)
 }

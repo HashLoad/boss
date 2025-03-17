@@ -9,66 +9,96 @@ import (
 	"github.com/pterm/pterm"
 )
 
+type logLevel int
+
+const (
+	_ logLevel = iota
+	WARN
+	ERROR
+	INFO
+	DEBUG
+)
+
 type Messenger struct {
 	sync.Mutex
-	Stdout     io.Writer
-	Stderr     io.Writer
-	Stdin      io.Reader
-	PanicOnDie bool
-	eCode      int
-	hasError   bool
+	Stdout   io.Writer
+	Stderr   io.Writer
+	Stdin    io.Reader
+	exitCode int
+	hasError bool
+
+	logLevel logLevel
 }
 
 func NewMessenger() *Messenger {
 	m := &Messenger{
-		Stdout:     os.Stdout,
-		Stderr:     os.Stderr,
-		Stdin:      os.Stdin,
-		PanicOnDie: false,
-		eCode:      1,
+		Stdout:   os.Stdout,
+		Stderr:   os.Stderr,
+		Stdin:    os.Stdin,
+		exitCode: 1,
+		logLevel: INFO,
 	}
 
 	return m
 }
 
-var DebugEnable bool
-var Default = NewMessenger()
+//nolint:gochecknoglobals // This is a global variable
+var defaultMsg = NewMessenger()
 
 func Die(msg string, args ...any) {
-	Default.Die(msg, args...)
+	defaultMsg.Die(msg, args...)
 }
 
 func Info(msg string, args ...any) {
-	Default.Info(msg, args...)
+	defaultMsg.Info(msg, args...)
 }
 
 func Debug(msg string, args ...any) {
-	Default.Debug(msg, args...)
+	defaultMsg.Debug(msg, args...)
 }
 
 func Warn(msg string, args ...any) {
-	Default.Warn(msg, args...)
+	defaultMsg.Warn(msg, args...)
 }
 
 func Err(msg string, args ...any) {
-	Default.Err(msg, args...)
+	defaultMsg.Err(msg, args...)
+}
+
+func LogLevel(level logLevel) {
+	defaultMsg.LogLevel(level)
+}
+
+func (m *Messenger) LogLevel(level logLevel) {
+	m.Lock()
+	m.logLevel = level
+	m.Unlock()
 }
 
 func (m *Messenger) Err(msg string, args ...any) {
+	if m.logLevel < ERROR {
+		return
+	}
 	m.print(pterm.Error, msg, args...)
 	m.hasError = true
 }
 
 func (m *Messenger) Warn(msg string, args ...any) {
+	if m.logLevel < WARN {
+		return
+	}
 	m.print(pterm.Warning, msg, args...)
 }
 
 func (m *Messenger) Info(msg string, args ...any) {
+	if m.logLevel < INFO {
+		return
+	}
 	m.print(pterm.Info, msg, args...)
 }
 
 func (m *Messenger) Debug(msg string, args ...any) {
-	if !DebugEnable {
+	if m.logLevel < DEBUG {
 		return
 	}
 
@@ -77,22 +107,19 @@ func (m *Messenger) Debug(msg string, args ...any) {
 
 func (m *Messenger) Die(msg string, args ...any) {
 	m.Err(msg, args...)
-	if m.PanicOnDie {
-		panic("trapped a Die() call")
-	}
-	os.Exit(m.eCode)
+	os.Exit(m.exitCode)
 }
 
 func (m *Messenger) ExitCode(e int) int {
 	m.Lock()
-	old := m.eCode
-	m.eCode = e
+	old := m.exitCode
+	m.exitCode = e
 	m.Unlock()
 	return old
 }
 
 func ExitCode(e int) int {
-	return Default.ExitCode(e)
+	return defaultMsg.ExitCode(e)
 }
 
 func (m *Messenger) print(printer pterm.PrefixPrinter, msg string, args ...any) {
@@ -103,7 +130,6 @@ func (m *Messenger) print(printer pterm.PrefixPrinter, msg string, args ...any) 
 	}
 
 	printer.Printf(msg, args...)
-
 }
 
 func (m *Messenger) HasErrored() bool {

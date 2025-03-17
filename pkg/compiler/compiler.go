@@ -35,7 +35,7 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 	}
 	outDir := filepath.Join(env.GetModulesDir(), consts.BplFolder, consts.FileBplOrder)
 
-	utils.HandleError(os.WriteFile(outDir, []byte(projects), os.ModePerm))
+	utils.HandleError(os.WriteFile(outDir, []byte(projects), 0600))
 }
 
 func buildOrderedPackages(pkg *models.Package) {
@@ -66,6 +66,5 @@ func buildOrderedPackages(pkg *models.Package) {
 			}
 		}
 		pkg.Lock.SetInstalled(node.Dep, dependency)
-
 	}
 }

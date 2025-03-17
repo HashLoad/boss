@@ -11,25 +11,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var quiet bool
+func initCmdRegister(root *cobra.Command) {
+	var quiet bool
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initialize a new project",
-	Long:  "Initialize a new project and creates a boss.json file",
-	Example: `  Initialize a new project:
+	var initCmd = &cobra.Command{
+		Use:   "init",
+		Short: "Initialize a new project",
+		Long:  "Initialize a new project and creates a boss.json file",
+		Example: `  Initialize a new project:
   boss init
 
   Initialize a new project without having it ask any questions:
   boss init --quiet`,
-	Run: func(cmd *cobra.Command, args []string) {
-		doInitialization(quiet)
-	},
-}
+		Run: func(_ *cobra.Command, _ []string) {
+			doInitialization(quiet)
+		},
+	}
 
-func init() {
-	root.AddCommand(initCmd)
 	initCmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "without asking questions")
+
+	root.AddCommand(initCmd)
 }
 
 func doInitialization(quiet bool) {
@@ -37,7 +38,7 @@ func doInitialization(quiet bool) {
 		printHead()
 	}
 
-	pkgJson, _ := models.LoadPackage(true)
+	packageData, _ := models.LoadPackage(true)
 
 	rxp := regexp.MustCompile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
 
@@ -45,18 +46,18 @@ func doInitialization(quiet bool) {
 	folderName := allString[0][1]
 
 	if quiet {
-		pkgJson.Name = folderName
-		pkgJson.Version = "1.0.0"
-		pkgJson.MainSrc = "./src"
+		packageData.Name = folderName
+		packageData.Version = "1.0.0"
+		packageData.MainSrc = "./src"
 	} else {
-		pkgJson.Name = getParamOrDef("Package name ("+folderName+")", folderName)
-		pkgJson.Homepage = getParamOrDef("Homepage", "")
-		pkgJson.Version = getParamOrDef("Version (1.0.0)", "1.0.0")
-		pkgJson.Description = getParamOrDef("Description", "")
-		pkgJson.MainSrc = getParamOrDef("Source folder (./src)", "./src")
+		packageData.Name = getParamOrDef("Package name ("+folderName+")", folderName)
+		packageData.Homepage = getParamOrDef("Homepage", "")
+		packageData.Version = getParamOrDef("Version (1.0.0)", "1.0.0")
+		packageData.Description = getParamOrDef("Description", "")
+		packageData.MainSrc = getParamOrDef("Source folder (./src)", "./src")
 	}
 
-	json := pkgJson.Save()
+	json := packageData.Save()
 	msg.Info("\n" + string(json))
 }
 

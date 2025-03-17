@@ -16,7 +16,7 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 	cacheDirInfo, err := os.Stat(cacheDir)
 	switch {
 	case os.IsNotExist(err):
-		if err := os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
+		if err = os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
 			msg.Die("Could not create %s: %s", cacheDir, err)
 		}
 
@@ -28,10 +28,10 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 		dependenciesNames := models.GetDependenciesNames(dependencies)
 		for _, info := range fileInfos {
 			if !info.IsDir() {
-				err := os.Remove(info.Name())
+				err = os.Remove(info.Name())
 				utils.HandleError(err)
 			}
-			if utils.Contains(consts.DefaultPaths, info.Name()) {
+			if utils.Contains(consts.DefaultPaths(), info.Name()) {
 				cleanArtifacts(filepath.Join(cacheDir, info.Name()), lock)
 				continue
 			}
@@ -43,9 +43,9 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 					goto remove
 				}
 			}
-
 		}
 	}
+
 	createPath(filepath.Join(cacheDir, consts.BplFolder))
 	createPath(filepath.Join(cacheDir, consts.DcuFolder))
 	createPath(filepath.Join(cacheDir, consts.DcpFolder))
@@ -53,7 +53,7 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 }
 
 func EnsureCacheDir(dep models.Dependency) {
-	if !env.GlobalConfiguration.GitEmbedded {
+	if !env.GlobalConfiguration().GitEmbedded {
 		return
 	}
 	cacheDir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
@@ -61,7 +61,8 @@ func EnsureCacheDir(dep models.Dependency) {
 	fi, err := os.Stat(cacheDir)
 	if err != nil {
 		msg.Debug("Creating %s", cacheDir)
-		if err := os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
+		err = os.MkdirAll(cacheDir, os.ModeDir|0755)
+		if err != nil {
 			msg.Die("Could not create %s: %s", cacheDir, err)
 		}
 	} else if !fi.IsDir() {
@@ -83,13 +84,12 @@ func cleanArtifacts(dir string, lock models.PackageLock) {
 		}
 		if !utils.Contains(artifactList, infoArtifact.Name()) {
 			for {
-				err := os.Remove(filepath.Join(dir, infoArtifact.Name()))
+				err = os.Remove(filepath.Join(dir, infoArtifact.Name()))
 				utils.HandleError(err)
 				if err == nil {
 					break
 				}
 			}
 		}
-
 	}
 }

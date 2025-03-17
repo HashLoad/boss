@@ -1,6 +1,7 @@
 package env
 
 import (
+	//nolint:gosec // We are not using this for security purposes
 	"crypto/md5"
 	"encoding/hex"
 	"os"
@@ -13,39 +14,64 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-var Global bool
-var Internal = false
-var GlobalConfiguration, _ = LoadConfiguration(GetBossHome())
+//nolint:gochecknoglobals //TODO: Refactor this
+var (
+	global                 bool
+	internal               = false
+	globalConfiguration, _ = LoadConfiguration(GetBossHome())
+)
+
+func SetGlobal(b bool) {
+	global = b
+}
+
+func SetInternal(b bool) {
+	internal = b
+}
+
+func GetInternal() bool {
+	return internal
+}
+
+func GetGlobal() bool {
+	return global
+}
+
+func GlobalConfiguration() *Configuration {
+	return globalConfiguration
+}
 
 func HashDelphiPath() string {
+	//nolint:gosec // We are not using this for security purposes
 	hasher := md5.New()
-	hasher.Write([]byte(strings.ToLower(GlobalConfiguration.DelphiPath)))
+	hasher.Write([]byte(strings.ToLower(GlobalConfiguration().DelphiPath)))
 	hashString := hex.EncodeToString(hasher.Sum(nil))
-	if Internal {
+	if internal {
 		hashString = consts.BossInternalDir + hashString
 	}
 	return hashString
 }
 
 func GetInternalGlobalDir() string {
-	internalOld := Internal
-	Internal = true
+	internalOld := internal
+	internal = true
 	result := filepath.Join(GetBossHome(), consts.FolderDependencies, HashDelphiPath())
-	Internal = internalOld
+	internal = internalOld
 	return result
 }
 
 func getwd() string {
-	if Global {
+	if global {
 		return filepath.Join(GetBossHome(), consts.FolderDependencies, HashDelphiPath())
-	} else {
-		if dir, err := os.Getwd(); err != nil {
-			msg.Err("Error to get paths", err)
-			return ""
-		} else {
-			return dir
-		}
 	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		msg.Err("Error to get paths", err)
+		return ""
+	}
+
+	return dir
 }
 
 func GetCacheDir() string {
@@ -53,7 +79,6 @@ func GetCacheDir() string {
 }
 
 func GetBossHome() string {
-
 	homeDir := os.Getenv("BOSS_HOME")
 
 	if homeDir == "" {
@@ -95,8 +120,8 @@ func GetGlobalBinPath() string {
 }
 
 func GetDcc32Dir() string {
-	if GlobalConfiguration.DelphiPath != "" {
-		return GlobalConfiguration.DelphiPath
+	if GlobalConfiguration().DelphiPath != "" {
+		return GlobalConfiguration().DelphiPath
 	}
 
 	byCmd := dcc32.GetDcc32DirByCmd()

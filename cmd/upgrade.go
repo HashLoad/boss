@@ -5,22 +5,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var preRelease bool
+func upgradeCmdRegister(root *cobra.Command) {
+	var preRelease bool
 
-var upgradeCmd = &cobra.Command{
-	Use:   "upgrade",
-	Short: "Upgrade the client version",
-	Example: `  Upgrade boss:
+	var upgradeCmd = &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrade the client version",
+		Example: `  Upgrade boss:
   boss upgrade
 
   Upgrade boss with pre-release:
   boss upgrade --dev`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return upgrade.BossUpgrade(preRelease)
-	},
-}
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return upgrade.BossUpgrade(preRelease)
+		},
+	}
 
-func init() {
 	root.AddCommand(upgradeCmd)
 	upgradeCmd.Flags().BoolVar(&preRelease, "dev", false, "pre-release")
 }

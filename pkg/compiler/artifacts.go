@@ -17,13 +17,13 @@ func moveArtifacts(dep models.Dependency, rootPath string) {
 	movePath(filepath.Join(rootPath, moduleName, consts.DcuFolder), filepath.Join(rootPath, consts.DcuFolder))
 }
 
-func movePath(old string, new string) {
-	files, err := os.ReadDir(old)
+func movePath(oldPath string, newPath string) {
+	files, err := os.ReadDir(oldPath)
 	var hasError = false
 	if err == nil {
 		for _, file := range files {
 			if !file.IsDir() {
-				err = os.Rename(filepath.Join(old, file.Name()), filepath.Join(new, file.Name()))
+				err = os.Rename(filepath.Join(oldPath, file.Name()), filepath.Join(newPath, file.Name()))
 				if err != nil {
 					hasError = true
 				}
@@ -32,7 +32,7 @@ func movePath(old string, new string) {
 		}
 	}
 	if !hasError {
-		err = os.RemoveAll(old)
+		err = os.RemoveAll(oldPath)
 		if !os.IsNotExist(err) {
 			utils.HandleError(err)
 		}
@@ -40,42 +40,21 @@ func movePath(old string, new string) {
 }
 
 func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Dependency, rootPath string) {
-
 	var moduleName = dep.GetName()
 	lockedDependency.Artifacts.Clean()
 
-	files, err := os.ReadDir(filepath.Join(rootPath, moduleName, consts.BplFolder))
-	if err == nil {
-		for _, file := range files {
-			if !file.IsDir() {
-				lockedDependency.Artifacts.Bpl = append(lockedDependency.Artifacts.Bpl, file.Name())
-			}
-		}
-	}
+	collectArtifacts(lockedDependency.Artifacts.Bpl, filepath.Join(rootPath, moduleName, consts.BplFolder))
+	collectArtifacts(lockedDependency.Artifacts.Dcu, filepath.Join(rootPath, moduleName, consts.DcuFolder))
+	collectArtifacts(lockedDependency.Artifacts.Bin, filepath.Join(rootPath, moduleName, consts.BinFolder))
+	collectArtifacts(lockedDependency.Artifacts.Dcp, filepath.Join(rootPath, moduleName, consts.DcpFolder))
+}
 
-	files, err = os.ReadDir(filepath.Join(rootPath, moduleName, consts.DcuFolder))
+func collectArtifacts(artifactList []string, path string) {
+	files, err := os.ReadDir(path)
 	if err == nil {
 		for _, file := range files {
 			if !file.IsDir() {
-				lockedDependency.Artifacts.Dcu = append(lockedDependency.Artifacts.Dcu, file.Name())
-			}
-		}
-	}
-
-	files, err = os.ReadDir(filepath.Join(rootPath, moduleName, consts.BinFolder))
-	if err == nil {
-		for _, file := range files {
-			if !file.IsDir() {
-				lockedDependency.Artifacts.Bin = append(lockedDependency.Artifacts.Bin, file.Name())
-			}
-		}
-	}
-
-	files, err = os.ReadDir(filepath.Join(rootPath, moduleName, consts.DcpFolder))
-	if err == nil {
-		for _, file := range files {
-			if !file.IsDir() {
-				lockedDependency.Artifacts.Dcp = append(lockedDependency.Artifacts.Dcp, file.Name())
+				artifactList = append(artifactList, file.Name())
 			}
 		}
 	}

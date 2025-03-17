@@ -6,19 +6,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var versionCmd = &cobra.Command{
-	Use:     "version",
-	Short:   "Show cli version",
-	Long:    `This command show the client version`,
-	Aliases: []string{"v"},
-	Example: `  Print version:
+func versionCmdRegister(root *cobra.Command) {
+	var versionCmd = &cobra.Command{
+		Use:     "version",
+		Short:   "Show cli version",
+		Long:    `This command show the client version`,
+		Aliases: []string{"v"},
+		Example: `  Print version:
   boss version`,
-	Run: func(cmd *cobra.Command, args []string) {
-		printVersion()
-	},
-}
+		Run: func(_ *cobra.Command, _ []string) {
+			printVersion()
+		},
+	}
 
-func init() {
 	root.AddCommand(versionCmd)
 }
 

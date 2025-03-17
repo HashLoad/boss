@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,11 +16,6 @@ import (
 const (
 	githubOrganization = "HashLoad"
 	githubRepository   = "boss"
-)
-
-var (
-	assetName = fmt.Sprintf("boss-%s-%s.zip", runtime.GOOS, runtime.GOARCH)
-	zipFolder = fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 )
 
 func BossUpgrade(preRelease bool) error {
@@ -37,7 +33,7 @@ func BossUpgrade(preRelease bool) error {
 	if err != nil {
 		return err
 	} else if asset == nil {
-		return fmt.Errorf("no asset found")
+		return errors.New("no asset found")
 	}
 
 	if *asset.Name == version.Get().Version {
@@ -53,7 +49,7 @@ func BossUpgrade(preRelease bool) error {
 	defer file.Close()
 	defer os.Remove(file.Name())
 
-	buff, err := getAssetFromZip(file, assetName)
+	buff, err := getAssetFromFile(file, getAssetName())
 	if err != nil {
 		return fmt.Errorf("failed to get asset from zip: %w", err)
 	}
@@ -61,14 +57,13 @@ func BossUpgrade(preRelease bool) error {
 	err = apply(buff)
 	if err != nil {
 		return fmt.Errorf("failed to apply update: %w", err)
-	} else {
-		msg.Info("Update applied successfully to %s", *release.TagName)
-		return nil
 	}
+
+	msg.Info("Update applied successfully to %s", *release.TagName)
+	return nil
 }
 
 func apply(buff []byte) error {
-
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -79,5 +74,13 @@ func apply(buff []byte) error {
 		OldSavePath: fmt.Sprintf("%s_bkp", exePath),
 		TargetPath:  exePath,
 	})
+}
 
+func getAssetName() string {
+	ext := "zip"
+	if runtime.GOOS != "windows" {
+		ext = "tar.gz"
+	}
+
+	return fmt.Sprintf("boss-%s-%s.%s", runtime.GOOS, runtime.GOARCH, ext)
 }

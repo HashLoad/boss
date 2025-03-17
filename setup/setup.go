@@ -18,16 +18,16 @@ import (
 
 const PATH string = "PATH"
 
-var (
-	defaultModules = []string{
+func defaultModules() []string {
+	return []string{
 		"bpl-identifier",
 	}
-)
+}
 
 func Initialize() {
-	var OldGlobal = env.Global
-	env.Internal = true
-	env.Global = true
+	var oldGlobal = env.GetGlobal()
+	env.SetInternal(true)
+	env.SetGlobal(true)
 
 	msg.Debug("DEBUG MODE")
 	msg.Debug("\tInitializing delphi version")
@@ -46,20 +46,19 @@ func Initialize() {
 	msg.Debug("\tAdjusting paths")
 	addPaths(paths)
 	msg.Debug("\tInstalling internal modules")
-	installModules(defaultModules)
+	installModules(defaultModules())
 	msg.Debug("\tCreating paths")
 	createPaths()
 
-	env.Global = OldGlobal
-	env.Internal = false
+	env.SetGlobal(oldGlobal)
+	env.SetInternal(false)
 	msg.Debug("finish boss system initialization")
-
 }
 
 func createPaths() {
 	_, err := os.Stat(env.GetGlobalEnvBpl())
 	if os.IsNotExist(err) {
-		_ = os.MkdirAll(env.GetGlobalEnvBpl(), os.ModePerm)
+		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0600)
 	}
 }
 
@@ -87,73 +86,70 @@ func addPaths(paths []string) {
 		if err != nil {
 			msg.Die("Failed to update PATH \n %s", err.Error())
 			return
-
 		}
+
 		msg.Warn("Please restart your console after complete.")
 	}
-
 }
 
 func installModules(modules []string) {
 	pkg, _ := models.LoadPackage(true)
-	dependencies := pkg.Dependencies.(map[string]any)
 	encountered := 0
 	for _, newPackage := range modules {
-		for installed := range dependencies {
+		for installed := range pkg.Dependencies {
 			if strings.Contains(installed, newPackage) {
 				encountered++
 			}
 		}
 	}
 
-	nextUpdate := env.GlobalConfiguration.LastInternalUpdate.
-		AddDate(0, 0, env.GlobalConfiguration.PurgeTime)
+	nextUpdate := env.GlobalConfiguration().LastInternalUpdate.
+		AddDate(0, 0, env.GlobalConfiguration().PurgeTime)
 
 	if encountered == len(modules) && time.Now().Before(nextUpdate) {
 		return
 	}
 
-	env.GlobalConfiguration.LastInternalUpdate = time.Now()
-	env.GlobalConfiguration.SaveConfiguration()
+	env.GlobalConfiguration().LastInternalUpdate = time.Now()
+	env.GlobalConfiguration().SaveConfiguration()
 
 	installer.GlobalInstall(modules, pkg, false, false)
 	moveBptIdentifier()
 }
 
 func moveBptIdentifier() {
-	var OutExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
-	if _, err := os.Stat(OutExeCompilation); os.IsNotExist(err) {
+	var outExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
+	if _, err := os.Stat(outExeCompilation); os.IsNotExist(err) {
 		return
 	}
 
 	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
-	err := os.MkdirAll(filepath.Dir(exePath), os.ModePerm)
+	err := os.MkdirAll(filepath.Dir(exePath), 0600)
 	if err != nil {
 		msg.Err(err.Error())
 	}
 
-	err = os.Rename(OutExeCompilation, exePath)
+	err = os.Rename(outExeCompilation, exePath)
 	if err != nil {
 		msg.Err(err.Error())
 	}
 }
 
 func initializeDelphiVersion() {
-	if len(env.GlobalConfiguration.DelphiPath) != 0 {
+	if len(env.GlobalConfiguration().DelphiPath) != 0 {
 		return
 	}
 	dcc32DirByCmd := dcc32.GetDcc32DirByCmd()
 	if len(dcc32DirByCmd) != 0 {
-		env.GlobalConfiguration.DelphiPath = dcc32DirByCmd[0]
-		env.GlobalConfiguration.SaveConfiguration()
+		env.GlobalConfiguration().DelphiPath = dcc32DirByCmd[0]
+		env.GlobalConfiguration().SaveConfiguration()
 		return
 	}
 
 	byRegistry := registry.GetDelphiPaths()
 	if len(byRegistry) != 0 {
-		env.GlobalConfiguration.DelphiPath = byRegistry[len(byRegistry)-1]
-		env.GlobalConfiguration.SaveConfiguration()
+		env.GlobalConfiguration().DelphiPath = byRegistry[len(byRegistry)-1]
+		env.GlobalConfiguration().SaveConfiguration()
 		return
 	}
-
 }

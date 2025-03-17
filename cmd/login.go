@@ -1,48 +1,55 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
 	"os/user"
 	"path/filepath"
-	"syscall"
 
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 )
 
-var removeLogin bool
-var useSsh bool
-var privateKey string
-var userName string
-var password string
+func loginCmdRegister(root *cobra.Command) {
+	var removeLogin bool
+	var useSSH bool
+	var privateKey string
+	var userName string
+	var password string
 
-var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "Add a registry user account",
-	Example: `  Adding a new user account:
+	var loginCmd = &cobra.Command{
+		Use:   "login",
+		Short: "Add a registry user account",
+		Example: `  Adding a new user account:
   boss login <repo>`,
-	Aliases: []string{"adduser", "add-user"},
-	Run: func(cmd *cobra.Command, args []string) {
-		login(removeLogin, useSsh, privateKey, userName, password, args)
-	},
-}
+		Aliases: []string{"adduser", "add-user"},
+		Run: func(_ *cobra.Command, args []string) {
+			login(removeLogin, useSSH, privateKey, userName, password, args)
+		},
+	}
 
-func init() {
-	// TODO add example to remove login or add a new command to logout (equals branch refact-steroids)
+	var logoutCmd = &cobra.Command{
+		Use:   "logout",
+		Short: "Remove a registry user account",
+		Example: `  Remove a new user account:
+  boss login <repo>`,
+		Run: func(_ *cobra.Command, args []string) {
+			login(removeLogin, false, "", "", "", args)
+		},
+	}
+
 	loginCmd.Flags().BoolVarP(&removeLogin, "rm", "r", false, "remove login")
-	loginCmd.Flags().BoolVarP(&useSsh, "ssh", "s", false, "Use SSH")
+	loginCmd.Flags().BoolVarP(&useSSH, "ssh", "s", false, "Use SSH")
 	loginCmd.Flags().StringVarP(&privateKey, "key", "k", "", "Path of ssh private key")
 	loginCmd.Flags().StringVarP(&userName, "username", "u", "", "Username")
 	loginCmd.Flags().StringVarP(&password, "password", "p", "", "Password or PassPhrase(with SSH)")
 	root.AddCommand(loginCmd)
+
+	root.AddCommand(logoutCmd)
 }
 
 func login(removeLogin bool, useSSH bool, privateKey string, userName string, password string, args []string) {
-	configuration := env.GlobalConfiguration
+	configuration := env.GlobalConfiguration()
 
 	if removeLogin {
 		delete(configuration.Auth, args[0])
@@ -77,8 +84,8 @@ func login(removeLogin bool, useSSH bool, privateKey string, userName string, pa
 	configuration.SaveConfiguration()
 }
 
-func setAuthWithParams(auth *env.Auth, useSsh bool, privateKey, userName, password string) {
-	auth.UseSSH = useSsh
+func setAuthWithParams(auth *env.Auth, useSSH bool, privateKey, userName, password string) {
+	auth.UseSSH = useSSH
 	if auth.UseSSH || (privateKey != "") {
 		auth.UseSSH = true
 		auth.Path = privateKey
@@ -93,7 +100,7 @@ func setAuthInteractively(auth *env.Auth) {
 	auth.UseSSH = getParamBoolean("Use SSH")
 
 	if auth.UseSSH {
-		auth.Path = getParamOrDef("Path of ssh private key("+getSshKeyPath()+")", getSshKeyPath())
+		auth.Path = getParamOrDef("Path of ssh private key("+getSSHKeyPath()+")", getSSHKeyPath())
 		auth.SetPassPhrase(getPass("PassPhrase"))
 	} else {
 		auth.SetUser(getParamOrDef("Username", ""))
@@ -102,19 +109,17 @@ func setAuthInteractively(auth *env.Auth) {
 }
 
 func getPass(description string) string {
-	fmt.Print(description + ": ")
-
-	bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+	pass, err := pterm.DefaultInteractiveTextInput.WithMask("•").Show(description)
 	if err != nil {
 		msg.Die("Error on get pass: %s", err)
 	}
-	return string(bytePassword)
+	return pass
 }
 
-func getSshKeyPath() string {
-	usr, e := user.Current()
-	if e != nil {
-		log.Fatal(e)
+func getSSHKeyPath() string {
+	usr, err := user.Current()
+	if err != nil {
+		msg.Die(err.Error())
 	}
 	return filepath.Join(usr.HomeDir, ".ssh", "id_rsa")
 }

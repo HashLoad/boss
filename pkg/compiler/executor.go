@@ -22,7 +22,7 @@ func getCompilerParameters(rootPath string, dep *models.Dependency, platform str
 		moduleName = dep.GetName()
 	}
 
-	if !env.Global {
+	if !env.GetGlobal() {
 		binPath = filepath.Join(rootPath, moduleName, consts.BinFolder)
 	} else {
 		binPath = env.GetGlobalBinPath()
@@ -44,9 +44,10 @@ func buildSearchPath(dep *models.Dependency) string {
 	if dep != nil {
 		searchPath = filepath.Join(env.GetModulesDir(), dep.GetName())
 
-		if pac, e := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage)); e == nil {
-			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.GetName(), pac.MainSrc)
-			for _, lib := range pac.GetParsedDependencies() {
+		packageData, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage))
+		if err == nil {
+			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.GetName(), packageData.MainSrc)
+			for _, lib := range packageData.GetParsedDependencies() {
 				searchPath += ";" + buildSearchPath(&lib)
 			}
 		}
@@ -76,18 +77,22 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 	readFileStr := string(readFile)
 	project, _ := filepath.Abs(dprojPath)
 
-	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" + filepath.Join(env.GetModulesDir(), consts.DcuFolder) +
+	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" +
+		filepath.Join(env.GetModulesDir(), consts.DcuFolder) +
 		";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder) //+ ";" + getNewPathsDep(dep, abs) + " "
 
 	readFileStr += ";" + buildSearchPath(dep)
 
 	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
 	for _, value := range []string{"Win32"} {
-		readFileStr += " \n msbuild \"" + project + "\" /p:Configuration=Debug " + getCompilerParameters(env.GetModulesDir(), dep, value)
+		readFileStr += " \n msbuild \"" +
+			project +
+			"\" /p:Configuration=Debug " +
+			getCompilerParameters(env.GetModulesDir(), dep, value)
 	}
 	readFileStr += " > \"" + buildLog + "\""
 
-	err = os.WriteFile(buildBat, []byte(readFileStr), os.ModePerm)
+	err = os.WriteFile(buildBat, []byte(readFileStr), 0600)
 	if err != nil {
 		msg.Warn("  - error on create build file")
 		return false
@@ -95,16 +100,15 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 
 	command := exec.Command(buildBat)
 	command.Dir = abs
-	if _, err := command.Output(); err != nil {
+	if _, err = command.Output(); err != nil {
 		msg.Err("  - Failed to compile, see " + buildLog + " for more information")
 		return false
-	} else {
-		msg.Info("  - Success!")
-		err := os.Remove(buildLog)
-		utils.HandleError(err)
-		err = os.Remove(buildBat)
-		utils.HandleError(err)
-
-		return true
 	}
+	msg.Info("  - Success!")
+	err = os.Remove(buildLog)
+	utils.HandleError(err)
+	err = os.Remove(buildBat)
+	utils.HandleError(err)
+
+	return true
 }

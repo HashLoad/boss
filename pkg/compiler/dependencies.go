@@ -42,8 +42,7 @@ func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.De
 				graph.AddEdge(localFather, node)
 			}
 		} else {
-			deps := pkgModule.GetParsedDependencies()
-			loadGraph(graph, &dep, deps, localFather)
+			loadGraph(graph, &dep, pkgModule.GetParsedDependencies(), localFather)
 		}
 	}
 }

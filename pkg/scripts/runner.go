@@ -3,7 +3,6 @@ package scripts
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"os/exec"
 	"strings"
@@ -15,6 +14,7 @@ import (
 func RunCmd(cmdName string) {
 	fields := strings.Fields(cmdName)
 
+	//nolint:gosec // This is a command runner, it's supposed to run any command passed to it
 	cmd := exec.Command(fields[0], fields[1:]...)
 	cmdReader, err := cmd.StdoutPipe()
 	cmdErr, _ := cmd.StderrPipe()
@@ -27,9 +27,8 @@ func RunCmd(cmdName string) {
 	go func() {
 		for scanner.Scan() {
 			text := scanner.Text()
-			fmt.Printf("%s\n", text)
+			msg.Info("%s\n", text)
 		}
-
 	}()
 
 	err = cmd.Start()
@@ -46,19 +45,17 @@ func RunCmd(cmdName string) {
 }
 
 func Run(args []string) {
-	if pkgJson, e := models.LoadPackage(true); e != nil {
-		msg.Err(e.Error())
+	if packageData, err := models.LoadPackage(true); err != nil {
+		msg.Err(err.Error())
 	} else {
-		if pkgJson.Scripts == nil {
+		if packageData.Scripts == nil {
 			msg.Die(errors.New("script not exists").Error())
 		}
-		scripts := pkgJson.Scripts.(map[string]any)
 
-		if command, ok := scripts[args[0]]; !ok {
+		if command, ok := packageData.Scripts[args[0]]; !ok {
 			msg.Err(errors.New("script not exists").Error())
 		} else {
-			RunCmd(command.(string) + " " + strings.Join(args[1:], " "))
+			RunCmd(command + " " + strings.Join(args[1:], " "))
 		}
 	}
-
 }

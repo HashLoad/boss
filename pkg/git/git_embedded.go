@@ -1,4 +1,4 @@
-package gitWrapper
+package git
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ func CloneCacheEmbedded(dep models.Dependency) *git.Repository {
 	storageCache := makeStorageCache(dep)
 	wtFs := makeWtFileSystem(dep)
 	url := dep.GetURL()
-	auth := env.GlobalConfiguration.GetAuth(dep.GetURLPrefix())
+	auth := env.GlobalConfiguration().GetAuth(dep.GetURLPrefix())
 
 	repository, e := git.Clone(storageCache, wtFs, &git.CloneOptions{
 		URL:  url,
@@ -54,7 +54,7 @@ func UpdateCacheEmbedded(dep models.Dependency) *git.Repository {
 
 	err = repository.Fetch(&git.FetchOptions{
 		Force: true,
-		Auth:  env.GlobalConfiguration.GetAuth(dep.GetURLPrefix())})
+		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix())})
 	if err != nil && err.Error() != "already up-to-date" {
 		msg.Debug("Error to fetch repository of %s: %s", dep.Repository, err)
 	}
@@ -64,12 +64,13 @@ func UpdateCacheEmbedded(dep models.Dependency) *git.Repository {
 
 func refreshCopy(dep models.Dependency) *git.Repository {
 	dir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
-	e := os.RemoveAll(dir)
-	if e == nil {
+	err := os.RemoveAll(dir)
+	if err == nil {
 		return CloneCacheEmbedded(dep)
-	} else {
-		msg.Err("Error on retry get refresh copy: %s", e)
 	}
+
+	msg.Err("Error on retry get refresh copy: %s", err)
+
 	return nil
 }
 

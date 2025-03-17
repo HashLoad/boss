@@ -4,17 +4,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CmdConfig = &cobra.Command{
-	Use:   "config",
-	Short: "Configurations",
-	Run: func(cmd *cobra.Command, args []string) {
-		_ = cmd.Help()
-	},
-}
+func RegisterConfigCommand(root *cobra.Command) {
+	configCmd := &cobra.Command{
+		Use:   "config",
+		Short: "Configurations",
+	}
 
-func InitializeConfig(root *cobra.Command) {
-	root.AddCommand(CmdConfig)
-	CmdConfig.AddCommand(cmdDelphi)
-	cmdDelphi.AddCommand(cmdDelphiList)
-	cmdDelphi.AddCommand(cmdDelphiUse)
+	root.AddCommand(configCmd)
+	delphiCmd(configCmd)
+	registryGitCmd(configCmd)
 }

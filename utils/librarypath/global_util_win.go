@@ -23,7 +23,7 @@ const BrowsingPathRegistry = "Browsing Path"
 func updateGlobalLibraryPath() {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
-		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
+		msg.Err("Version not found for path %s", env.GlobalConfiguration().DelphiPath)
 	}
 	library, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library`, registry.ALL_ACCESS)
 
@@ -64,7 +64,7 @@ func updateGlobalLibraryPath() {
 func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
-		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
+		msg.Err("Version not found for path %s", env.GlobalConfiguration().DelphiPath)
 	}
 	library, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library`, registry.ALL_ACCESS)
 

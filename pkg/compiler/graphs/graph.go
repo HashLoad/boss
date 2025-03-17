@@ -118,9 +118,8 @@ func (g *GraphItem) String() {
 func removeNode(nodes []*Node, key int) []*Node {
 	if key == len(nodes) {
 		return nodes[:key]
-	} else {
-		return slices.Delete(nodes, key, key+1)
 	}
+	return slices.Delete(nodes, key, key+1)
 }
 
 func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) *NodeQueue {
@@ -135,6 +134,31 @@ func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) *NodeQueue {
 		}
 	}
 
+	nodes = g.expandGraphNodes(nodes, pkg)
+
+	g.processNodes(nodes, &queue)
+	g.unlock()
+	return &queue
+}
+
+func (g *GraphItem) processNodes(nodes []*Node, queue *NodeQueue) {
+	for {
+		if len(nodes) == 0 {
+			break
+		}
+
+		for key := 0; key < len(nodes); key++ {
+			node := nodes[key]
+			if !containsOne(g.depends[node.Value], nodes) {
+				queue.Enqueue(*node)
+				nodes = removeNode(nodes, key)
+				key--
+			}
+		}
+	}
+}
+
+func (g *GraphItem) expandGraphNodes(nodes []*Node, pkg *models.Package) []*Node {
 	var redo = true
 	for {
 		if !redo {
@@ -156,23 +180,7 @@ func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) *NodeQueue {
 			}
 		}
 	}
-
-	for {
-		if len(nodes) == 0 {
-			break
-		}
-
-		for key := 0; key < len(nodes); key++ {
-			node := nodes[key]
-			if !containsOne(g.depends[node.Value], nodes) {
-				queue.Enqueue(*node)
-				nodes = removeNode(nodes, key)
-				key--
-			}
-		}
-	}
-	g.unlock()
-	return &queue
+	return nodes
 }
 
 type NodeQueue struct {

@@ -11,17 +11,17 @@ import (
 
 type Package struct {
 	fileName     string
-	IsNew        bool        `json:"-"`
-	Name         string      `json:"name"`
-	Description  string      `json:"description"`
-	Version      string      `json:"version"`
-	Homepage     string      `json:"homepage"`
-	MainSrc      string      `json:"mainsrc"`
-	BrowsingPath string      `json:"browsingpath"`
-	Projects     []string    `json:"projects"`
-	Scripts      any         `json:"scripts,omitempty"`
-	Dependencies any         `json:"dependencies"`
-	Lock         PackageLock `json:"-"`
+	IsNew        bool              `json:"-"`
+	Name         string            `json:"name"`
+	Description  string            `json:"description"`
+	Version      string            `json:"version"`
+	Homepage     string            `json:"homepage"`
+	MainSrc      string            `json:"mainsrc"`
+	BrowsingPath string            `json:"browsingpath"`
+	Projects     []string          `json:"projects"`
+	Scripts      map[string]string `json:"scripts,omitempty"`
+	Dependencies map[string]string `json:"dependencies"`
+	Lock         PackageLock       `json:"-"`
 }
 
 func (p *Package) Save() []byte {
@@ -32,19 +32,14 @@ func (p *Package) Save() []byte {
 }
 
 func (p *Package) AddDependency(dep string, ver string) {
-	if p.Dependencies == nil {
-		p.Dependencies = make(map[string]any)
-	}
-	deps := p.Dependencies.(map[string]any)
-
-	for key := range deps {
+	for key := range p.Dependencies {
 		if strings.EqualFold(key, dep) {
-			deps[key] = ver
+			p.Dependencies[key] = ver
 			return
 		}
 	}
 
-	deps[dep] = ver
+	p.Dependencies[dep] = ver
 }
 
 func (p *Package) AddProject(project string) {
@@ -52,30 +47,20 @@ func (p *Package) AddProject(project string) {
 }
 
 func (p *Package) GetParsedDependencies() []Dependency {
-	dependencies, ok := p.Dependencies.(map[string]any)
-	if !ok {
+	if len(p.Dependencies) == 0 {
 		return []Dependency{}
 	}
-
-	if len(dependencies) == 0 {
-		return []Dependency{}
-	}
-	return GetDependencies(dependencies)
+	return GetDependencies(p.Dependencies)
 }
 
 func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
-		deps, ok := p.Dependencies.(map[string]any)
-		if !ok {
-			return
-		}
-
-		for key := range deps {
+		for key := range p.Dependencies {
 			if strings.EqualFold(key, dep) {
-				delete(deps, key)
+				delete(p.Dependencies, key)
+				return
 			}
 		}
-		p.Dependencies = deps
 	}
 }
 
@@ -84,7 +69,7 @@ func getNew(file string) *Package {
 	res.fileName = file
 	res.IsNew = true
 
-	res.Dependencies = make(map[string]any)
+	res.Dependencies = make(map[string]string)
 	res.Projects = []string{}
 	res.Lock = LoadPackageLock(res)
 	return res

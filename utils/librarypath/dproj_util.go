@@ -5,7 +5,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/beevik/etree"
@@ -13,7 +12,6 @@ import (
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 )
 
 func updateDprojLibraryPath(pkg *models.Package) {
@@ -51,7 +49,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 	buildModes := projectOptions.SelectElement(consts.XMLTagNameBuildModes)
 	for _, item := range buildModes.SelectElements(consts.XMLTagNameItem) {
 		attribute := item.SelectAttr(consts.XMLNameAttribute)
-		compilerOptions := item.SelectElement(consts.XMLTagNameCompilerOptions)
+		compilerOptions = item.SelectElement(consts.XMLTagNameCompilerOptions)
 		if compilerOptions != nil {
 			msg.Info("  Updating %s mode", attribute.Value)
 			processCompilerOptions(compilerOptions)
@@ -61,7 +59,8 @@ func updateOtherUnitFilesProject(lpiName string) {
 	doc.WriteSettings.CanonicalAttrVal = true
 	doc.WriteSettings.CanonicalEndTags = false
 	doc.WriteSettings.CanonicalText = true
-	if err := doc.WriteToFile(lpiName); err != nil {
+
+	if err = doc.WriteToFile(lpiName); err != nil {
 		panic(err)
 	}
 }
@@ -95,7 +94,6 @@ func updateGlobalBrowsingPath(pkg *models.Package) {
 			updateGlobalBrowsingByProject(projectName, i == 0)
 		}
 	}
-
 }
 
 func updateLibraryPathProject(dprojName string) {
@@ -121,7 +119,7 @@ func updateLibraryPathProject(dprojName string) {
 				child = createTagLibraryPath(children)
 			}
 			rootPath := filepath.Join(env.GetCurrentDir(), path.Dir(dprojName))
-			if _, err := os.Stat(rootPath); os.IsNotExist(err) {
+			if _, err = os.Stat(rootPath); os.IsNotExist(err) {
 				rootPath = env.GetCurrentDir()
 			}
 			processCurrentPath(child, rootPath)
@@ -132,7 +130,7 @@ func updateLibraryPathProject(dprojName string) {
 	doc.WriteSettings.CanonicalEndTags = false
 	doc.WriteSettings.CanonicalText = true
 
-	if err := doc.WriteToFile(dprojName); err != nil {
+	if err = doc.WriteToFile(dprojName); err != nil {
 		panic(err)
 	}
 }
@@ -191,37 +189,4 @@ func processCurrentPath(node *etree.Element, rootPath string) {
 	currentPaths = GetNewPaths(currentPaths, false, rootPath)
 
 	node.SetText(strings.Join(currentPaths, ";"))
-}
-
-func _(dprojName string) []string {
-	doc := etree.NewDocument()
-	info, err := os.Stat(dprojName)
-	if os.IsNotExist(err) || info.IsDir() {
-		msg.Err(".dproj not found.")
-		return []string{}
-	}
-	err = doc.ReadFromFile(dprojName)
-	if err != nil {
-		msg.Err("Error on read dproj: %s", err)
-		return []string{}
-	}
-	root := doc.Root()
-
-	var result []string
-
-	path, err := etree.CompilePath("/Project/ProjectExtensions/BorlandProject/Platforms")
-	utils.HandleError(err)
-	platforms := root.FindElementPath(path)
-	for _, platform := range platforms.ChildElements() {
-		value := platform.SelectAttr(consts.XMLValueAttribute)
-		activePlatform, err := strconv.ParseBool(platform.Text())
-		utils.HandleError(err)
-
-		if value != nil && activePlatform {
-			result = append(result, value.Value)
-		}
-	}
-
-	return result
-
 }

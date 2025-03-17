@@ -1,4 +1,4 @@
-package gitWrapper
+package git
 
 import (
 	"fmt"
@@ -53,19 +53,18 @@ func getWrapperClone(dep models.Dependency) {
 
 	cmd := exec.Command("git", "clone", dir, dep.GetURL(), dirModule)
 
-	if err := runCommand(cmd); err != nil {
+	if err = runCommand(cmd); err != nil {
 		msg.Die(err.Error())
 	}
 	initSubmodulesNative(dep)
 
 	_ = os.Remove(filepath.Join(dirModule, ".git"))
-
 }
 
 func writeDotGitFile(dep models.Dependency) {
 	mask := fmt.Sprintf("gitdir: %s\n", filepath.Join(env.GetCacheDir(), dep.GetHashName()))
 	path := filepath.Join(env.GetModulesDir(), dep.GetName(), ".git")
-	_ = os.WriteFile(path, []byte(mask), os.ModePerm)
+	_ = os.WriteFile(path, []byte(mask), 0600)
 }
 
 func getWrapperFetch(dep models.Dependency) {
@@ -74,7 +73,7 @@ func getWrapperFetch(dep models.Dependency) {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.GetName())
 
 	if _, err := os.Stat(dirModule); os.IsNotExist(err) {
-		err := os.MkdirAll(dirModule, os.ModePerm)
+		err = os.MkdirAll(dirModule, 0600)
 		utils.HandleError(err)
 	}
 
@@ -129,7 +128,7 @@ func newWriter(errorWritter bool) *writer {
 	return &writer{errorWritter: errorWritter}
 }
 
-func (writer *writer) Write(p []byte) (n int, err error) {
+func (writer *writer) Write(p []byte) (int, error) {
 	var str = "  " + string(p)
 	if writer.errorWritter {
 		msg.Err(str)

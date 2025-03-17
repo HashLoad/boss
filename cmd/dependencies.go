@@ -21,15 +21,15 @@ const (
 	usingMain = 2
 )
 
-var showVersion bool
-var tree = treeprint.New()
+func dependenciesCmdRegister(root *cobra.Command) {
+	var showVersion bool
 
-var dependenciesCmd = &cobra.Command{
-	Use:     "dependencies",
-	Short:   "Print all project dependencies",
-	Long:    "Print all project dependencies with or without version control",
-	Aliases: []string{"dep", "ls", "list", "ll", "la"},
-	Example: `  Listing all dependencies:
+	var dependenciesCmd = &cobra.Command{
+		Use:     "dependencies",
+		Short:   "Print all project dependencies",
+		Long:    "Print all project dependencies with or without version control",
+		Aliases: []string{"dep", "ls", "list", "ll", "la", "dependency"},
+		Example: `  Listing all dependencies:
   boss dependencies
 
   Listing all dependencies with version control:
@@ -40,17 +40,17 @@ var dependenciesCmd = &cobra.Command{
 
   List package dependencies with version control:
   boss dependencies <pkg> --version`,
-	Run: func(cmd *cobra.Command, args []string) {
-		printDependencies(showVersion)
-	},
-}
+		Run: func(_ *cobra.Command, _ []string) {
+			printDependencies(showVersion)
+		},
+	}
 
-func init() {
 	root.AddCommand(dependenciesCmd)
 	dependenciesCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show dependency version")
 }
 
 func printDependencies(showVersion bool) {
+	var tree = treeprint.New()
 	pkg, err := models.LoadPackage(false)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -63,10 +63,14 @@ func printDependencies(showVersion bool) {
 	main := tree.AddBranch(pkg.Name + ":")
 	deps := pkg.GetParsedDependencies()
 	printDeps(nil, deps, pkg.Lock, main, showVersion)
-	print(tree.String())
+	msg.Info(tree.String())
 }
 
-func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.PackageLock, tree treeprint.Tree, showVersion bool) {
+func printDeps(dep *models.Dependency,
+	deps []models.Dependency,
+	lock models.PackageLock,
+	tree treeprint.Tree,
+	showVersion bool) {
 	var localTree treeprint.Tree
 
 	if dep != nil {
@@ -80,13 +84,17 @@ func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.Pac
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {
-			deps := pkgModule.GetParsedDependencies()
-			printDeps(&dep, deps, lock, localTree, showVersion)
+			subDeps := pkgModule.GetParsedDependencies()
+			printDeps(&dep, subDeps, lock, localTree, showVersion)
 		}
 	}
 }
 
-func printSingleDependency(dep *models.Dependency, lock models.PackageLock, tree treeprint.Tree, showVersion bool) treeprint.Tree {
+func printSingleDependency(
+	dep *models.Dependency,
+	lock models.PackageLock,
+	tree treeprint.Tree,
+	showVersion bool) treeprint.Tree {
 	var output = dep.GetName()
 
 	if showVersion {

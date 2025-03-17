@@ -14,12 +14,12 @@ import (
 )
 
 func updateVersion(newVersion int64) {
-	env.GlobalConfiguration.ConfigVersion = newVersion
-	env.GlobalConfiguration.SaveConfiguration()
+	env.GlobalConfiguration().ConfigVersion = newVersion
+	env.GlobalConfiguration().SaveConfiguration()
 }
 
 func needUpdate(toVersion int64) bool {
-	return env.GlobalConfiguration.ConfigVersion < toVersion
+	return env.GlobalConfiguration().ConfigVersion < toVersion
 }
 
 func executeUpdate(version int64, update func()) {
@@ -33,28 +33,27 @@ func executeUpdate(version int64, update func()) {
 }
 
 func migration() {
-
 	executeUpdate(1,
 		func() {
-			env.GlobalConfiguration.InternalRefreshRate = 5
+			env.GlobalConfiguration().InternalRefreshRate = 5
 		})
 
 	executeUpdate(2, func() {
-		OldPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDirOld+env.HashDelphiPath())
+		oldPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDirOld+env.HashDelphiPath())
 		newPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDir+env.HashDelphiPath())
-		err := os.Rename(OldPath, newPath)
+		err := os.Rename(oldPath, newPath)
 		if !os.IsNotExist(err) {
 			utils.HandleError(err)
 		}
 	})
 
 	executeUpdate(3, func() {
-		env.GlobalConfiguration.GitEmbedded = true
+		env.GlobalConfiguration().GitEmbedded = true
 	})
 
 	executeUpdate(5, func() {
-		env.Internal = false
-		env.GlobalConfiguration.LastInternalUpdate = time.Now().AddDate(-1000, 0, 0)
+		env.SetInternal(false)
+		env.GlobalConfiguration().LastInternalUpdate = time.Now().AddDate(-1000, 0, 0)
 		modulesDir := filepath.Join(env.GetBossHome(), consts.FolderDependencies, env.HashDelphiPath())
 		if _, err := os.Stat(modulesDir); os.IsNotExist(err) {
 			return
@@ -68,7 +67,7 @@ func migration() {
 		}
 
 		installer.GlobalInstall([]string{}, modules, false, false)
-		env.Internal = true
+		env.SetInternal(true)
 	})
 
 	executeUpdate(6, func() {

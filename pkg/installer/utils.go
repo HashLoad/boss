@@ -8,11 +8,14 @@ import (
 	"github.com/hashload/boss/pkg/models"
 )
 
+//nolint:lll // This regex is too long and it's better to keep it like this
+const urlVersionMatcher = `(?U)(?m)^(?:http[s]{0,1}://)?(?P<host>.*)(?::(?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+)))?$`
+
 func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 	for e := range args {
 		dependency := ParseDependency(args[e])
 
-		re := regexp.MustCompile(`(?U)(?m)^(?:http[s]{0,1}://)?(?P<host>.*)(?::(?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+)))?$`)
+		re := regexp.MustCompile(urlVersionMatcher)
 		match := make(map[string]string)
 		split := re.FindStringSubmatch(dependency)
 
@@ -40,11 +43,11 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 
 func ParseDependency(dependencyName string) string {
 	re := regexp.MustCompile(`(?m)(([?^/]).*)`)
-	if !re.Match([]byte(dependencyName)) {
+	if !re.MatchString(dependencyName) {
 		return "github.com/hashload/" + dependencyName
 	}
 	re = regexp.MustCompile(`(?m)([?^/].*)(([?^/]).*)`)
-	if !re.Match([]byte(dependencyName)) {
+	if !re.MatchString(dependencyName) {
 		return "github.com/" + dependencyName
 	}
 	return dependencyName

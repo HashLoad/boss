@@ -1,6 +1,7 @@
 package models
 
 import (
+	//nolint:gosec // We are not using this for security purposes
 	"crypto/md5"
 	"encoding/hex"
 	"io"
@@ -19,6 +20,7 @@ type Dependency struct {
 }
 
 func (p *Dependency) GetHashName() string {
+	//nolint:gosec // We are not using this for security purposes
 	hash := md5.New()
 	if _, err := io.WriteString(hash, p.Repository); err != nil {
 		msg.Warn("Failed on write dependency hash")
@@ -42,13 +44,13 @@ func (p *Dependency) sshURL() string {
 }
 
 func (p *Dependency) GetURLPrefix() string {
-	var re = regexp.MustCompile(`^[^/^:]+`)
-	return re.FindString(p.Repository)
+	urlPrefixPattern := regexp.MustCompile(`^[^/^:]+`)
+	return urlPrefixPattern.FindString(p.Repository)
 }
 
 func (p *Dependency) GetURL() string {
 	prefix := p.GetURLPrefix()
-	auth := env.GlobalConfiguration.Auth[prefix]
+	auth := env.GlobalConfiguration().Auth[prefix]
 	if auth != nil {
 		if auth.UseSSH {
 			return p.sshURL()
@@ -86,10 +88,10 @@ func ParseDependency(repo string, info string) Dependency {
 	return dependency
 }
 
-func GetDependencies(deps map[string]any) []Dependency {
+func GetDependencies(deps map[string]string) []Dependency {
 	dependencies := make([]Dependency, 0)
 	for repo, info := range deps {
-		dependencies = append(dependencies, ParseDependency(repo, info.(string)))
+		dependencies = append(dependencies, ParseDependency(repo, info))
 	}
 	return dependencies
 }
