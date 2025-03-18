@@ -1,27 +1,24 @@
 ---
-  repos:
+repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.1.0
+      rev: v5.0.0
       hooks:
-        - id: check-added-large-files
-        - id: check-byte-order-marker
-        - id: check-executables-have-shebangs
-        - id: check-merge-conflict
-        - id: end-of-file-fixer
-        - id: mixed-line-ending
-        - id: check-yaml
-        - id: detect-private-key
-        - id: check-symlinks
-        - id: trailing-whitespace
-          args: [--markdown-linebreak-ext=md]
+          - id: check-added-large-files
+          - id: check-byte-order-marker
+          - id: check-executables-have-shebangs
+          - id: check-merge-conflict
+          - id: end-of-file-fixer
+          - id: mixed-line-ending
+          - id: check-yaml
+          - id: detect-private-key
+          - id: check-symlinks
+          - id: trailing-whitespace
+            args: [--markdown-linebreak-ext=md]
 
-    - repo: https://github.com/dnephin/pre-commit-golang
-      rev: v0.5.0
+    - repo: https://github.com/golangci/golangci-lint
+      rev: v1.64.5
       hooks:
-        - id: go-fmt
-        - id: go-imports
-        - id: no-go-testing
-        - id: golangci-lint
-        - id: go-unit-tests
-        - id: go-build
-        - id: go-mod-tidy
+          - id: golangci-lint-config-verify
+            entry: go tool golangci-lint config verify
+          - id: golangci-lint-full
+            entry: go tool golangci-lint run --fix

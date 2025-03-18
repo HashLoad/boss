@@ -12,7 +12,6 @@ import (
 	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/pkg/registry"
-	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/dcc32"
 )
 
@@ -33,22 +32,14 @@ func Initialize() {
 	msg.Debug("\tInitializing delphi version")
 	initializeDelphiVersion()
 
-	paths := []string{
-		consts.EnvBossBin,
-		env.GetGlobalBinPath(),
-		env.GetGlobalEnvBpl(),
-		env.GetGlobalEnvDcu(),
-		env.GetGlobalEnvDcp(),
-	}
-
 	msg.Debug("\tExecuting migrations")
 	migration()
-	msg.Debug("\tAdjusting paths")
-	addPaths(paths)
 	msg.Debug("\tInstalling internal modules")
 	installModules(defaultModules())
 	msg.Debug("\tCreating paths")
 	createPaths()
+
+	InitializePath()
 
 	env.SetGlobal(oldGlobal)
 	env.SetInternal(false)
@@ -59,36 +50,6 @@ func createPaths() {
 	_, err := os.Stat(env.GetGlobalEnvBpl())
 	if os.IsNotExist(err) {
 		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0600)
-	}
-}
-
-func addPaths(paths []string) {
-	var needAdd = false
-	currentPath, err := os.Getwd()
-	if err != nil {
-		msg.Die("Failed to load current working directory \n %s", err.Error())
-		return
-	}
-
-	splitPath := strings.Split(currentPath, ";")
-
-	for _, path := range paths {
-		if !utils.Contains(splitPath, path) {
-			splitPath = append(splitPath, path)
-			needAdd = true
-		}
-	}
-
-	if needAdd {
-		newPath := strings.Join(splitPath, ";")
-		currentPathEnv := os.Getenv(PATH)
-		err := os.Setenv(PATH, currentPathEnv+";"+newPath)
-		if err != nil {
-			msg.Die("Failed to update PATH \n %s", err.Error())
-			return
-		}
-
-		msg.Warn("Please restart your console after complete.")
 	}
 }
 

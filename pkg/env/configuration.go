@@ -16,7 +16,7 @@ import (
 )
 
 type Configuration struct {
-	path                string
+	path                string           `json:"-"`
 	Key                 string           `json:"id"`
 	Auth                map[string]*Auth `json:"auth"`
 	PurgeTime           int              `json:"purge_after"`
@@ -26,18 +26,22 @@ type Configuration struct {
 	DelphiPath          string           `json:"delphi_path,omitempty"`
 	ConfigVersion       int64            `json:"config_version"`
 	GitEmbedded         bool             `json:"git_embedded"`
+
+	Advices struct {
+		SetupPath bool `json:"setup_path,omitempty"`
+	} `json:"advices"`
 }
 
 type Auth struct {
 	UseSSH     bool   `json:"use,omitempty"`
 	Path       string `json:"path,omitempty"`
-	User       string `json:"x,omitempty"`
-	Pass       string `json:"y,omitempty"`
-	PassPhrase string `json:"z,omitempty"`
+	User       string `json:"user,omitempty"`
+	Pass       string `json:"pass,omitempty"`
+	PassPhrase string `json:"keypass,omitempty"`
 }
 
 func (a *Auth) GetUser() string {
-	ret, err := crypto.Decrypt(machineID(), a.User)
+	ret, err := crypto.Decrypt(crypto.MachineKey(), a.User)
 	if err != nil {
 		msg.Err("Fail to decrypt user.")
 		return ""
@@ -46,7 +50,7 @@ func (a *Auth) GetUser() string {
 }
 
 func (a *Auth) GetPassword() string {
-	ret, err := crypto.Decrypt(machineID(), a.Pass)
+	ret, err := crypto.Decrypt(crypto.MachineKey(), a.Pass)
 	if err != nil {
 		msg.Err("Fail to decrypt pass.", err)
 		return ""
@@ -56,7 +60,7 @@ func (a *Auth) GetPassword() string {
 }
 
 func (a *Auth) GetPassPhrase() string {
-	ret, err := crypto.Decrypt(machineID(), a.PassPhrase)
+	ret, err := crypto.Decrypt(crypto.MachineKey(), a.PassPhrase)
 	if err != nil {
 		msg.Err("Fail to decrypt PassPhrase.", err)
 		return ""
@@ -65,7 +69,7 @@ func (a *Auth) GetPassPhrase() string {
 }
 
 func (a *Auth) SetUser(user string) {
-	if encryptedUser, err := crypto.Encrypt(machineID(), user); err != nil {
+	if encryptedUser, err := crypto.Encrypt(crypto.MachineKey(), user); err != nil {
 		msg.Err("Fail to crypt user.", err)
 	} else {
 		a.User = encryptedUser
@@ -73,7 +77,7 @@ func (a *Auth) SetUser(user string) {
 }
 
 func (a *Auth) SetPass(pass string) {
-	if cPass, err := crypto.Encrypt(machineID(), pass); err != nil {
+	if cPass, err := crypto.Encrypt(crypto.MachineKey(), pass); err != nil {
 		msg.Err("Fail to crypt pass.")
 	} else {
 		a.Pass = cPass
@@ -81,7 +85,7 @@ func (a *Auth) SetPass(pass string) {
 }
 
 func (a *Auth) SetPassPhrase(passphrase string) {
-	if cPassPhrase, err := crypto.Encrypt(machineID(), passphrase); err != nil {
+	if cPassPhrase, err := crypto.Encrypt(crypto.MachineKey(), passphrase); err != nil {
 		msg.Err("Fail to crypt PassPhrase.")
 	} else {
 		a.PassPhrase = cPassPhrase
@@ -179,8 +183,4 @@ func LoadConfiguration(cachePath string) (*Configuration, error) {
 	configuration.path = cachePath
 
 	return configuration, nil
-}
-
-func machineID() []byte {
-	return []byte(crypto.GetMachineID()[:16])
 }

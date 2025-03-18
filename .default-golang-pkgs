@@ -1,4 +1,0 @@
-github.com/go-critic/go-critic/cmd/gocritic@latest
-github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
-github.com/fzipp/gocyclo/cmd/gocyclo@latest
-golang.org/x/tools/cmd/goimports@latest

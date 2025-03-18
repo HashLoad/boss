@@ -7,7 +7,7 @@ import (
 
 func LocalInstall(args []string, pkg *models.Package, lockedVersion bool, _ /* noSave */ bool) {
 	// TODO noSave
-	EnsureDependencyOfArgs(pkg, args)
+	EnsureDependency(pkg, args)
 	DoInstall(pkg, lockedVersion)
 	dcp.InjectDpcs(pkg, pkg.Lock)
 }

@@ -15,17 +15,16 @@ import (
 )
 
 func getCompilerParameters(rootPath string, dep *models.Dependency, platform string) string {
-	var binPath string
 	var moduleName = ""
 
 	if dep != nil {
 		moduleName = dep.GetName()
 	}
 
+	binPath := env.GetGlobalBinPath()
+
 	if !env.GetGlobal() {
 		binPath = filepath.Join(rootPath, moduleName, consts.BinFolder)
-	} else {
-		binPath = env.GetGlobalBinPath()
 	}
 
 	return " /p:DCC_BplOutput=\"" + filepath.Join(rootPath, moduleName, consts.BplFolder) + "\" " +

@@ -8,7 +8,7 @@ import (
 )
 
 func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool, _ /* nosave */ bool) {
-	EnsureDependencyOfArgs(pkg, args)
+	EnsureDependency(pkg, args)
 	DoInstall(pkg, lockedVersion)
 	msg.Err("Cannot install global packages on this platform, only build and install local")
 }

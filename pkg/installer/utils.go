@@ -11,7 +11,7 @@ import (
 //nolint:lll // This regex is too long and it's better to keep it like this
 const urlVersionMatcher = `(?m)^(?:http[s]?:\/\/|git@)?(?P<url>[\w\.\-\/:]+?)(?:[@:](?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+|[\w\-]+)))?$`
 
-func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
+func EnsureDependency(pkg *models.Package, args []string) {
 	for _, dependency := range args {
 		dependency = ParseDependency(dependency)
 

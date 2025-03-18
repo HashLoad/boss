@@ -31,7 +31,7 @@ func Encrypt(key []byte, message string) (string, error) {
 		return "", fmt.Errorf("error on read random: %w", err)
 	}
 
-	stream := cipher.NewCFBEncrypter(block, iv)
+	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(cipherText[aes.BlockSize:], plainText)
 
 	return base64.URLEncoding.EncodeToString(cipherText), nil
@@ -55,18 +55,23 @@ func Decrypt(key []byte, securemess string) (string, error) {
 	iv := cipherText[:aes.BlockSize]
 	cipherText = cipherText[aes.BlockSize:]
 
-	stream := cipher.NewCFBDecrypter(block, iv)
+	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(cipherText, cipherText)
 
 	return string(cipherText), nil
 }
+
 func GetMachineID() string {
 	id, err := machineid.ID()
 	if err != nil {
 		msg.Err("Error on get machine ID")
-		id = "AAAA"
+		id = "12345678901234567890123456789012"
 	}
 	return id
+}
+
+func MachineKey() []byte {
+	return []byte(GetMachineID())
 }
 
 func Md5MachineID() string {

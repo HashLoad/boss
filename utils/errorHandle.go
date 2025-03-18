@@ -7,3 +7,9 @@ func HandleError(err error) {
 		msg.Err(err.Error())
 	}
 }
+
+func HandleErrorFatal(err error) {
+	if err != nil {
+		msg.Die(err.Error())
+	}
+}

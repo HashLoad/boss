@@ -11,7 +11,7 @@
             "mode": "auto",
             "program": "${workspaceFolder}",
             "cwd": "${workspaceFolder}/test_dir",
-            "args": ["install", "horse:dev"],
+            "args": ["install", "jhonson"],
         }
     ]
 }

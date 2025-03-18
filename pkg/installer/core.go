@@ -20,10 +20,29 @@ import (
 	"github.com/masterminds/semver"
 )
 
+type installContext struct {
+	rootLocked       *models.PackageLock
+	root             *models.Package
+	processed        []string
+	useLockedVersion bool
+}
+
+func newInstallContext(pkg *models.Package, useLockedVersion bool) *installContext {
+	return &installContext{
+		rootLocked:       &pkg.Lock,
+		root:             pkg,
+		useLockedVersion: useLockedVersion,
+		processed:        consts.DefaultPaths(),
+	}
+}
+
 func DoInstall(pkg *models.Package, lockedVersion bool) {
 	msg.Info("Installing modules in project path")
 
-	dependencies := EnsureDependencies(pkg.Lock, pkg, lockedVersion)
+	installContext := newInstallContext(pkg, lockedVersion)
+
+	dependencies := installContext.ensureDependencies(pkg)
+
 	paths.EnsureCleanModulesDir(dependencies, pkg.Lock)
 
 	pkg.Lock.CleanRemoved(dependencies)
@@ -36,29 +55,22 @@ func DoInstall(pkg *models.Package, lockedVersion bool) {
 	msg.Info("Success!")
 }
 
-func EnsureDependencies(
-	rootLock models.PackageLock,
-	pkg *models.Package,
-	lockedVersion bool,
-	processed ...string) []models.Dependency {
+func (ic *installContext) ensureDependencies(pkg *models.Package) []models.Dependency {
 	if pkg.Dependencies == nil {
 		return []models.Dependency{}
 	}
 	deps := pkg.GetParsedDependencies()
 
-	ensureModules(rootLock, pkg, deps, lockedVersion)
-	if len(processed) == 0 {
-		processed = append(processed, consts.DefaultPaths()...)
-	}
+	ic.ensureModules(pkg, deps)
 
-	deps = append(deps, processOthers(rootLock, lockedVersion, processed)...)
+	deps = append(deps, ic.processOthers()...)
 
 	return deps
 }
 
-func processOthers(rootLock models.PackageLock, lockedVersion bool, processed []string) []models.Dependency {
+func (ic *installContext) processOthers() []models.Dependency {
 	infos, err := os.ReadDir(env.GetModulesDir())
-	var lenProcessedInitial = len(processed)
+	var lenProcessedInitial = len(ic.processed)
 	var result []models.Dependency
 	if err != nil {
 		msg.Err("Error on try load dir of modules: %s", err)
@@ -69,11 +81,11 @@ func processOthers(rootLock models.PackageLock, lockedVersion bool, processed []
 			continue
 		}
 
-		if utils.Contains(processed, info.Name()) {
+		if utils.Contains(ic.processed, info.Name()) {
 			continue
 		}
 
-		processed = append(processed, info.Name())
+		ic.processed = append(ic.processed, info.Name())
 
 		msg.Info("Processing module %s", info.Name())
 
@@ -90,45 +102,44 @@ func processOthers(rootLock models.PackageLock, lockedVersion bool, processed []
 			}
 			msg.Err("  Error on try load package %s: %s", fileName, err)
 		} else {
-			result = append(result, EnsureDependencies(rootLock, packageOther, lockedVersion, processed...)...)
+			result = append(result, ic.ensureDependencies(packageOther)...)
 		}
 	}
-	if lenProcessedInitial > len(processed) {
-		result = append(result, processOthers(rootLock, lockedVersion, processed)...)
+	if lenProcessedInitial > len(ic.processed) {
+		result = append(result, ic.processOthers()...)
 	}
 
 	return result
 }
 
-func ensureModules(rootLock models.PackageLock, pkg *models.Package, deps []models.Dependency, lockedVersion bool) {
-	msg.Info("Installing modules")
+func (ic *installContext) ensureModules(pkg *models.Package, deps []models.Dependency) {
 	for _, dep := range deps {
 		msg.Info("Processing dependency %s", dep.GetName())
 
-		if shouldSkipDependency(rootLock, dep, lockedVersion) {
+		if ic.shouldSkipDependency(dep) {
 			msg.Info("Dependency %s already installed", dep.GetName())
 			continue
 		}
 
 		GetDependency(dep)
 		repository := git.GetRepository(dep)
-		referenceName := getReferenceName(rootLock, pkg, dep, repository)
+		referenceName := ic.getReferenceName(pkg, dep, repository)
 
-		if !rootLock.NeedUpdate(dep, referenceName.Short()) {
+		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) {
 			msg.Info("  %s already updated", dep.GetName())
 			continue
 		}
 
-		checkoutAndUpdate(rootLock, dep, repository, referenceName)
+		ic.checkoutAndUpdate(dep, repository, referenceName)
 	}
 }
 
-func shouldSkipDependency(rootLock models.PackageLock, dep models.Dependency, lockedVersion bool) bool {
-	if !lockedVersion {
+func (ic *installContext) shouldSkipDependency(dep models.Dependency) bool {
+	if !ic.useLockedVersion {
 		return false
 	}
 
-	installed, exists := rootLock.Installed[strings.ToLower(dep.GetURL())]
+	installed, exists := ic.rootLocked.Installed[strings.ToLower(dep.GetURL())]
 	if !exists {
 		return false
 	}
@@ -149,12 +160,11 @@ func shouldSkipDependency(rootLock models.PackageLock, dep models.Dependency, lo
 	return !installedVersion.LessThan(requiredVersion)
 }
 
-func getReferenceName(
-	rootLock models.PackageLock,
+func (ic *installContext) getReferenceName(
 	pkg *models.Package,
 	dep models.Dependency,
 	repository *goGit.Repository) plumbing.ReferenceName {
-	bestMatch := getVersion(rootLock, dep, repository, false)
+	bestMatch := ic.getVersion(dep, repository)
 	var referenceName plumbing.ReferenceName
 
 	if bestMatch == nil {
@@ -171,8 +181,7 @@ func getReferenceName(
 	return referenceName
 }
 
-func checkoutAndUpdate(
-	rootLock models.PackageLock,
+func (ic *installContext) checkoutAndUpdate(
 	dep models.Dependency,
 	repository *goGit.Repository,
 	referenceName plumbing.ReferenceName) {
@@ -183,7 +192,7 @@ func checkoutAndUpdate(
 		Branch: referenceName,
 	})
 
-	rootLock.AddInstalled(dep, referenceName.Short())
+	ic.rootLocked.AddInstalled(dep, referenceName.Short())
 
 	if err != nil {
 		msg.Die("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)
@@ -200,16 +209,20 @@ func checkoutAndUpdate(
 	}
 }
 
-func getVersion(
-	rootLock models.PackageLock,
+func (ic *installContext) getVersion(
 	dep models.Dependency,
 	repository *goGit.Repository,
-	locked bool,
 ) *plumbing.Reference {
+	if ic.useLockedVersion {
+		lockedDependency := ic.rootLocked.GetInstalled(dep)
+		if tag := git.GetByTag(repository, lockedDependency.Version); tag != nil {
+			return tag
+		}
+	}
+
 	versions := git.GetVersions(repository, dep)
 	constraints, err := semver.NewConstraint(dep.GetVersion())
 	if err != nil {
-		msg.Warn("  Error on get constraints %s, using branch format now...", err)
 		for _, version := range versions {
 			if version.Name().Short() == dep.GetVersion() {
 				return version
@@ -219,32 +232,14 @@ func getVersion(
 		return nil
 	}
 
-	return getVersionSemantic(
-		rootLock,
-		dep,
-		repository,
+	return ic.getVersionSemantic(
 		versions,
-		constraints,
-		locked)
+		constraints)
 }
 
-func getVersionSemantic(
-	rootLock models.PackageLock,
-	dep models.Dependency,
-	repository *goGit.Repository,
+func (ic *installContext) getVersionSemantic(
 	versions []*plumbing.Reference,
-	contraint *semver.Constraints,
-	locked bool) *plumbing.Reference {
-	if locked {
-		lockedDependency := rootLock.GetInstalled(dep)
-		if tag := git.GetByTag(repository, lockedDependency.Version); tag != nil {
-			return tag
-		}
-
-		msg.Warn("Tag not found %s, using semantic now...", lockedDependency.Version)
-		return getVersion(rootLock, dep, repository, false)
-	}
-
+	contraint *semver.Constraints) *plumbing.Reference {
 	var bestVersion *semver.Version
 
 	for _, version := range versions {
