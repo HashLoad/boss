@@ -56,20 +56,50 @@ func GetMain(repository *goGit.Repository) (*config.Branch, error) {
 	return branch, err
 }
 
-func GetVersions(repository *goGit.Repository) []*plumbing.Reference {
+func GetVersions(repository *goGit.Repository, dep models.Dependency) []*plumbing.Reference {
+	var result = make([]*plumbing.Reference, 0)
+
+	err := repository.Fetch(&goGit.FetchOptions{
+		Force: true,
+		Prune: true,
+		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
+		RefSpecs: []config.RefSpec{
+			"refs/*:refs/*",
+			"HEAD:refs/heads/HEAD",
+		},
+	})
+
+	if err != nil {
+		msg.Warn("Fail to fetch repository %s: %s", dep.Repository, err)
+	}
+
 	tags, err := repository.Tags()
 	if err != nil {
-		msg.Err("Fail to retrieve versions: %", err)
-	}
-	var result = make([]*plumbing.Reference, 0)
-	for {
-		reference, err := tags.Next()
+		msg.Err("Fail to retrieve versions: %v", err)
+	} else {
+		err = tags.ForEach(func(reference *plumbing.Reference) error {
+			result = append(result, reference)
+			return nil
+		})
 		if err != nil {
-			msg.Err("Fail to retrieve versions: %", err)
-			return result
+			msg.Err("Fail to retrieve versions: %v", err)
 		}
-		result = append(result, reference)
 	}
+
+	branches, err := repository.Branches()
+	if err != nil {
+		msg.Err("Fail to retrieve branches: %v", err)
+	} else {
+		err = branches.ForEach(func(reference *plumbing.Reference) error {
+			result = append(result, reference)
+			return nil
+		})
+		if err != nil {
+			msg.Err("Fail to retrieve branches: %v", err)
+		}
+	}
+
+	return result
 }
 
 func GetTagsShortName(repository *goGit.Repository) []string {
@@ -99,9 +129,9 @@ func GetByTag(repository *goGit.Repository, shortName string) *plumbing.Referenc
 func GetRepository(dep models.Dependency) *goGit.Repository {
 	cache := makeStorageCache(dep)
 	dir := osfs.New(filepath.Join(env.GetModulesDir(), dep.GetName()))
-	repository, e := goGit.Open(cache, dir)
-	if e != nil {
-		msg.Err("Error on open repository %s: %s", dep.Repository, e)
+	repository, err := goGit.Open(cache, dir)
+	if err != nil {
+		msg.Err("Error on open repository %s: %s", dep.Repository, err)
 	}
 
 	return repository

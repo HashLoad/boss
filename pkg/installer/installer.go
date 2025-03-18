@@ -9,13 +9,12 @@ import (
 )
 
 func InstallModules(args []string, lockedVersion bool, noSave bool) {
-	_ = lockedVersion
-	pkg, e := models.LoadPackage(env.GetGlobal())
-	if e != nil {
-		if os.IsNotExist(e) {
+	pkg, err := models.LoadPackage(env.GetGlobal())
+	if err != nil {
+		if os.IsNotExist(err) {
 			msg.Die("boss.json not exists in " + env.GetCurrentDir())
 		} else {
-			msg.Die("Fail on open dependencies file: %s", e)
+			msg.Die("Fail on open dependencies file: %s", err)
 		}
 	}
 
@@ -27,18 +26,18 @@ func InstallModules(args []string, lockedVersion bool, noSave bool) {
 }
 
 func UninstallModules(args []string, _ /* noSave */ bool) {
-	pkg, e := models.LoadPackage(false)
+	pkg, err := models.LoadPackage(false)
 
-	if e != nil {
-		msg.Err(e.Error())
+	if err != nil {
+		msg.Err(err.Error())
 	}
 
 	if pkg == nil {
 		return
 	}
 
-	for e := range args {
-		dependencyRepository := ParseDependency(args[e])
+	for _, arg := range args {
+		dependencyRepository := ParseDependency(arg)
 		pkg.UninstallDependency(dependencyRepository)
 	}
 

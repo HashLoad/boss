@@ -25,7 +25,7 @@ func checkHasGitClient() {
 
 func CloneCacheNative(dep models.Dependency) *git2.Repository {
 	msg.Info("Downloading dependency %s", dep.Repository)
-	getWrapperClone(dep)
+	doClone(dep)
 	return GetRepository(dep)
 }
 
@@ -34,7 +34,7 @@ func UpdateCacheNative(dep models.Dependency) *git2.Repository {
 	return GetRepository(dep)
 }
 
-func getWrapperClone(dep models.Dependency) {
+func doClone(dep models.Dependency) {
 	checkHasGitClient()
 
 	paths.EnsureCacheDir(dep)

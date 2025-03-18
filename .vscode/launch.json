@@ -10,7 +10,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["upgrade"],
+            "cwd": "${workspaceFolder}/test_dir",
+            "args": ["install", "horse:dev"],
         }
     ]
 }

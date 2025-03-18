@@ -21,22 +21,22 @@ const (
 
 type Messenger struct {
 	sync.Mutex
-	Stdout   io.Writer
-	Stderr   io.Writer
-	Stdin    io.Reader
-	exitCode int
-	hasError bool
+	Stdout     io.Writer
+	Stderr     io.Writer
+	Stdin      io.Reader
+	exitStatus int
+	hasError   bool
 
 	logLevel logLevel
 }
 
 func NewMessenger() *Messenger {
 	m := &Messenger{
-		Stdout:   os.Stdout,
-		Stderr:   os.Stderr,
-		Stdin:    os.Stdin,
-		exitCode: 1,
-		logLevel: INFO,
+		Stdout:     os.Stdout,
+		Stderr:     os.Stderr,
+		Stdin:      os.Stdin,
+		exitStatus: 1,
+		logLevel:   INFO,
 	}
 
 	return m
@@ -107,19 +107,17 @@ func (m *Messenger) Debug(msg string, args ...any) {
 
 func (m *Messenger) Die(msg string, args ...any) {
 	m.Err(msg, args...)
-	os.Exit(m.exitCode)
+	os.Exit(m.exitStatus)
 }
 
-func (m *Messenger) ExitCode(e int) int {
+func (m *Messenger) ExitCode(exitStatus int) {
 	m.Lock()
-	old := m.exitCode
-	m.exitCode = e
+	m.exitStatus = exitStatus
 	m.Unlock()
-	return old
 }
 
-func ExitCode(e int) int {
-	return defaultMsg.ExitCode(e)
+func ExitCode(exitStatus int) {
+	defaultMsg.ExitCode(exitStatus)
 }
 
 func (m *Messenger) print(printer pterm.PrefixPrinter, msg string, args ...any) {

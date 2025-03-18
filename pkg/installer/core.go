@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,25 +36,32 @@ func DoInstall(pkg *models.Package, lockedVersion bool) {
 	msg.Info("Success!")
 }
 
-func EnsureDependencies(rootLock models.PackageLock, pkg *models.Package, lockedVersion bool) []models.Dependency {
+func EnsureDependencies(
+	rootLock models.PackageLock,
+	pkg *models.Package,
+	lockedVersion bool,
+	processed ...string) []models.Dependency {
 	if pkg.Dependencies == nil {
 		return []models.Dependency{}
 	}
 	deps := pkg.GetParsedDependencies()
 
 	ensureModules(rootLock, pkg, deps, lockedVersion)
+	if len(processed) == 0 {
+		processed = append(processed, consts.DefaultPaths()...)
+	}
 
-	deps = append(deps, processOthers(rootLock, lockedVersion, consts.DefaultPaths())...)
+	deps = append(deps, processOthers(rootLock, lockedVersion, processed)...)
 
 	return deps
 }
 
 func processOthers(rootLock models.PackageLock, lockedVersion bool, processed []string) []models.Dependency {
-	infos, e := os.ReadDir(env.GetModulesDir())
+	infos, err := os.ReadDir(env.GetModulesDir())
 	var lenProcessedInitial = len(processed)
 	var result []models.Dependency
-	if e != nil {
-		msg.Err("Error on try load dir of modules: %s", e)
+	if err != nil {
+		msg.Err("Error on try load dir of modules: %s", err)
 	}
 
 	for _, info := range infos {
@@ -71,8 +79,8 @@ func processOthers(rootLock models.PackageLock, lockedVersion bool, processed []
 
 		fileName := filepath.Join(env.GetModulesDir(), info.Name(), consts.FilePackage)
 
-		_, i := os.Stat(fileName)
-		if os.IsNotExist(i) {
+		_, err := os.Stat(fileName)
+		if os.IsNotExist(err) {
 			msg.Warn("  boss.json not exists in %s", info.Name())
 		}
 
@@ -82,7 +90,7 @@ func processOthers(rootLock models.PackageLock, lockedVersion bool, processed []
 			}
 			msg.Err("  Error on try load package %s: %s", fileName, err)
 		} else {
-			result = append(result, EnsureDependencies(rootLock, packageOther, lockedVersion)...)
+			result = append(result, EnsureDependencies(rootLock, packageOther, lockedVersion, processed...)...)
 		}
 	}
 	if lenProcessedInitial > len(processed) {
@@ -146,10 +154,10 @@ func getReferenceName(
 	pkg *models.Package,
 	dep models.Dependency,
 	repository *goGit.Repository) plumbing.ReferenceName {
-	hasMatch, bestMatch := getVersion(rootLock, dep, repository, false)
+	bestMatch := getVersion(rootLock, dep, repository, false)
 	var referenceName plumbing.ReferenceName
 
-	if !hasMatch {
+	if bestMatch == nil {
 		if mainBranchReference, err := git.GetMain(repository); err == nil {
 			referenceName = plumbing.NewBranchReferenceName(mainBranchReference.Name)
 		}
@@ -180,24 +188,57 @@ func checkoutAndUpdate(
 	if err != nil {
 		msg.Die("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)
 	}
+
+	err = worktree.Pull(&goGit.PullOptions{
+		Force: true,
+
+		Auth: env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
+	})
+
+	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
+		msg.Warn("  Error on pull from dependency %s\n%s", dep.Repository, err)
+	}
 }
 
 func getVersion(
 	rootLock models.PackageLock,
 	dep models.Dependency,
 	repository *goGit.Repository,
-	lockedVersion bool,
-) (bool, *plumbing.Reference) {
-	versions := git.GetVersions(repository)
-	constraints, e := semver.NewConstraint(dep.GetVersion())
-	if e != nil {
-		msg.Err("  Version type not supported! %s", e)
+	locked bool,
+) *plumbing.Reference {
+	versions := git.GetVersions(repository, dep)
+	constraints, err := semver.NewConstraint(dep.GetVersion())
+	if err != nil {
+		msg.Warn("  Error on get constraints %s, using branch format now...", err)
+		for _, version := range versions {
+			if version.Name().Short() == dep.GetVersion() {
+				return version
+			}
+		}
+
+		return nil
 	}
 
-	if lockedVersion {
+	return getVersionSemantic(
+		rootLock,
+		dep,
+		repository,
+		versions,
+		constraints,
+		locked)
+}
+
+func getVersionSemantic(
+	rootLock models.PackageLock,
+	dep models.Dependency,
+	repository *goGit.Repository,
+	versions []*plumbing.Reference,
+	contraint *semver.Constraints,
+	locked bool) *plumbing.Reference {
+	if locked {
 		lockedDependency := rootLock.GetInstalled(dep)
 		if tag := git.GetByTag(repository, lockedDependency.Version); tag != nil {
-			return true, tag
+			return tag
 		}
 
 		msg.Warn("Tag not found %s, using semantic now...", lockedDependency.Version)
@@ -205,8 +246,6 @@ func getVersion(
 	}
 
 	var bestVersion *semver.Version
-	hasMatch := false
-	var bestMatch *plumbing.Reference
 
 	for _, version := range versions {
 		short := version.Name().Short()
@@ -214,14 +253,15 @@ func getVersion(
 		if err != nil {
 			continue
 		}
-		if constraints.Check(newVersion) {
-			hasMatch = true
-			if bestVersion == nil || newVersion.GreaterThan(bestVersion) {
-				bestMatch = version
+		if contraint.Check(newVersion) {
+			if bestVersion != nil && newVersion.GreaterThan(bestVersion) {
+				bestVersion = newVersion
+			}
+
+			if bestVersion == nil {
 				bestVersion = newVersion
 			}
 		}
 	}
-
-	return hasMatch, bestMatch
+	return nil
 }

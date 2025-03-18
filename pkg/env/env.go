@@ -82,10 +82,10 @@ func GetBossHome() string {
 	homeDir := os.Getenv("BOSS_HOME")
 
 	if homeDir == "" {
-		systemHome, e := homedir.Dir()
+		systemHome, err := homedir.Dir()
 		homeDir = systemHome
-		if e != nil {
-			msg.Err("Error to get cache paths", e)
+		if err != nil {
+			msg.Err("Error to get cache paths", err)
 		}
 
 		homeDir = filepath.FromSlash(homeDir)

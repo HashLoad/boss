@@ -9,11 +9,11 @@ import (
 )
 
 //nolint:lll // This regex is too long and it's better to keep it like this
-const urlVersionMatcher = `(?U)(?m)^(?:http[s]{0,1}://)?(?P<host>.*)(?::(?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+)))?$`
+const urlVersionMatcher = `(?m)^(?:http[s]?:\/\/|git@)?(?P<url>[\w\.\-\/:]+?)(?:[@:](?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+|[\w\-]+)))?$`
 
 func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
-	for e := range args {
-		dependency := ParseDependency(args[e])
+	for _, dependency := range args {
+		dependency = ParseDependency(dependency)
 
 		re := regexp.MustCompile(urlVersionMatcher)
 		match := make(map[string]string)
@@ -26,7 +26,7 @@ func EnsureDependencyOfArgs(pkg *models.Package, args []string) {
 		}
 		var ver string
 		var dep string
-		dep = match["host"]
+		dep = match["url"]
 		if len(match["version"]) == 0 {
 			ver = consts.MinimalDependencyVersion
 		} else {

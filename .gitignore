@@ -39,3 +39,4 @@ bin/
 .env
 # Added by goreleaser init:
 dist/
+test_dir/

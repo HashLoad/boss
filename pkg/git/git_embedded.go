@@ -1,11 +1,11 @@
 package git
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	cache2 "github.com/go-git/go-git/v5/plumbing/cache"
@@ -20,18 +20,18 @@ import (
 func CloneCacheEmbedded(dep models.Dependency) *git.Repository {
 	msg.Info("Downloading dependency %s", dep.Repository)
 	storageCache := makeStorageCache(dep)
-	wtFs := makeWtFileSystem(dep)
+	worktreeFileSystem := createWorktreeFs(dep)
 	url := dep.GetURL()
 	auth := env.GlobalConfiguration().GetAuth(dep.GetURLPrefix())
 
-	repository, e := git.Clone(storageCache, wtFs, &git.CloneOptions{
+	repository, err := git.Clone(storageCache, worktreeFileSystem, &git.CloneOptions{
 		URL:  url,
 		Tags: git.AllTags,
 		Auth: auth,
 	})
-	if e != nil {
+	if err != nil {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
-		msg.Die("Error to get repository of %s: %s", dep.Repository, e)
+		msg.Die("Error to get repository of %s: %s", dep.Repository, err)
 	}
 	initSubmodules(dep, repository)
 	return repository
@@ -39,7 +39,7 @@ func CloneCacheEmbedded(dep models.Dependency) *git.Repository {
 
 func UpdateCacheEmbedded(dep models.Dependency) *git.Repository {
 	storageCache := makeStorageCache(dep)
-	wtFs := makeWtFileSystem(dep)
+	wtFs := createWorktreeFs(dep)
 
 	repository, err := git.Open(storageCache, wtFs)
 	if err != nil {
@@ -83,10 +83,9 @@ func makeStorageCache(dep models.Dependency) storage.Storer {
 	return newStorage
 }
 
-func makeWtFileSystem(dep models.Dependency) billy.Filesystem {
+func createWorktreeFs(dep models.Dependency) billy.Filesystem {
 	paths.EnsureCacheDir(dep)
-	dir := filepath.Join(env.GetCacheDir(), fmt.Sprintf("%s_wt", dep.GetHashName()))
-	fs := osfs.New(dir)
+	fs := memfs.New()
 
 	return fs
 }

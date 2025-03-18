@@ -33,9 +33,9 @@ func updateOtherUnitFilesProject(lpiName string) {
 		msg.Err(".lpi not found.")
 		return
 	}
-	e := doc.ReadFromFile(lpiName)
-	if e != nil {
-		msg.Err("Error on read lpi: %s", e)
+	err = doc.ReadFromFile(lpiName)
+	if err != nil {
+		msg.Err("Error on read lpi: %s", err)
 		return
 	}
 
@@ -103,9 +103,9 @@ func updateLibraryPathProject(dprojName string) {
 		msg.Err(".dproj not found.")
 		return
 	}
-	e := doc.ReadFromFile(dprojName)
-	if e != nil {
-		msg.Err("Error on read dproj: %s", e)
+	err = doc.ReadFromFile(dprojName)
+	if err != nil {
+		msg.Err("Error on read dproj: %s", err)
 		return
 	}
 	root := doc.Root()

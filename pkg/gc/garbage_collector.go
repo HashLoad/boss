@@ -27,9 +27,9 @@ func RunGC(ignoreLastUpdate bool) error {
 			var extension = filepath.Ext(info.Name())
 			base := filepath.Base(info.Name())
 			var name = strings.TrimRight(base, extension)
-			repoInfo, e := models.RepoData(name)
-			if e != nil {
-				msg.Warn("Fail to parse repo info in GC: ", e)
+			repoInfo, err := models.RepoData(name)
+			if err != nil {
+				msg.Warn("Fail to parse repo info in GC: ", err)
 				return nil
 			}
 

@@ -64,9 +64,9 @@ func createPaths() {
 
 func addPaths(paths []string) {
 	var needAdd = false
-	currentPath, e := os.Getwd()
-	if e != nil {
-		msg.Die("Failed to load current working directory \n %s", e.Error())
+	currentPath, err := os.Getwd()
+	if err != nil {
+		msg.Die("Failed to load current working directory \n %s", err.Error())
 		return
 	}
 

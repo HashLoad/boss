@@ -152,8 +152,8 @@ func cleanEmpty(paths []string) []string {
 }
 
 func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
-	_, e := os.Stat(path)
-	if os.IsNotExist(e) {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
 		return paths
 	}
 
@@ -175,8 +175,8 @@ func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, root
 }
 
 func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
-	_, e := os.Stat(path)
-	if os.IsNotExist(e) {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
 		return paths
 	}
 
