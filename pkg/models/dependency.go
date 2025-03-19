@@ -19,7 +19,7 @@ type Dependency struct {
 	UseSSH     bool
 }
 
-func (p *Dependency) GetHashName() string {
+func (p *Dependency) HashName() string {
 	//nolint:gosec // We are not using this for security purposes
 	hash := md5.New()
 	if _, err := io.WriteString(hash, p.Repository); err != nil {
@@ -99,12 +99,12 @@ func GetDependencies(deps map[string]string) []Dependency {
 func GetDependenciesNames(deps []Dependency) []string {
 	var dependencies []string
 	for _, info := range deps {
-		dependencies = append(dependencies, info.GetName())
+		dependencies = append(dependencies, info.Name())
 	}
 	return dependencies
 }
 
-func (p *Dependency) GetName() string {
+func (p *Dependency) Name() string {
 	var re = regexp.MustCompile(`[^/]+(:?/$|$)`)
 	return re.FindString(p.Repository)
 }

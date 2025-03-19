@@ -114,10 +114,10 @@ func (ic *installContext) processOthers() []models.Dependency {
 
 func (ic *installContext) ensureModules(pkg *models.Package, deps []models.Dependency) {
 	for _, dep := range deps {
-		msg.Info("Processing dependency %s", dep.GetName())
+		msg.Info("Processing dependency %s", dep.Name())
 
 		if ic.shouldSkipDependency(dep) {
-			msg.Info("Dependency %s already installed", dep.GetName())
+			msg.Info("Dependency %s already installed", dep.Name())
 			continue
 		}
 
@@ -125,8 +125,24 @@ func (ic *installContext) ensureModules(pkg *models.Package, deps []models.Depen
 		repository := git.GetRepository(dep)
 		referenceName := ic.getReferenceName(pkg, dep, repository)
 
-		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) {
-			msg.Info("  %s already updated", dep.GetName())
+		wt, err := repository.Worktree()
+		if err != nil {
+			msg.Die("  Error on get worktree from repository %s\n%s", dep.Repository, err)
+		}
+
+		status, err := wt.Status()
+		if err != nil {
+			msg.Die("  Error on get status from worktree %s\n%s", dep.Repository, err)
+		}
+
+		head, er := repository.Head()
+		if er != nil {
+			msg.Die("  Error on get head from repository %s\n%s", dep.Repository, er)
+		}
+
+		currentRef := head.Name()
+		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) && status.IsClean() && referenceName == currentRef {
+			msg.Info("  %s already updated", dep.Name())
 			continue
 		}
 
@@ -169,13 +185,13 @@ func (ic *installContext) getReferenceName(
 
 	if bestMatch == nil {
 		if mainBranchReference, err := git.GetMain(repository); err == nil {
-			referenceName = plumbing.NewBranchReferenceName(mainBranchReference.Name)
+			return plumbing.NewBranchReferenceName(mainBranchReference.Name)
 		}
-	} else {
-		referenceName = bestMatch.Name()
-		if dep.GetVersion() == consts.MinimalDependencyVersion {
-			pkg.Dependencies[dep.Repository] = "^" + referenceName.Short()
-		}
+	}
+
+	referenceName = bestMatch.Name()
+	if dep.GetVersion() == consts.MinimalDependencyVersion {
+		pkg.Dependencies[dep.Repository] = "^" + referenceName.Short()
 	}
 
 	return referenceName
@@ -185,14 +201,17 @@ func (ic *installContext) checkoutAndUpdate(
 	dep models.Dependency,
 	repository *goGit.Repository,
 	referenceName plumbing.ReferenceName) {
-	worktree, _ := repository.Worktree()
+	worktree, err := repository.Worktree()
+	if err != nil {
+		msg.Die("  Error on get worktree from repository %s\n%s", dep.Repository, err)
+	}
 
-	err := worktree.Checkout(&goGit.CheckoutOptions{
+	err = worktree.Checkout(&goGit.CheckoutOptions{
 		Force:  true,
 		Branch: referenceName,
 	})
 
-	ic.rootLocked.AddInstalled(dep, referenceName.Short())
+	ic.rootLocked.Add(dep, referenceName.Short())
 
 	if err != nil {
 		msg.Die("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)
@@ -200,8 +219,7 @@ func (ic *installContext) checkoutAndUpdate(
 
 	err = worktree.Pull(&goGit.PullOptions{
 		Force: true,
-
-		Auth: env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
+		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
 	})
 
 	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
@@ -215,7 +233,9 @@ func (ic *installContext) getVersion(
 ) *plumbing.Reference {
 	if ic.useLockedVersion {
 		lockedDependency := ic.rootLocked.GetInstalled(dep)
-		if tag := git.GetByTag(repository, lockedDependency.Version); tag != nil {
+
+		if tag := git.GetByTag(repository, lockedDependency.Version); tag != nil &&
+			lockedDependency.Version != dep.GetVersion() {
 			return tag
 		}
 	}
@@ -241,6 +261,7 @@ func (ic *installContext) getVersionSemantic(
 	versions []*plumbing.Reference,
 	contraint *semver.Constraints) *plumbing.Reference {
 	var bestVersion *semver.Version
+	var bestReference *plumbing.Reference
 
 	for _, version := range versions {
 		short := version.Name().Short()
@@ -251,12 +272,14 @@ func (ic *installContext) getVersionSemantic(
 		if contraint.Check(newVersion) {
 			if bestVersion != nil && newVersion.GreaterThan(bestVersion) {
 				bestVersion = newVersion
+				bestReference = version
 			}
 
 			if bestVersion == nil {
 				bestVersion = newVersion
+				bestReference = version
 			}
 		}
 	}
-	return nil
+	return bestReference
 }

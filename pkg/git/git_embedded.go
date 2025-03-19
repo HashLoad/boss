@@ -30,7 +30,7 @@ func CloneCacheEmbedded(dep models.Dependency) *git.Repository {
 		Auth: auth,
 	})
 	if err != nil {
-		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.GetHashName()))
+		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.HashName()))
 		msg.Die("Error to get repository of %s: %s", dep.Repository, err)
 	}
 	initSubmodules(dep, repository)
@@ -63,7 +63,7 @@ func UpdateCacheEmbedded(dep models.Dependency) *git.Repository {
 }
 
 func refreshCopy(dep models.Dependency) *git.Repository {
-	dir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
+	dir := filepath.Join(env.GetCacheDir(), dep.HashName())
 	err := os.RemoveAll(dir)
 	if err == nil {
 		return CloneCacheEmbedded(dep)
@@ -76,7 +76,7 @@ func refreshCopy(dep models.Dependency) *git.Repository {
 
 func makeStorageCache(dep models.Dependency) storage.Storer {
 	paths.EnsureCacheDir(dep)
-	dir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
+	dir := filepath.Join(env.GetCacheDir(), dep.HashName())
 	fs := osfs.New(dir)
 
 	newStorage := filesystem.NewStorage(fs, cache2.NewObjectLRUDefault())

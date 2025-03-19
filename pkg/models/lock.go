@@ -31,8 +31,8 @@ type LockedDependency struct {
 	Version   string              `json:"version"`
 	Hash      string              `json:"hash"`
 	Artifacts DependencyArtifacts `json:"artifacts"`
-	Failed    bool                `json:"failed"`
-	Changed   bool                `json:"changed"`
+	Failed    bool                `json:"-"`
+	Changed   bool                `json:"-"`
 }
 
 type PackageLock struct {
@@ -92,14 +92,14 @@ func (p *PackageLock) Save() {
 	_ = os.WriteFile(p.fileName, marshal, 0600)
 }
 
-func (p *PackageLock) AddInstalled(dep Dependency, version string) {
-	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
+func (p *PackageLock) Add(dep Dependency, version string) {
+	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.Name())
 
 	hash := utils.HashDir(dependencyDir)
 
 	if locked, ok := p.Installed[strings.ToLower(dep.Repository)]; !ok {
 		p.Installed[strings.ToLower(dep.Repository)] = LockedDependency{
-			Name:    dep.GetName(),
+			Name:    dep.Name(),
 			Version: version,
 			Changed: true,
 			Hash:    hash,
@@ -122,7 +122,7 @@ func (p *Dependency) internalNeedUpdate(lockedDependency LockedDependency, versi
 		return true
 	}
 
-	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, p.GetName())
+	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, p.Name())
 
 	if _, err := os.Stat(dependencyDir); os.IsNotExist(err) {
 		return true
@@ -195,10 +195,6 @@ func (p *PackageLock) NeedUpdate(dep Dependency, version string) bool {
 
 	if lockedDependency.Changed {
 		lockedDependency.Failed = false
-		lockedDependency.Artifacts.Bin = []string{}
-		lockedDependency.Artifacts.Bpl = []string{}
-		lockedDependency.Artifacts.Dcp = []string{}
-		lockedDependency.Artifacts.Dcu = []string{}
 	}
 	p.Installed[strings.ToLower(dep.Repository)] = lockedDependency
 
@@ -210,7 +206,7 @@ func (p *PackageLock) GetInstalled(dep Dependency) LockedDependency {
 }
 
 func (p *PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
-	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.GetName())
+	dependencyDir := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, dep.Name())
 	hash := utils.HashDir(dependencyDir)
 	locked.Hash = hash
 

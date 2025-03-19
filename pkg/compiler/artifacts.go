@@ -10,7 +10,7 @@ import (
 )
 
 func moveArtifacts(dep models.Dependency, rootPath string) {
-	var moduleName = dep.GetName()
+	var moduleName = dep.Name()
 	movePath(filepath.Join(rootPath, moduleName, consts.BplFolder), filepath.Join(rootPath, consts.BplFolder))
 	movePath(filepath.Join(rootPath, moduleName, consts.DcpFolder), filepath.Join(rootPath, consts.DcpFolder))
 	movePath(filepath.Join(rootPath, moduleName, consts.BinFolder), filepath.Join(rootPath, consts.BinFolder))
@@ -40,7 +40,7 @@ func movePath(oldPath string, newPath string) {
 }
 
 func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Dependency, rootPath string) {
-	var moduleName = dep.GetName()
+	var moduleName = dep.Name()
 	lockedDependency.Artifacts.Clean()
 
 	collectArtifacts(lockedDependency.Artifacts.Bpl, filepath.Join(rootPath, moduleName, consts.BplFolder))

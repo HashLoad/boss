@@ -1,7 +1,8 @@
 name: golangci-lint
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -11,10 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: asdf-vm/actions/install@v3
-        env:
-          ASDF_GOLANG_DEFAULT_PACKAGES_FILE: ./.default-golang-pkgs
+      - uses: jdx/mise-action@v2
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11.4'
+          python-version: "3.11.4"
       - uses: pre-commit/action@v3.0.1

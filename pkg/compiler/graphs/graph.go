@@ -16,11 +16,11 @@ type Node struct {
 }
 
 func NewNode(dependency *models.Dependency) *Node {
-	return &Node{Dep: *dependency, Value: strings.ToLower(dependency.GetName())}
+	return &Node{Dep: *dependency, Value: strings.ToLower(dependency.Name())}
 }
 
 func (n *Node) String() string {
-	return n.Dep.GetName()
+	return n.Dep.Name()
 }
 
 type GraphItem struct {

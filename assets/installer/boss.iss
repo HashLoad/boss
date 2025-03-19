@@ -1,5 +1,5 @@
 #define BossName "Boss"
-#define BossVersion "3.0.5"
+#define BossVersion "{%VERSION|0.0.1}"
 #define BossPublisher "Hashload"
 #define BossURL "https://github.com/hashload/boss"
 
@@ -74,7 +74,7 @@ end;
 Name: "{app}"; Permissions: everyone-full
 
 [Files]
-Source: "boss.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{%BIN_DIR|boss.exe}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath('{app}')

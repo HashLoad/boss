@@ -14,10 +14,12 @@ func needUpdate(toVersion int64) bool {
 	return env.GlobalConfiguration().ConfigVersion < toVersion
 }
 
-func executeUpdate(version int64, update func()) {
+func executeUpdate(version int64, update ...func()) {
 	if needUpdate(version) {
 		msg.Debug("\t\tRunning update to version %d", version)
-		update()
+		for _, fn := range update {
+			fn()
+		}
 		updateVersion(version)
 	} else {
 		msg.Debug("\t\tUpdate to version %d already performed", version)
@@ -31,8 +33,5 @@ func migration() {
 	executeUpdate(4, cleanup)
 	executeUpdate(5, cleanup)
 	executeUpdate(6, six)
-	executeUpdate(7, func() {
-		seven()
-		cleanup()
-	})
+	executeUpdate(7, seven, cleanup)
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -38,7 +39,10 @@ func doInitialization(quiet bool) {
 		printHead()
 	}
 
-	packageData, _ := models.LoadPackage(true)
+	packageData, err := models.LoadPackage(true)
+	if err != nil && !os.IsNotExist(err) {
+		msg.Die("Fail on open dependencies file: %s", err)
+	}
 
 	rxp := regexp.MustCompile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
 

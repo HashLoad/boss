@@ -34,7 +34,7 @@ func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.De
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage))
+		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
 		if err != nil {
 			node := graphs.NewNode(&dep)
 			graph.AddNode(node)

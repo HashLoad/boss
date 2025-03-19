@@ -5,17 +5,13 @@ import (
 	"errors"
 	"io"
 	"os/exec"
-	"strings"
 
 	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func RunCmd(cmdName string) {
-	fields := strings.Fields(cmdName)
-
-	//nolint:gosec // This is a command runner, it's supposed to run any command passed to it
-	cmd := exec.Command(fields[0], fields[1:]...)
+func RunCmd(name string, args ...string) {
+	cmd := exec.Command(name, args...)
 	cmdReader, err := cmd.StdoutPipe()
 	cmdErr, _ := cmd.StderrPipe()
 	if err != nil {
@@ -55,7 +51,7 @@ func Run(args []string) {
 		if command, ok := packageData.Scripts[args[0]]; !ok {
 			msg.Err(errors.New("script not exists").Error())
 		} else {
-			RunCmd(command + " " + strings.Join(args[1:], " "))
+			RunCmd(command, args[1:]...)
 		}
 	}
 }

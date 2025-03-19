@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 
 type Package struct {
 	fileName     string
-	IsNew        bool              `json:"-"`
 	Name         string            `json:"name"`
 	Description  string            `json:"description"`
 	Version      string            `json:"version"`
@@ -47,7 +47,7 @@ func (p *Package) AddProject(project string) {
 }
 
 func (p *Package) GetParsedDependencies() []Dependency {
-	if len(p.Dependencies) == 0 {
+	if p == nil || len(p.Dependencies) == 0 {
 		return []Dependency{}
 	}
 	return GetDependencies(p.Dependencies)
@@ -67,7 +67,6 @@ func (p *Package) UninstallDependency(dep string) {
 func getNew(file string) *Package {
 	res := new(Package)
 	res.fileName = file
-	res.IsNew = true
 
 	res.Dependencies = make(map[string]string)
 	res.Projects = []string{}
@@ -84,11 +83,15 @@ func LoadPackage(createNew bool) (*Package, error) {
 		return getNew(env.GetBossFile()), err
 	}
 	result := getNew(env.GetBossFile())
+
 	if err := json.Unmarshal(fileBytes, result); err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			return nil, err
+		}
+
+		return nil, fmt.Errorf("error on unmarshal file %s: %w", env.GetBossFile(), err)
 	}
 	result.Lock = LoadPackageLock(result)
-	result.IsNew = false
 	return result, nil
 }
 
