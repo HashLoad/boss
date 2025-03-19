@@ -12,36 +12,40 @@ import (
 
 type RepoInfo struct {
 	Key        string    `json:"key"`
+	Name       string    `json:"name"`
 	LastUpdate time.Time `json:"last_update"`
 	Versions   []string  `json:"versions"`
 }
 
-func SaveRepoData(key string, versions []string) {
+func CacheRepositoryDetails(dep Dependency, versions []string) {
 	location := env.GetCacheDir()
-	data := &RepoInfo{}
-	data.Key = key
-	data.LastUpdate = time.Now()
-	data.Versions = versions
-	d, err := json.Marshal(data)
+	data := &RepoInfo{
+		Key:        dep.HashName(),
+		Name:       dep.Name(),
+		Versions:   versions,
+		LastUpdate: time.Now(),
+	}
+
+	buff, err := json.Marshal(data)
 	if err != nil {
 		msg.Err(err.Error())
 	}
 
-	pp := filepath.Join(location, "info")
-	err = os.MkdirAll(pp, 0755)
+	infoPath := filepath.Join(location, "info")
+	err = os.MkdirAll(infoPath, 0755)
 	if err != nil {
 		msg.Err(err.Error())
 	}
 
-	p := filepath.Join(pp, key+".json")
-	f, err := os.Create(p)
+	jsonFilePath := filepath.Join(infoPath, data.Key+".json")
+	jsonFile, err := os.Create(jsonFilePath)
 	if err != nil {
 		msg.Err(err.Error())
 		return
 	}
-	defer f.Close()
+	defer jsonFile.Close()
 
-	_, err = f.Write(d)
+	_, err = jsonFile.Write(buff)
 	if err != nil {
 		msg.Err(err.Error())
 	}
@@ -49,15 +53,15 @@ func SaveRepoData(key string, versions []string) {
 
 func RepoData(key string) (*RepoInfo, error) {
 	location := env.GetCacheDir()
-	c := &RepoInfo{}
-	p := filepath.Join(location, "info", key+".json")
-	f, err := os.ReadFile(p)
+	cacheRepository := &RepoInfo{}
+	cacheInfoPath := filepath.Join(location, "info", key+".json")
+	cacheInfoData, err := os.ReadFile(cacheInfoPath)
 	if err != nil {
 		return &RepoInfo{}, err
 	}
-	err = json.Unmarshal(f, c)
+	err = json.Unmarshal(cacheInfoData, cacheRepository)
 	if err != nil {
 		return &RepoInfo{}, err
 	}
-	return c, nil
+	return cacheRepository, nil
 }

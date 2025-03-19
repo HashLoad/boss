@@ -15,10 +15,13 @@ import (
 	"github.com/xlab/treeprint"
 )
 
+type dependencyStatus int
+
 const (
-	updated   = 0
-	outdated  = 1
-	usingMain = 2
+	updated dependencyStatus = iota
+	outdated
+	usingBranch
+	branchOutdated
 )
 
 func dependenciesCmdRegister(root *cobra.Command) {
@@ -80,7 +83,7 @@ func printDeps(dep *models.Dependency,
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage))
+		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {
@@ -95,40 +98,47 @@ func printSingleDependency(
 	lock models.PackageLock,
 	tree treeprint.Tree,
 	showVersion bool) treeprint.Tree {
-	var output = dep.GetName()
+	var output = dep.Name()
 
 	if showVersion {
 		output += "@"
 		output += lock.GetInstalled(*dep).Version
 	}
 
-	switch isOutdated(*dep, lock.GetInstalled(*dep).Version) {
+	status, version := isOutdated(*dep, lock.GetInstalled(*dep).Version)
+
+	switch status {
 	case outdated:
-		output += " outdated"
-	case usingMain:
-		output += " using main"
+		output += " <- outdated (" + version + ")"
+	case usingBranch:
+		output += " <- branch based"
+	case branchOutdated:
+		output += " <- branch outdated"
+	case updated:
+		output += ""
 	}
 
 	return tree.AddBranch(output)
 }
 
-func isOutdated(dependency models.Dependency, version string) int {
+func isOutdated(dependency models.Dependency, version string) (dependencyStatus, string) {
 	installer.GetDependency(dependency)
-	info, err := models.RepoData(dependency.GetHashName())
+	info, err := models.RepoData(dependency.HashName())
 	if err != nil {
 		utils.HandleError(err)
 	} else {
+		//TODO: Check if the branch is outdated by comparing the hash
 		locked, err := semver.NewVersion(version)
 		if err != nil {
-			return usingMain
+			return usingBranch, ""
 		}
 		constraint, _ := semver.NewConstraint(dependency.GetVersion())
 		for _, value := range info.Versions {
 			version, err := semver.NewVersion(value)
 			if err == nil && version.GreaterThan(locked) && constraint.Check(version) {
-				return outdated
+				return outdated, version.String()
 			}
 		}
 	}
-	return updated
+	return updated, ""
 }

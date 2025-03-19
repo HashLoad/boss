@@ -114,10 +114,10 @@ func (ic *installContext) processOthers() []models.Dependency {
 
 func (ic *installContext) ensureModules(pkg *models.Package, deps []models.Dependency) {
 	for _, dep := range deps {
-		msg.Info("Processing dependency %s", dep.GetName())
+		msg.Info("Processing dependency %s", dep.Name())
 
 		if ic.shouldSkipDependency(dep) {
-			msg.Info("Dependency %s already installed", dep.GetName())
+			msg.Info("Dependency %s already installed", dep.Name())
 			continue
 		}
 
@@ -126,7 +126,7 @@ func (ic *installContext) ensureModules(pkg *models.Package, deps []models.Depen
 		referenceName := ic.getReferenceName(pkg, dep, repository)
 
 		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) {
-			msg.Info("  %s already updated", dep.GetName())
+			msg.Info("  %s already updated", dep.Name())
 			continue
 		}
 
@@ -192,7 +192,7 @@ func (ic *installContext) checkoutAndUpdate(
 		Branch: referenceName,
 	})
 
-	ic.rootLocked.AddInstalled(dep, referenceName.Short())
+	ic.rootLocked.Add(dep, referenceName.Short())
 
 	if err != nil {
 		msg.Die("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)

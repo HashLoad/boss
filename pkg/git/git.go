@@ -128,7 +128,7 @@ func GetByTag(repository *goGit.Repository, shortName string) *plumbing.Referenc
 
 func GetRepository(dep models.Dependency) *goGit.Repository {
 	cache := makeStorageCache(dep)
-	dir := osfs.New(filepath.Join(env.GetModulesDir(), dep.GetName()))
+	dir := osfs.New(filepath.Join(env.GetModulesDir(), dep.Name()))
 	repository, err := goGit.Open(cache, dir)
 	if err != nil {
 		msg.Err("Error on open repository %s: %s", dep.Repository, err)

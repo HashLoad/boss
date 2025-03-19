@@ -14,49 +14,47 @@ import (
 func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.PackageLock) {
 	cacheDir := env.GetModulesDir()
 	cacheDirInfo, err := os.Stat(cacheDir)
-	switch {
-	case os.IsNotExist(err):
-		if err = os.MkdirAll(cacheDir, os.ModeDir|0755); err != nil {
-			msg.Die("Could not create %s: %s", cacheDir, err)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(cacheDir, os.ModeDir|0755)
+		utils.HandleError(err)
+	}
+
+	if cacheDirInfo != nil && !cacheDirInfo.IsDir() {
+		msg.Die("modules is not a directory")
+	}
+
+	fileInfos, err := os.ReadDir(cacheDir)
+	utils.HandleError(err)
+	dependenciesNames := models.GetDependenciesNames(dependencies)
+	for _, info := range fileInfos {
+		if !info.IsDir() {
+			err = os.Remove(info.Name())
+			utils.HandleError(err)
+		}
+		if utils.Contains(consts.DefaultPaths(), info.Name()) {
+			cleanArtifacts(filepath.Join(cacheDir, info.Name()), lock)
+			continue
 		}
 
-	case cacheDirInfo != nil && !cacheDirInfo.IsDir():
-		msg.Die("modules is not a directory")
-	default:
-		fileInfos, err := os.ReadDir(cacheDir)
-		utils.HandleError(err)
-		dependenciesNames := models.GetDependenciesNames(dependencies)
-		for _, info := range fileInfos {
-			if !info.IsDir() {
-				err = os.Remove(info.Name())
-				utils.HandleError(err)
-			}
-			if utils.Contains(consts.DefaultPaths(), info.Name()) {
-				cleanArtifacts(filepath.Join(cacheDir, info.Name()), lock)
-				continue
-			}
-
-			if !utils.Contains(dependenciesNames, info.Name()) {
-			remove:
-				if err = os.RemoveAll(filepath.Join(cacheDir, info.Name())); err != nil {
-					msg.Warn("Failed to remove old cache: %s", err.Error())
-					goto remove
-				}
+		if !utils.Contains(dependenciesNames, info.Name()) {
+		remove:
+			if err = os.RemoveAll(filepath.Join(cacheDir, info.Name())); err != nil {
+				msg.Warn("Failed to remove old cache: %s", err.Error())
+				goto remove
 			}
 		}
 	}
 
-	createPath(filepath.Join(cacheDir, consts.BplFolder))
-	createPath(filepath.Join(cacheDir, consts.DcuFolder))
-	createPath(filepath.Join(cacheDir, consts.DcpFolder))
-	createPath(filepath.Join(cacheDir, consts.BinFolder))
+	for _, path := range consts.DefaultPaths() {
+		createPath(filepath.Join(cacheDir, path))
+	}
 }
 
 func EnsureCacheDir(dep models.Dependency) {
 	if !env.GlobalConfiguration().GitEmbedded {
 		return
 	}
-	cacheDir := filepath.Join(env.GetCacheDir(), dep.GetHashName())
+	cacheDir := filepath.Join(env.GetCacheDir(), dep.HashName())
 
 	fi, err := os.Stat(cacheDir)
 	if err != nil {

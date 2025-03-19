@@ -26,7 +26,7 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 			break
 		}
 		node := queue.Dequeue()
-		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.GetName(), consts.FilePackage)
+		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name(), consts.FilePackage)
 		if dependencyPackage, err := models.LoadPackageOther(dependencyPath); err == nil {
 			for _, value := range dependencyPackage.Projects {
 				projects += strings.TrimSuffix(filepath.Base(value), filepath.Ext(value)) + consts.FileExtensionBpl + "\n"
@@ -46,17 +46,17 @@ func buildOrderedPackages(pkg *models.Package) {
 			break
 		}
 		node := queue.Dequeue()
-		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.GetName())
+		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name())
 
 		dependency := pkg.Lock.GetInstalled(node.Dep)
 
-		msg.Info("Building %s", node.Dep.GetName())
+		msg.Info("Building %s", node.Dep.Name())
 		dependency.Changed = false
 		if dependencyPackage, err := models.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage)); err == nil {
 			dprojs := dependencyPackage.Projects
 			if len(dprojs) > 0 {
 				for _, dproj := range dprojs {
-					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.GetName(), dproj))
+					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.Name(), dproj))
 					if !compile(dprojPath, &node.Dep, pkg.Lock) {
 						dependency.Failed = true
 					}

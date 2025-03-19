@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/hashload/boss/pkg/consts"
@@ -22,15 +23,6 @@ func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool, noSav
 	EnsureDependency(pkg, args)
 	DoInstall(pkg, lockedVersion)
 	doInstallPackages()
-}
-
-func find(array []string, value string) int {
-	for key, item := range array {
-		if item == value {
-			return key
-		}
-	}
-	return -1
 }
 
 func addPathBpl(ideVersion string) {
@@ -90,7 +82,7 @@ func doInstallPackages() {
 			return nil
 		}
 
-		if find(keys, path) == -1 {
+		if !slices.Contains(keys, path) {
 			utils.HandleError(knowPackages.SetStringValue(path, path))
 		}
 		existingBpls = append(existingBpls, path)
@@ -99,7 +91,7 @@ func doInstallPackages() {
 	})
 
 	for _, key := range keys {
-		if find(existingBpls, key) != -1 {
+		if slices.Contains(existingBpls, key) {
 			continue
 		}
 

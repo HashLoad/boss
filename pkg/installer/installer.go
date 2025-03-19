@@ -25,7 +25,7 @@ func InstallModules(args []string, lockedVersion bool, noSave bool) {
 	}
 }
 
-func UninstallModules(args []string, _ /* noSave */ bool) {
+func UninstallModules(args []string, noSave bool) {
 	pkg, err := models.LoadPackage(false)
 
 	if err != nil {
@@ -43,8 +43,6 @@ func UninstallModules(args []string, _ /* noSave */ bool) {
 
 	pkg.Save()
 
-	// TODO noSave
 	// TODO implement remove without reinstall process
-
-	InstallModules([]string{}, false, false)
+	InstallModules([]string{}, false, noSave)
 }

@@ -39,8 +39,8 @@ func doClone(dep models.Dependency) {
 
 	paths.EnsureCacheDir(dep)
 
-	dirModule := filepath.Join(env.GetModulesDir(), dep.GetName())
-	dir := "--separate-git-dir=" + filepath.Join(env.GetCacheDir(), dep.GetHashName())
+	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
+	dir := "--separate-git-dir=" + filepath.Join(env.GetCacheDir(), dep.HashName())
 
 	err := os.RemoveAll(dirModule)
 	if !os.IsNotExist(err) {
@@ -62,15 +62,15 @@ func doClone(dep models.Dependency) {
 }
 
 func writeDotGitFile(dep models.Dependency) {
-	mask := fmt.Sprintf("gitdir: %s\n", filepath.Join(env.GetCacheDir(), dep.GetHashName()))
-	path := filepath.Join(env.GetModulesDir(), dep.GetName(), ".git")
+	mask := fmt.Sprintf("gitdir: %s\n", filepath.Join(env.GetCacheDir(), dep.HashName()))
+	path := filepath.Join(env.GetModulesDir(), dep.Name(), ".git")
 	_ = os.WriteFile(path, []byte(mask), 0600)
 }
 
 func getWrapperFetch(dep models.Dependency) {
 	checkHasGitClient()
 
-	dirModule := filepath.Join(env.GetModulesDir(), dep.GetName())
+	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
 
 	if _, err := os.Stat(dirModule); os.IsNotExist(err) {
 		err = os.MkdirAll(dirModule, 0600)
@@ -97,7 +97,7 @@ func getWrapperFetch(dep models.Dependency) {
 }
 
 func initSubmodulesNative(dep models.Dependency) {
-	dirModule := filepath.Join(env.GetModulesDir(), dep.GetName())
+	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
 	cmd := exec.Command("git", "submodule", "update", "--init", "--recursive")
 	cmd.Dir = dirModule
 

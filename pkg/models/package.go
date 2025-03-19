@@ -11,7 +11,6 @@ import (
 
 type Package struct {
 	fileName     string
-	IsNew        bool              `json:"-"`
 	Name         string            `json:"name"`
 	Description  string            `json:"description"`
 	Version      string            `json:"version"`
@@ -67,7 +66,6 @@ func (p *Package) UninstallDependency(dep string) {
 func getNew(file string) *Package {
 	res := new(Package)
 	res.fileName = file
-	res.IsNew = true
 
 	res.Dependencies = make(map[string]string)
 	res.Projects = []string{}
@@ -88,7 +86,6 @@ func LoadPackage(createNew bool) (*Package, error) {
 		return nil, err
 	}
 	result.Lock = LoadPackageLock(result)
-	result.IsNew = false
 	return result, nil
 }
 

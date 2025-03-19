@@ -18,7 +18,7 @@ func getCompilerParameters(rootPath string, dep *models.Dependency, platform str
 	var moduleName = ""
 
 	if dep != nil {
-		moduleName = dep.GetName()
+		moduleName = dep.Name()
 	}
 
 	binPath := env.GetGlobalBinPath()
@@ -41,11 +41,11 @@ func buildSearchPath(dep *models.Dependency) string {
 	var searchPath = ""
 
 	if dep != nil {
-		searchPath = filepath.Join(env.GetModulesDir(), dep.GetName())
+		searchPath = filepath.Join(env.GetModulesDir(), dep.Name())
 
-		packageData, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage))
+		packageData, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
 		if err == nil {
-			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.GetName(), packageData.MainSrc)
+			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.Name(), packageData.MainSrc)
 			for _, lib := range packageData.GetParsedDependencies() {
 				searchPath += ";" + buildSearchPath(&lib)
 			}
@@ -57,7 +57,7 @@ func buildSearchPath(dep *models.Dependency) string {
 func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLock) bool {
 	msg.Info("  Building " + filepath.Base(dprojPath))
 
-	bossPackagePath := filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage)
+	bossPackagePath := filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage)
 
 	if dependencyPackage, err := models.LoadPackageOther(bossPackagePath); err == nil {
 		dcp.InjectDpcsFile(dprojPath, dependencyPackage, rootLock)
