@@ -8,7 +8,10 @@ import (
 var (
 	version = "v0.0.1"
 
-	metadata  = ""
+	//nolint:gochecknoglobals // This is a variable that injects the build metadata during build.
+	metadata = ""
+
+	//nolint:gochecknoglobals // This is a variable that injects the git commit hash during build.
 	gitCommit = ""
 )
 
@@ -28,7 +31,6 @@ func GetVersion() string {
 	return version + "+" + metadata
 }
 
-// Get returns build info
 func Get() BuildInfo {
 	v := BuildInfo{
 		Version:   GetVersion(),

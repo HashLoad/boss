@@ -1,0 +1,15 @@
+[tools]
+go = "1.24"
+pre-commit = "4.0.1"
+
+[tasks.setup]
+description = "Setup the project"
+run = ["pre-commit install", "go mod download"]
+
+[tasks.lint]
+description = "Run linter"
+run = "pre-commit run --all-files"
+
+[tasks.golint]
+description = "Run golangci-lint"
+run = "go tool golangci-lint run --out-format=colored-line-number"

@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/models"
 )
 
 func getRequiresList(pkg *models.Package, rootLock models.PackageLock) []string {

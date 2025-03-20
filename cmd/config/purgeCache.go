@@ -1,40 +1,25 @@
 package config
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/hashload/boss/core"
-	"github.com/hashload/boss/utils"
+	"github.com/hashload/boss/pkg/gc"
 	"github.com/spf13/cobra"
 )
 
-var purgeCacheCmd = &cobra.Command{
-	Use:           "cache",
-	Short:         "Configure cache",
-	ValidArgs:     []string{"rm"},
-	SilenceErrors: true,
-	Args: func(cmd *cobra.Command, args []string) error {
-		err := cobra.OnlyValidArgs(cmd, args)
-		if err == nil {
-			err = cobra.ExactArgs(1)(cmd, args)
-		}
-		if err != nil {
-			println(err.Error())
-			println()
-			fmt.Printf("Valid args:\n\t%s\n", strings.Join(cmd.ValidArgs, "\n\t"))
-			println()
-			return err
-		}
-		return nil
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		if utils.Contains(args, "rm") {
-			core.RunGC(true)
-		}
-	},
-}
+func RegisterCmd(cmd *cobra.Command) {
+	purgeCacheCmd := &cobra.Command{
+		Use:   "cache",
+		Short: "Configure cache",
+	}
 
-func init() {
-	CmdConfig.AddCommand(purgeCacheCmd)
+	rmCacheCmd := &cobra.Command{
+		Use:   "rm",
+		Short: "Remove cache",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return gc.RunGC(true)
+		},
+	}
+
+	purgeCacheCmd.AddCommand(rmCacheCmd)
+
+	cmd.AddCommand(purgeCacheCmd)
 }

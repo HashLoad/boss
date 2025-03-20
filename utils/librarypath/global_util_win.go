@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
 
-	bossRegistry "github.com/hashload/boss/core/registry"
+	bossRegistry "github.com/hashload/boss/pkg/registry"
 )
 
 const SearchPathRegistry = "Search Path"
@@ -23,7 +23,7 @@ const BrowsingPathRegistry = "Browsing Path"
 func updateGlobalLibraryPath() {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
-		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
+		msg.Err("Version not found for path %s", env.GlobalConfiguration().DelphiPath)
 	}
 	library, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library`, registry.ALL_ACCESS)
 
@@ -64,7 +64,7 @@ func updateGlobalLibraryPath() {
 func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
-		msg.Err("Version not found for path %s", env.GlobalConfiguration.DelphiPath)
+		msg.Err("Version not found for path %s", env.GlobalConfiguration().DelphiPath)
 	}
 	library, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library`, registry.ALL_ACCESS)
 

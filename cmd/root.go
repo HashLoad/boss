@@ -4,45 +4,66 @@ import (
 	"os"
 
 	"github.com/hashload/boss/cmd/config"
-	"github.com/hashload/boss/core"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/gc"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/setup"
-	"github.com/hashload/boss/utils"
 
 	"github.com/spf13/cobra"
 )
 
-var versionPrint bool
+func Execute() error {
+	var versionPrint bool
+	var global bool
+	var debug bool
 
-var RootCmd = &cobra.Command{
-	Use:   "boss",
-	Short: "Dependency Manager for Delphi",
-	Long:  "Dependency Manager for Delphi",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if versionPrint {
-			printVersion(false)
-		} else {
-			return cmd.Help()
-		}
-		return nil
-	},
-}
+	var root = &cobra.Command{
+		Use:   "boss",
+		Short: "Dependency Manager for Delphi",
+		Long:  "Dependency Manager for Delphi",
+		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+			if debug {
+				msg.LogLevel(msg.DEBUG)
+				msg.Debug("Debug mode enabled")
+			}
 
-func Execute() {
-	RootCmd.PersistentFlags().BoolVarP(&env.Global, "global", "g", false, "global environment")
-	RootCmd.PersistentFlags().BoolVarP(&msg.DebugEnable, "debug", "d", false, "debug")
-	RootCmd.Flags().BoolVarP(&versionPrint, "version", "v", false, "show cli version")
+			env.SetGlobal(global)
+		},
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if versionPrint {
+				printVersion()
+			} else {
+				return cmd.Help()
+			}
+			return nil
+		},
+	}
 
-	msg.DebugEnable = utils.Contains(os.Args, "-d")
+	root.PersistentFlags().BoolVarP(&global, "global", "g", false, "global environment")
+	root.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug")
+	root.Flags().BoolVarP(&versionPrint, "version", "v", false, "show cli version")
 
 	setup.Initialize()
 
-	config.InitializeConfig(RootCmd)
+	config.RegisterConfigCommand(root)
+	initCmdRegister(root)
+	installCmdRegister(root)
+	loginCmdRegister(root)
+	runCmdRegister(root)
+	uninstallCmdRegister(root)
+	updateCmdRegister(root)
+	upgradeCmdRegister(root)
+	dependenciesCmdRegister(root)
+	versionCmdRegister(root)
 
-	core.RunGC(false)
+	if err := gc.RunGC(false); err != nil {
+		return err
+	}
 
-	if err := RootCmd.Execute(); err != nil {
+	config.RegisterCmd(root)
+	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
+
+	return nil
 }

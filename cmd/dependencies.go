@@ -4,32 +4,35 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/core/installer"
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/installer"
+	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
 	"github.com/spf13/cobra"
 	"github.com/xlab/treeprint"
 )
 
+type dependencyStatus int
+
 const (
-	updated     = 0
-	outdated    = 1
-	usingMaster = 2
+	updated dependencyStatus = iota
+	outdated
+	usingBranch
+	branchOutdated
 )
 
-var showVersion bool
-var tree = treeprint.New()
+func dependenciesCmdRegister(root *cobra.Command) {
+	var showVersion bool
 
-var dependenciesCmd = &cobra.Command{
-	Use:     "dependencies",
-	Short:   "Print all project dependencies",
-	Long:    "Print all project dependencies with or without version control",
-	Aliases: []string{"dep", "ls", "list", "ll", "la"},
-	Example: `  Listing all dependencies:
+	var dependenciesCmd = &cobra.Command{
+		Use:     "dependencies",
+		Short:   "Print all project dependencies",
+		Long:    "Print all project dependencies with or without version control",
+		Aliases: []string{"dep", "ls", "list", "ll", "la", "dependency"},
+		Example: `  Listing all dependencies:
   boss dependencies
 
   Listing all dependencies with version control:
@@ -40,17 +43,17 @@ var dependenciesCmd = &cobra.Command{
 
   List package dependencies with version control:
   boss dependencies <pkg> --version`,
-	Run: func(cmd *cobra.Command, args []string) {
-		printDependencies(showVersion)
-	},
-}
+		Run: func(_ *cobra.Command, _ []string) {
+			printDependencies(showVersion)
+		},
+	}
 
-func init() {
-	RootCmd.AddCommand(dependenciesCmd)
+	root.AddCommand(dependenciesCmd)
 	dependenciesCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show dependency version")
 }
 
 func printDependencies(showVersion bool) {
+	var tree = treeprint.New()
 	pkg, err := models.LoadPackage(false)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -60,13 +63,17 @@ func printDependencies(showVersion bool) {
 		}
 	}
 
-	master := tree.AddBranch(pkg.Name + ":")
+	main := tree.AddBranch(pkg.Name + ":")
 	deps := pkg.GetParsedDependencies()
-	printDeps(nil, deps, pkg.Lock, master, showVersion)
-	print(tree.String())
+	printDeps(nil, deps, pkg.Lock, main, showVersion)
+	msg.Info(tree.String())
 }
 
-func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.PackageLock, tree treeprint.Tree, showVersion bool) {
+func printDeps(dep *models.Dependency,
+	deps []models.Dependency,
+	lock models.PackageLock,
+	tree treeprint.Tree,
+	showVersion bool) {
 	var localTree treeprint.Tree
 
 	if dep != nil {
@@ -76,51 +83,62 @@ func printDeps(dep *models.Dependency, deps []models.Dependency, lock models.Pac
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.GetName(), consts.FilePackage))
+		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {
-			deps := pkgModule.GetParsedDependencies()
-			printDeps(&dep, deps, lock, localTree, showVersion)
+			subDeps := pkgModule.GetParsedDependencies()
+			printDeps(&dep, subDeps, lock, localTree, showVersion)
 		}
 	}
 }
 
-func printSingleDependency(dep *models.Dependency, lock models.PackageLock, tree treeprint.Tree, showVersion bool) treeprint.Tree {
-	var output = dep.GetName()
+func printSingleDependency(
+	dep *models.Dependency,
+	lock models.PackageLock,
+	tree treeprint.Tree,
+	showVersion bool) treeprint.Tree {
+	var output = dep.Name()
 
 	if showVersion {
 		output += "@"
 		output += lock.GetInstalled(*dep).Version
 	}
 
-	switch isOutdated(*dep, lock.GetInstalled(*dep).Version) {
+	status, version := isOutdated(*dep, lock.GetInstalled(*dep).Version)
+
+	switch status {
 	case outdated:
-		output += " outdated"
-	case usingMaster:
-		output += " using master"
+		output += " <- outdated (" + version + ")"
+	case usingBranch:
+		output += " <- branch based"
+	case branchOutdated:
+		output += " <- branch outdated"
+	case updated:
+		output += ""
 	}
 
 	return tree.AddBranch(output)
 }
 
-func isOutdated(dependency models.Dependency, version string) int {
+func isOutdated(dependency models.Dependency, version string) (dependencyStatus, string) {
 	installer.GetDependency(dependency)
-	info, err := models.RepoData(dependency.GetHashName())
+	info, err := models.RepoData(dependency.HashName())
 	if err != nil {
 		utils.HandleError(err)
 	} else {
+		//TODO: Check if the branch is outdated by comparing the hash
 		locked, err := semver.NewVersion(version)
 		if err != nil {
-			return usingMaster
+			return usingBranch, ""
 		}
 		constraint, _ := semver.NewConstraint(dependency.GetVersion())
 		for _, value := range info.Versions {
 			version, err := semver.NewVersion(value)
 			if err == nil && version.GreaterThan(locked) && constraint.Check(version) {
-				return outdated
+				return outdated, version.String()
 			}
 		}
 	}
-	return updated
+	return updated, ""
 }

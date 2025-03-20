@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
 
-	"github.com/google/go-github/v45/github"
+	"errors"
+
+	"github.com/google/go-github/v69/github"
 	"github.com/snakeice/gogress"
 )
 
@@ -61,7 +62,7 @@ func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*
 	}
 
 	if bestRelease == nil {
-		return nil, fmt.Errorf("no releases found")
+		return nil, errors.New("no releases found")
 	}
 
 	return bestRelease, nil
@@ -69,26 +70,30 @@ func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*
 
 func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) {
 	for _, asset := range release.Assets {
-		if asset.GetName() == assetName {
+		if asset.GetName() == getAssetName() {
 			return asset, nil
 		}
 	}
 
-	return nil, fmt.Errorf("no asset found")
+	return nil, errors.New("no asset found")
 }
 
 func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
-	resp, err := http.Get(asset.GetBrowserDownloadURL())
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, asset.GetBrowserDownloadURL(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download asset: %w", err)
 	}
 	defer resp.Body.Close()
 
-	file, err := ioutil.TempFile("", "boss")
+	file, err := os.CreateTemp("", "boss")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
-	// defer file.Close()
 
 	bar := gogress.New64(int64(math.Round(float64(asset.GetSize()))))
 	bar.Start()

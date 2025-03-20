@@ -2,22 +2,20 @@ package dcp
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/hashload/boss/consts"
-	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/pkg/consts"
+	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
 )
-
-var encode = charmap.Windows1252
 
 func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
 	dprojNames := librarypath.GetProjectNames(pkg)
@@ -30,25 +28,29 @@ func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
 }
 
 func InjectDpcsFile(fileName string, pkg *models.Package, lock models.PackageLock) {
-	if fileName, exists := getDprDpkFromDproj(fileName); exists {
-		file := readFile(fileName)
-		requiresList := getRequiresList(pkg, lock)
-		if file, needWrite := processFile(file, requiresList); needWrite {
-			writeFile(fileName, file)
-		}
+	dprDpkFileName, exists := getDprDpkFromDproj(fileName)
+	if !exists {
+		return
+	}
+
+	file := readFile(dprDpkFileName)
+	requiresList := getRequiresList(pkg, lock)
+
+	if processedFile, needWrite := processFile(file, requiresList); needWrite {
+		writeFile(dprDpkFileName, processedFile)
 	}
 }
 
 func readFile(filename string) string {
 	f, err := os.Open(filename)
 	if err != nil {
-		log.Fatal(err)
+		msg.Die(err.Error())
 	}
-	r := transform.NewReader(f, encode.NewDecoder())
+	r := transform.NewReader(f, charmap.Windows1252.NewDecoder())
 
-	bytes, err := ioutil.ReadAll(r)
+	bytes, err := io.ReadAll(r)
 	if err != nil {
-		log.Fatal(err)
+		msg.Die(err.Error())
 	}
 
 	return string(bytes)
@@ -57,19 +59,19 @@ func readFile(filename string) string {
 func writeFile(filename string, content string) {
 	f, err := os.Create(filename)
 	if err != nil {
-		log.Fatal(err)
+		msg.Die(err.Error())
 	}
-	w := transform.NewWriter(f, encode.NewEncoder())
+	w := transform.NewWriter(f, charmap.Windows1252.NewEncoder())
 	_, err = fmt.Fprint(w, content)
 	if err != nil {
-		log.Fatal(err)
+		msg.Die(err.Error())
 	}
 	if err = f.Close(); err != nil {
-		log.Fatal(err)
+		msg.Die(err.Error())
 	}
 }
 
-func getDprDpkFromDproj(dprojName string) (filename string, find bool) {
+func getDprDpkFromDproj(dprojName string) (string, bool) {
 	baseName := strings.TrimSuffix(dprojName, filepath.Ext(dprojName))
 	dpkName := baseName + consts.FileExtensionDpk
 
@@ -117,12 +119,12 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 	return result, true
 }
 
-func processFile(content string, dcps []string) (newContent string, hasNew bool) {
+func processFile(content string, dcps []string) (string, bool) {
 	if len(dcps) == 0 {
 		return content, false
 	}
-	if content, success := injectDcps(content, dcps); success {
-		return content, true
+	if injectedContent, success := injectDcps(content, dcps); success {
+		return injectedContent, true
 	}
 
 	lines := strings.Split(content, "\n")
@@ -140,5 +142,4 @@ func processFile(content string, dcps []string) (newContent string, hasNew bool)
 	content = strings.Join(lines[:containsindex], "\n\n") +
 		"requires" + dpcLine + ";\n\n" + strings.Join(lines[containsindex:], "\n")
 	return content, true
-
 }
