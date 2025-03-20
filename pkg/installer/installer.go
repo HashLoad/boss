@@ -27,9 +27,8 @@ func InstallModules(args []string, lockedVersion bool, noSave bool) {
 
 func UninstallModules(args []string, noSave bool) {
 	pkg, err := models.LoadPackage(false)
-
-	if err != nil {
-		msg.Err(err.Error())
+	if err != nil && !os.IsNotExist(err) {
+		msg.Die("Fail on open dependencies file: %s", err)
 	}
 
 	if pkg == nil {

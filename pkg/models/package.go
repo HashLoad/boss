@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -46,7 +47,7 @@ func (p *Package) AddProject(project string) {
 }
 
 func (p *Package) GetParsedDependencies() []Dependency {
-	if len(p.Dependencies) == 0 {
+	if p == nil || len(p.Dependencies) == 0 {
 		return []Dependency{}
 	}
 	return GetDependencies(p.Dependencies)
@@ -82,8 +83,13 @@ func LoadPackage(createNew bool) (*Package, error) {
 		return getNew(env.GetBossFile()), err
 	}
 	result := getNew(env.GetBossFile())
+
 	if err := json.Unmarshal(fileBytes, result); err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			return nil, err
+		}
+
+		return nil, fmt.Errorf("error on unmarshal file %s: %w", env.GetBossFile(), err)
 	}
 	result.Lock = LoadPackageLock(result)
 	return result, nil
