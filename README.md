@@ -1,6 +1,7 @@
 # Boss
 
 ![Boss][bossLogo]
+
 ![GitHub release (latest by date)][latestReleaseBadge]
 ![GitHub Release Date][releaseDateBadge]
 ![GitHub repo size][repoSizeBadge]
