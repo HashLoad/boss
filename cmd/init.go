@@ -1,37 +1,37 @@
 package cmd
 
 import (
-	"bufio"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/models"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/pkg/msg"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
-var quiet bool
+func initCmdRegister(root *cobra.Command) {
+	var quiet bool
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initialize a new project",
-	Long:  "Initialize a new project and creates a boss.json file",
-	Example: `  Initialize a new project:
+	var initCmd = &cobra.Command{
+		Use:   "init",
+		Short: "Initialize a new project",
+		Long:  "Initialize a new project and creates a boss.json file",
+		Example: `  Initialize a new project:
   boss init
 
   Initialize a new project without having it ask any questions:
   boss init --quiet`,
-	Run: func(cmd *cobra.Command, args []string) {
-		doInitialization(quiet)
-	},
-}
+		Run: func(_ *cobra.Command, _ []string) {
+			doInitialization(quiet)
+		},
+	}
 
-func init() {
-	RootCmd.AddCommand(initCmd)
 	initCmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "without asking questions")
+
+	root.AddCommand(initCmd)
 }
 
 func doInitialization(quiet bool) {
@@ -39,7 +39,10 @@ func doInitialization(quiet bool) {
 		printHead()
 	}
 
-	pkgJson, _ := models.LoadPackage(true)
+	packageData, err := models.LoadPackage(true)
+	if err != nil && !os.IsNotExist(err) {
+		msg.Die("Fail on open dependencies file: %s", err)
+	}
 
 	rxp := regexp.MustCompile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
 
@@ -47,39 +50,35 @@ func doInitialization(quiet bool) {
 	folderName := allString[0][1]
 
 	if quiet {
-		pkgJson.Name = folderName
-		pkgJson.Version = "1.0.0"
-		pkgJson.MainSrc = "./src"
+		packageData.Name = folderName
+		packageData.Version = "1.0.0"
+		packageData.MainSrc = "./src"
 	} else {
-		pkgJson.Name = getParamOrDef("Package name ("+folderName+")", folderName)
-		pkgJson.Homepage = getParamOrDef("Homepage", "")
-		pkgJson.Version = getParamOrDef("Version (1.0.0)", "1.0.0")
-		pkgJson.Description = getParamOrDef("Description", "")
-		pkgJson.MainSrc = getParamOrDef("Source folder (./src)", "./src")
+		packageData.Name = getParamOrDef("Package name ("+folderName+")", folderName)
+		packageData.Homepage = getParamOrDef("Homepage", "")
+		packageData.Version = getParamOrDef("Version (1.0.0)", "1.0.0")
+		packageData.Description = getParamOrDef("Description", "")
+		packageData.MainSrc = getParamOrDef("Source folder (./src)", "./src")
 	}
 
-	json := pkgJson.Save()
-	fmt.Println("\n" + string([]byte(json)))
+	json := packageData.Save()
+	msg.Info("\n" + string(json))
 }
 
-func getParamOrDef(msg string, def string) string {
-	fmt.Print(msg + ": ")
-	rr := bufio.NewReader(os.Stdin)
-	if res, e := rr.ReadString('\n'); e == nil && res != "\n" {
-		res = strings.ReplaceAll(res, "\t", "")
-		res = strings.ReplaceAll(res, "\n", "")
-		res = strings.ReplaceAll(res, "\r", "")
-		if res == "" {
-			return def
-		} else {
-			return res
-		}
+func getParamOrDef(msg string, def ...string) string {
+	input := &pterm.DefaultInteractiveTextInput
+
+	if len(def) > 0 {
+		input = input.WithDefaultValue(def[0])
 	}
-	return def
+
+	result, _ := input.Show(msg)
+
+	return result
 }
 
 func printHead() {
-	println(`
+	msg.Info(`
 This utility will walk you through creating a boss.json file.
 It only covers the most common items, and tries to guess sensible defaults.
 

@@ -37,3 +37,7 @@ boss.json
 _dist
 bin/
 .env
+# Added by goreleaser init:
+dist/
+test_dir/
+.vscode/settings.json

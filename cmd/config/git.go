@@ -1,73 +1,54 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/hashload/boss/env"
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/spf13/cobra"
 )
-
-var gitCmd = &cobra.Command{
-	Use:     "git",
-	Short:   "Configure Git",
-	Example: "boss config git mode",
-	Run: func(cmd *cobra.Command, args []string) {
-		_ = cmd.Help()
-
-	},
-}
 
 func boolToMode(embedded bool) string {
 	if embedded {
 		return "embedded"
-	} else {
-		return "native"
 	}
+
+	return "native"
 }
 
-var gitModeCmd = &cobra.Command{
-	Use:           "mode [type]",
-	Short:         "Configure Git mode",
-	ValidArgs:     []string{"native", "embedded", "default"},
-	SilenceErrors: true,
-	Args: func(cmd *cobra.Command, args []string) error {
-		err := cobra.OnlyValidArgs(cmd, args)
-		if err == nil {
-			err = cobra.ExactArgs(1)(cmd, args)
-		}
-		if err != nil {
-			println(err.Error())
-			println()
-			println("Current: ", boolToMode(env.GlobalConfiguration.GitEmbedded))
-			println()
-			fmt.Printf("Valid args:\n\t%s\n", strings.Join(cmd.ValidArgs, "\n\t"))
-			println()
-			return err
-		}
-		return nil
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		switch args[0] {
-		case "native":
-			{
-				env.GlobalConfiguration.GitEmbedded = false
+func registryGitCmd(root *cobra.Command) {
+	gitCmd := &cobra.Command{
+		Use:     "git",
+		Short:   "Configure Git",
+		Example: "boss config git mode",
+	}
 
+	gitModeCmd := &cobra.Command{
+		Use:       "mode [type]",
+		Short:     "Configure Git mode",
+		ValidArgs: []string{"native", "embedded", "default"},
+		Args: func(cmd *cobra.Command, args []string) error {
+			err := cobra.OnlyValidArgs(cmd, args)
+			if err == nil {
+				err = cobra.ExactArgs(1)(cmd, args)
 			}
-		case "embedded", "default":
-			{
-				env.GlobalConfiguration.GitEmbedded = true
+			if err != nil {
+				msg.Warn(err.Error())
+				msg.Info("Current: %s\n\nValid args:\n\t%s\n",
+					boolToMode(env.GlobalConfiguration().GitEmbedded),
+					strings.Join(cmd.ValidArgs, "\n\t"))
+				return err
 			}
+			return nil
+		},
+		Run: func(_ *cobra.Command, args []string) {
+			env.GlobalConfiguration().GitEmbedded = args[0] != "native"
 
-		}
-		msg.Info("Using %s git", boolToMode(env.GlobalConfiguration.GitEmbedded))
-		env.GlobalConfiguration.SaveConfiguration()
+			msg.Info("Using %s git", boolToMode(env.GlobalConfiguration().GitEmbedded))
+			env.GlobalConfiguration().SaveConfiguration()
+		},
+	}
 
-	},
-}
-
-func init() {
-	CmdConfig.AddCommand(gitCmd)
+	root.AddCommand(gitCmd)
 	gitCmd.AddCommand(gitModeCmd)
 }

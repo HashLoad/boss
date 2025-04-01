@@ -4,13 +4,13 @@
 package librarypath
 
 import (
-	"github.com/hashload/boss/msg"
+	"github.com/hashload/boss/pkg/msg"
 )
 
 func updateGlobalLibraryPath() {
 	msg.Warn("updateGlobalLibraryPath not implemented on this platform")
 }
 
-func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
+func updateGlobalBrowsingByProject(_ string, _ bool) {
 	msg.Warn("updateGlobalBrowsingByProject not implemented on this platform")
 }
