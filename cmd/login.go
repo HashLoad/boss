@@ -48,7 +48,14 @@ func loginCmdRegister(root *cobra.Command) {
 	root.AddCommand(logoutCmd)
 }
 
-func login(removeLogin bool, useSSH bool, privateKey string, userName string, password string, args []string) {
+func login(
+	removeLogin bool,
+	useSSH bool,
+	privateKey string,
+	userName string,
+	password string,
+	args []string,
+) {
 	configuration := env.GlobalConfiguration()
 
 	if removeLogin {
@@ -65,7 +72,7 @@ func login(removeLogin bool, useSSH bool, privateKey string, userName string, pa
 	} else {
 		repo = getParamOrDef("Url to login (ex: github.com)", "")
 		if repo == "" {
-			msg.Die("Empty is not valid!!")
+			msg.Fatal("Empty is not valid!!")
 		}
 		auth = configuration.Auth[repo]
 	}
@@ -111,7 +118,7 @@ func setAuthInteractively(auth *env.Auth) {
 func getPass(description string) string {
 	pass, err := pterm.DefaultInteractiveTextInput.WithMask("•").Show(description)
 	if err != nil {
-		msg.Die("Error on get pass: %s", err)
+		msg.Fatal("Error on get pass: %s", err)
 	}
 	return pass
 }
@@ -119,7 +126,7 @@ func getPass(description string) string {
 func getSSHKeyPath() string {
 	usr, err := user.Current()
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 	return filepath.Join(usr.HomeDir, ".ssh", "id_rsa")
 }

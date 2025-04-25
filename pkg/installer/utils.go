@@ -8,6 +8,7 @@ import (
 	"github.com/hashload/boss/pkg/models"
 )
 
+//
 //nolint:lll // This regex is too long and it's better to keep it like this
 const urlVersionMatcher = `(?m)^(?:http[s]?:\/\/|git@)?(?P<url>[\w\.\-\/:]+?)(?:[@:](?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+|[\w\-]+)))?$`
 

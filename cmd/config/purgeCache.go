@@ -11,13 +11,18 @@ func RegisterCmd(cmd *cobra.Command) {
 		Short: "Configure cache",
 	}
 
+	cleanAll := false
+
 	rmCacheCmd := &cobra.Command{
-		Use:   "rm",
-		Short: "Remove cache",
+		Use:     "clean",
+		Aliases: []string{"rm"},
+		Short:   "Clean cache based on TTL and usage",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return gc.RunGC(true)
+			return gc.CleanupCache(true, cleanAll)
 		},
 	}
+
+	rmCacheCmd.Flags().BoolVarP(&cleanAll, "all", "a", false, "clean all cache")
 
 	purgeCacheCmd.AddCommand(rmCacheCmd)
 

@@ -86,7 +86,7 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 func (p *PackageLock) Save() {
 	marshal, err := json.MarshalIndent(&p, "", "\t")
 	if err != nil {
-		msg.Die("error %v", err)
+		msg.Fatal("error %v", err)
 	}
 
 	_ = os.WriteFile(p.fileName, marshal, 0600)
@@ -190,7 +190,8 @@ func (p *PackageLock) NeedUpdate(dep Dependency, version string) bool {
 		return true
 	}
 
-	needUpdate := dep.internalNeedUpdate(lockedDependency, version) || !lockedDependency.checkArtifacts(p)
+	needUpdate := dep.internalNeedUpdate(lockedDependency, version) ||
+		!lockedDependency.checkArtifacts(p)
 	lockedDependency.Changed = needUpdate || lockedDependency.Changed
 
 	if lockedDependency.Changed {

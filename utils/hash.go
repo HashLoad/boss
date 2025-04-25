@@ -1,45 +1,50 @@
 package utils
 
 import (
-	//nolint:gosec // MD5 is used for hash comparison
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func hashByte(contentPtr *[]byte) string {
-	contents := *contentPtr
-	//nolint:gosec // MD5 is used for hash comparison
-	hasher := md5.New()
-	hasher.Write(contents)
+func hashByte(contentPtr []byte) string {
+	hasher := sha256.New()
+	hasher.Write(contentPtr)
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 func HashDir(dir string) string {
 	var err error
-	var finalHash = "b:"
-	err = filepath.Walk(dir, func(path string, _ os.FileInfo, err error) error {
+	var finalHash = ""
+	err = filepath.Walk(dir, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil && !os.IsNotExist(err) {
 			msg.Warn("Failed to read file %s", path)
 			return nil
 		}
 
-		if os.IsNotExist(err) {
+		if os.IsNotExist(err) || fileInfo.IsDir() {
 			return nil
 		}
 
-		fileBytes, _ := os.ReadFile(path)
-		fileHash := hashByte(&fileBytes)
+		fileBytes, err := os.ReadFile(path)
+		if err != nil {
+			msg.Warn("Failed to read file %s", path)
+			//nolint:nilerr // We don't want to stop the process
+			return nil
+		}
+
+		fileHash := hashByte(fileBytes)
 		finalHash += fileHash
 		return nil
 	})
 	if err != nil {
-		os.Exit(1)
+		msg.Err("Failed to read file %s", dir)
+		msg.Err("Error: %s", err)
+		msg.Fatal("I can't continue, sorry :(")
 	}
-	c := []byte(finalHash)
-	m := hashByte(&c)
-	return m
+	finalHashDigest := fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(finalHash)))
+	return finalHashDigest
 }

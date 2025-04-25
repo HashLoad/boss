@@ -44,13 +44,13 @@ func InjectDpcsFile(fileName string, pkg *models.Package, lock models.PackageLoc
 func readFile(filename string) string {
 	f, err := os.Open(filename)
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 	r := transform.NewReader(f, charmap.Windows1252.NewDecoder())
 
 	bytes, err := io.ReadAll(r)
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 
 	return string(bytes)
@@ -59,15 +59,15 @@ func readFile(filename string) string {
 func writeFile(filename string, content string) {
 	f, err := os.Create(filename)
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 	w := transform.NewWriter(f, charmap.Windows1252.NewEncoder())
 	_, err = fmt.Fprint(w, content)
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 	if err = f.Close(); err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 }
 

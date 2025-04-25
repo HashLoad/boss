@@ -63,7 +63,7 @@ func InitializePath() {
 	var needAdd = false
 	currentPath, err := os.Getwd()
 	if err != nil {
-		msg.Die("Failed to load current working directory \n %s", err.Error())
+		msg.Fatal("Failed to load current working directory \n %s", err.Error())
 		return
 	}
 
@@ -82,7 +82,7 @@ func InitializePath() {
 		currentPathEnv := os.Getenv(PATH)
 		err := os.Setenv(PATH, currentPathEnv+";"+newPath)
 		if err != nil {
-			msg.Die("Failed to update PATH \n %s", err.Error())
+			msg.Fatal("Failed to update PATH \n %s", err.Error())
 			return
 		}
 

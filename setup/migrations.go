@@ -25,17 +25,20 @@ func one() {
 }
 
 func two() {
-	oldPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDirOld+env.HashDelphiPath())
-	newPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDir+env.HashDelphiPath())
+	oldPath := filepath.Join(
+		env.GetBossHome(),
+		consts.FolderDependencies,
+		consts.BossInternalDirOld+env.HashDelphiPath(),
+	)
+	newPath := filepath.Join(
+		env.GetBossHome(),
+		consts.FolderDependencies,
+		consts.BossInternalDir+env.HashDelphiPath(),
+	)
 	err := os.Rename(oldPath, newPath)
 	if !os.IsNotExist(err) {
 		utils.HandleError(err)
 	}
-}
-
-func three() {
-	env.GlobalConfiguration().GitEmbedded = true
-	env.GlobalConfiguration().SaveConfiguration()
 }
 
 func six() {
@@ -62,7 +65,7 @@ func seven() {
 	}
 
 	for key, value := range auth {
-		authMap, ok := value.(map[string]interface{})
+		authMap, ok := value.(map[string]any)
 		if !ok {
 			continue
 		}

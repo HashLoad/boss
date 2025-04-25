@@ -15,6 +15,7 @@ type RepoInfo struct {
 	Name       string    `json:"name"`
 	LastUpdate time.Time `json:"last_update"`
 	Versions   []string  `json:"versions"`
+	References []string  `json:"references"` // TODO: check it on garbage collector
 }
 
 func CacheRepositoryDetails(dep Dependency, versions []string) {
@@ -32,7 +33,7 @@ func CacheRepositoryDetails(dep Dependency, versions []string) {
 	}
 
 	infoPath := filepath.Join(location, "info")
-	err = os.MkdirAll(infoPath, 0755)
+	err = os.MkdirAll(infoPath, 0750)
 	if err != nil {
 		msg.Err(err.Error())
 	}

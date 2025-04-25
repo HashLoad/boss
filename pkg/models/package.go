@@ -64,7 +64,7 @@ func (p *Package) UninstallDependency(dep string) {
 	}
 }
 
-func getNew(file string) *Package {
+func newPackage(file string) *Package {
 	res := new(Package)
 	res.fileName = file
 
@@ -80,9 +80,9 @@ func LoadPackage(createNew bool) (*Package, error) {
 		if createNew {
 			err = nil
 		}
-		return getNew(env.GetBossFile()), err
+		return newPackage(env.GetBossFile()), err
 	}
-	result := getNew(env.GetBossFile())
+	result := newPackage(env.GetBossFile())
 
 	if err := json.Unmarshal(fileBytes, result); err != nil {
 		if os.IsNotExist(err) {
@@ -95,13 +95,13 @@ func LoadPackage(createNew bool) (*Package, error) {
 	return result, nil
 }
 
-func LoadPackageOther(path string) (*Package, error) {
+func LoadPackageFromFile(path string) (*Package, error) {
 	fileBytes, err := os.ReadFile(path)
 	if err != nil {
-		return getNew(path), err
+		return newPackage(path), err
 	}
 
-	result := getNew(path)
+	result := newPackage(path)
 
 	err = json.Unmarshal(fileBytes, result)
 	if err != nil {

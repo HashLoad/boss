@@ -44,7 +44,12 @@ func cleanPath(paths []string, fullPath bool) []string {
 	return processedPaths
 }
 
-func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setReadOnly bool) []string {
+func GetNewBrowsingPaths(
+	paths []string,
+	fullPath bool,
+	rootPath string,
+	setReadOnly bool,
+) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
 
@@ -66,7 +71,7 @@ func processBrowsingPath(
 ) []string {
 	var packagePath = filepath.Join(basePath, value.Name(), consts.FilePackage)
 	if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-		other, _ := models.LoadPackageOther(packagePath)
+		other, _ := models.LoadPackageFromFile(packagePath)
 		if other.BrowsingPath != "" {
 			dir := filepath.Join(basePath, value.Name(), other.BrowsingPath)
 			paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
@@ -105,8 +110,13 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	for _, value := range matches {
 		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
 		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-			other, _ := models.LoadPackageOther(packagePath)
-			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath, rootPath)
+			other, _ := models.LoadPackageFromFile(packagePath)
+			paths = getNewPathsFromDir(
+				filepath.Join(path, value.Name(), other.MainSrc),
+				paths,
+				fullPath,
+				rootPath,
+			)
 		} else {
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath, rootPath)
 		}
@@ -151,7 +161,12 @@ func cleanEmpty(paths []string) []string {
 	return paths
 }
 
-func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
+func getNewBrowsingPathsFromDir(
+	path string,
+	paths []string,
+	fullPath bool,
+	rootPath string,
+) []string {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return paths

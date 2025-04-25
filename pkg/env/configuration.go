@@ -8,11 +8,10 @@ import (
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	sshGit "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils/crypto"
-	"golang.org/x/crypto/ssh"
 )
 
 type Configuration struct {
@@ -25,7 +24,6 @@ type Configuration struct {
 	LastInternalUpdate  time.Time        `json:"last_internal_update"`
 	DelphiPath          string           `json:"delphi_path,omitempty"`
 	ConfigVersion       int64            `json:"config_version"`
-	GitEmbedded         bool             `json:"git_embedded"`
 
 	Advices struct {
 		SetupPath bool `json:"setup_path,omitempty"`
@@ -97,24 +95,20 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 
 	switch {
 	case auth == nil:
-		return nil
-	case auth.UseSSH:
-		pem, err := os.ReadFile(auth.Path)
+		sshAuth, err := ssh.NewSSHAgentAuth("git")
 		if err != nil {
-			msg.Die("Fail to open ssh key %s", err)
+			msg.Debug("Failed to create SSH agent auth: %s, falling back non SSH auth", err)
+			return nil
 		}
-		var signer ssh.Signer
+		return sshAuth
 
-		if auth.GetPassPhrase() != "" {
-			signer, err = ssh.ParsePrivateKeyWithPassphrase(pem, []byte(auth.GetPassPhrase()))
-		} else {
-			signer, err = ssh.ParsePrivateKey(pem)
-		}
-
+	case auth.UseSSH:
+		signer, err := getSigner(auth)
 		if err != nil {
 			panic(err)
 		}
-		return &sshGit.PublicKeys{User: "git", Signer: signer}
+
+		return &ssh.PublicKeys{User: "git", Signer: signer}
 
 	default:
 		return &http.BasicAuth{Username: auth.GetUser(), Password: auth.GetPassword()}
@@ -124,18 +118,18 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 func (c *Configuration) SaveConfiguration() {
 	jsonString, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
-		msg.Die("Error on parse config file", err.Error())
+		msg.Fatal("Error on parse config file", err.Error())
 	}
 
-	err = os.MkdirAll(c.path, 0755)
+	err = os.MkdirAll(c.path, 0750)
 	if err != nil {
-		msg.Die("Failed on create path", c.path, err.Error())
+		msg.Fatal("Failed on create path", c.path, err.Error())
 	}
 
 	configPath := filepath.Join(c.path, consts.BossConfigFile)
 	f, err := os.Create(configPath)
 	if err != nil {
-		msg.Die("Failed on create file ", configPath, err.Error())
+		msg.Fatal("Failed on create file ", configPath, err.Error())
 		return
 	}
 
@@ -143,7 +137,7 @@ func (c *Configuration) SaveConfiguration() {
 
 	_, err = f.Write(jsonString)
 	if err != nil {
-		msg.Die("Failed on write cache file", err.Error())
+		msg.Fatal("Failed on write cache file", err.Error())
 	}
 }
 
@@ -155,7 +149,6 @@ func makeDefault(configPath string) *Configuration {
 		LastInternalUpdate:  time.Now(),
 		Auth:                make(map[string]*Auth),
 		Key:                 crypto.Md5MachineID(),
-		GitEmbedded:         true,
 	}
 }
 

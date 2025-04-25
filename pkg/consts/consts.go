@@ -30,7 +30,11 @@ const (
 
 	MinimalDependencyVersion string = ">0.0.0"
 
-	EnvBossBin = "." + string(filepath.Separator) + FolderDependencies + string(filepath.Separator) + BinFolder
+	EnvBossBin = "." + string(
+		filepath.Separator,
+	) + FolderDependencies + string(
+		filepath.Separator,
+	) + BinFolder
 
 	XMLTagNameProperty               string = "PropertyGroup"
 	XMLValueAttribute                       = "value"

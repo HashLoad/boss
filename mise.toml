@@ -1,5 +1,6 @@
 [tools]
 go = "1.24"
+golangci-lint = "latest"
 pre-commit = "4.0.1"
 
 [tasks.setup]

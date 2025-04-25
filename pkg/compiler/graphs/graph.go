@@ -142,11 +142,7 @@ func (g *GraphItem) Queue(pkg *models.Package, allDeps bool) *NodeQueue {
 }
 
 func (g *GraphItem) processNodes(nodes []*Node, queue *NodeQueue) {
-	for {
-		if len(nodes) == 0 {
-			break
-		}
-
+	for len(nodes) > 0 {
 		for key := 0; key < len(nodes); key++ {
 			node := nodes[key]
 			if !containsOne(g.depends[node.Value], nodes) {
@@ -160,10 +156,7 @@ func (g *GraphItem) processNodes(nodes []*Node, queue *NodeQueue) {
 
 func (g *GraphItem) expandGraphNodes(nodes []*Node, pkg *models.Package) []*Node {
 	var redo = true
-	for {
-		if !redo {
-			break
-		}
+	for redo {
 		redo = false
 		for _, node := range nodes {
 			usedBy := g.usedBy[node.Value]

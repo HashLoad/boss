@@ -15,12 +15,11 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 	cacheDir := env.GetModulesDir()
 	cacheDirInfo, err := os.Stat(cacheDir)
 	if os.IsNotExist(err) {
-		err = os.MkdirAll(cacheDir, os.ModeDir|0755)
-		utils.HandleError(err)
+		EnsureCacheDir(dependencies[0])
 	}
 
 	if cacheDirInfo != nil && !cacheDirInfo.IsDir() {
-		msg.Die("modules is not a directory")
+		msg.Fatal("modules is not a directory")
 	}
 
 	fileInfos, err := os.ReadDir(cacheDir)
@@ -51,25 +50,22 @@ func EnsureCleanModulesDir(dependencies []models.Dependency, lock models.Package
 }
 
 func EnsureCacheDir(dep models.Dependency) {
-	if !env.GlobalConfiguration().GitEmbedded {
-		return
-	}
 	cacheDir := filepath.Join(env.GetCacheDir(), dep.HashName())
 
 	fi, err := os.Stat(cacheDir)
 	if err != nil {
 		msg.Debug("Creating %s", cacheDir)
-		err = os.MkdirAll(cacheDir, os.ModeDir|0755)
+		err = os.MkdirAll(cacheDir, os.ModeDir|0750)
 		if err != nil {
-			msg.Die("Could not create %s: %s", cacheDir, err)
+			msg.Fatal("Could not create %s: %s", cacheDir, err)
 		}
 	} else if !fi.IsDir() {
-		msg.Die("cache is not a directory")
+		msg.Fatal("cache is not a directory")
 	}
 }
 
 func createPath(path string) {
-	utils.HandleError(os.MkdirAll(path, os.ModeDir|0755))
+	utils.HandleError(os.MkdirAll(path, os.ModeDir|0750))
 }
 
 func cleanArtifacts(dir string, lock models.PackageLock) {

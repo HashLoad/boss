@@ -16,10 +16,6 @@ func delphiCmd(root *cobra.Command) {
 		Use:   "delphi",
 		Short: "Configure Delphi version",
 		Long:  `Configure Delphi version to compile modules`,
-		Run: func(cmd *cobra.Command, _ []string) {
-			msg.Info("Running in path %s", env.GlobalConfiguration().DelphiPath)
-			_ = cmd.Usage()
-		},
 	}
 
 	list := &cobra.Command{
@@ -37,6 +33,20 @@ func delphiCmd(root *cobra.Command) {
 			for index, path := range paths {
 				msg.Info("  [%d] %s", index, path)
 			}
+		},
+	}
+
+	current := &cobra.Command{
+		Use:   "current",
+		Short: "Show current Delphi version",
+		Long:  `Show current Delphi version to compile modules`,
+		Run: func(_ *cobra.Command, _ []string) {
+			config := env.GlobalConfiguration()
+			if config.DelphiPath == "" {
+				msg.Warn("No Delphi version set")
+				return
+			}
+			msg.Info("Current Delphi version: %s", config.DelphiPath)
 		},
 	}
 
@@ -75,4 +85,5 @@ func delphiCmd(root *cobra.Command) {
 
 	delphiCmd.AddCommand(list)
 	delphiCmd.AddCommand(use)
+	delphiCmd.AddCommand(current)
 }

@@ -12,9 +12,9 @@ func InstallModules(args []string, lockedVersion bool, noSave bool) {
 	pkg, err := models.LoadPackage(env.GetGlobal())
 	if err != nil {
 		if os.IsNotExist(err) {
-			msg.Die("boss.json not exists in " + env.GetCurrentDir())
+			msg.Fatal("boss.json not exists in " + env.GetCurrentDir())
 		} else {
-			msg.Die("Fail on open dependencies file: %s", err)
+			msg.Fatal("Fail on open dependencies file: %s", err)
 		}
 	}
 
@@ -28,7 +28,7 @@ func InstallModules(args []string, lockedVersion bool, noSave bool) {
 func UninstallModules(args []string, noSave bool) {
 	pkg, err := models.LoadPackage(false)
 	if err != nil && !os.IsNotExist(err) {
-		msg.Die("Fail on open dependencies file: %s", err)
+		msg.Fatal("Fail on open dependencies file: %s", err)
 	}
 
 	if pkg == nil {

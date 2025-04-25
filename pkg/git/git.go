@@ -12,20 +12,8 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func CloneCache(dep models.Dependency) *goGit.Repository {
-	if env.GlobalConfiguration().GitEmbedded {
-		return CloneCacheEmbedded(dep)
-	}
-
-	return CloneCacheNative(dep)
-}
-
-func UpdateCache(dep models.Dependency) *goGit.Repository {
-	if env.GlobalConfiguration().GitEmbedded {
-		return UpdateCacheEmbedded(dep)
-	}
-
-	return UpdateCacheNative(dep)
+func New() *GitProvider {
+	return &GitProvider{}
 }
 
 func initSubmodules(dep models.Dependency, repository *goGit.Repository) {
