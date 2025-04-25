@@ -19,6 +19,4 @@ repos:
       rev: v1.64.5
       hooks:
           - id: golangci-lint-config-verify
-            entry: go tool golangci-lint config verify
           - id: golangci-lint-full
-            entry: go tool golangci-lint run --fix

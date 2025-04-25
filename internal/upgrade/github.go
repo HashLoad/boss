@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"os"
+	"strings"
 
 	"errors"
 
 	"github.com/google/go-github/v69/github"
+	"github.com/hashload/boss/pkg/progress"
 	"github.com/snakeice/gogress"
 )
 
@@ -48,7 +49,10 @@ func getBossReleases() ([]*github.RepositoryRelease, error) {
 	return releases, nil
 }
 
-func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*github.RepositoryRelease, error) {
+func findLatestRelease(
+	releases []*github.RepositoryRelease,
+	preRelease bool,
+) (*github.RepositoryRelease, error) {
 	var bestRelease *github.RepositoryRelease
 
 	for _, release := range releases {
@@ -68,9 +72,12 @@ func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*
 	return bestRelease, nil
 }
 
-func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) {
+func findAsset(
+	release *github.RepositoryRelease,
+	assetPrefix string,
+) (*github.ReleaseAsset, error) {
 	for _, asset := range release.Assets {
-		if asset.GetName() == getAssetName() {
+		if strings.HasPrefix(asset.GetName(), assetPrefix) {
 			return asset, nil
 		}
 	}
@@ -79,7 +86,12 @@ func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) 
 }
 
 func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, asset.GetBrowserDownloadURL(), nil)
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodGet,
+		asset.GetBrowserDownloadURL(),
+		nil,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -95,7 +107,9 @@ func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
 
-	bar := gogress.New64(int64(math.Round(float64(asset.GetSize()))))
+	progress.Setup()
+	bar := gogress.New64(int64(asset.GetSize()))
+
 	bar.Start()
 	defer bar.Finish()
 	proxyReader := bar.NewProxyReader(resp.Body)

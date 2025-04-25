@@ -29,17 +29,23 @@ func BossUpgrade(preRelease bool) error {
 		return fmt.Errorf("failed to find latest boss release: %w", err)
 	}
 
-	asset, err := findAsset(release)
+	assetPrefix := assetNameWithouExt()
+
+	asset, err := findAsset(release, assetPrefix)
 	if err != nil {
 		return err
-	} else if asset == nil {
+	}
+
+	if asset == nil {
 		return errors.New("no asset found")
 	}
 
-	if *asset.Name == version.Get().Version {
+	if asset.GetName() == version.Get().Version {
 		msg.Info("boss is already up to date")
 		return nil
 	}
+
+	msg.Info("Downloading update %s -> %s", version.Get().Version, release.GetTagName())
 
 	file, err := downloadAsset(asset)
 	if err != nil {
@@ -49,9 +55,9 @@ func BossUpgrade(preRelease bool) error {
 	defer file.Close()
 	defer os.Remove(file.Name())
 
-	buff, err := getAssetFromFile(file, getAssetName())
+	buff, err := getAssetFromFile(file, asset)
 	if err != nil {
-		return fmt.Errorf("failed to get asset from zip: %w", err)
+		return fmt.Errorf("failed to get asset from compressed file: %w", err)
 	}
 
 	err = apply(buff)
@@ -59,7 +65,7 @@ func BossUpgrade(preRelease bool) error {
 		return fmt.Errorf("failed to apply update: %w", err)
 	}
 
-	msg.Info("Update applied successfully to %s", *release.TagName)
+	msg.Info("Update applied successfully %s -> %s", version.Get().Version, release.GetTagName())
 	return nil
 }
 
@@ -71,16 +77,11 @@ func apply(buff []byte) error {
 	exePath, _ := filepath.Abs(ex)
 
 	return selfupdate.Apply(bytes.NewBuffer(buff), selfupdate.Options{
-		OldSavePath: fmt.Sprintf("%s_bkp", exePath),
+		OldSavePath: exePath + "_bkp",
 		TargetPath:  exePath,
 	})
 }
 
-func getAssetName() string {
-	ext := "zip"
-	if runtime.GOOS != "windows" {
-		ext = "tar.gz"
-	}
-
-	return fmt.Sprintf("boss-%s-%s.%s", runtime.GOOS, runtime.GOARCH, ext)
+func assetNameWithouExt() string {
+	return fmt.Sprintf("boss-%s-%s", runtime.GOOS, runtime.GOARCH)
 }

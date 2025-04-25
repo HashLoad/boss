@@ -10,22 +10,32 @@ import (
 	"path"
 	"runtime"
 	"strings"
+
+	"github.com/google/go-github/v69/github"
 )
 
-func getAssetFromFile(file *os.File, assetName string) ([]byte, error) {
+func getAssetFromFile(file *os.File, asset *github.ReleaseAsset) ([]byte, error) {
 	stat, err := file.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("failed to stat file: %w", err)
 	}
 
-	if strings.HasSuffix(assetName, ".zip") {
-		return readFileFromZip(file, assetName, stat)
+	formatHandler := map[string]func(*os.File, os.FileInfo) ([]byte, error){
+		".zip":    readFileFromZip,
+		".tar.gz": readFileFromTargz,
 	}
 
-	return readFileFromTargz(file, assetName)
+	ext := path.Ext(asset.GetName())
+
+	handler, ok := formatHandler[ext]
+	if !ok {
+		return nil, fmt.Errorf("unsupported file format: %s", ext)
+	}
+
+	return handler(file, stat)
 }
 
-func readFileFromZip(file *os.File, assetName string, stat os.FileInfo) ([]byte, error) {
+func readFileFromZip(file *os.File, stat os.FileInfo) ([]byte, error) {
 	reader, err := zip.NewReader(file, stat.Size())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create zip reader: %w", err)
@@ -45,10 +55,10 @@ func readFileFromZip(file *os.File, assetName string, stat os.FileInfo) ([]byte,
 		}
 	}
 
-	return nil, fmt.Errorf("failed to find asset %s in zip", assetName)
+	return nil, fmt.Errorf("failed to find asset %s in zip", file.Name())
 }
 
-func readFileFromTargz(file *os.File, assetName string) ([]byte, error) {
+func readFileFromTargz(file *os.File, _ os.FileInfo) ([]byte, error) {
 	gzipReader, err := gzip.NewReader(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
@@ -73,5 +83,5 @@ func readFileFromTargz(file *os.File, assetName string) ([]byte, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("failed to find asset %s in tar.gz", assetName)
+	return nil, fmt.Errorf("failed to find asset %s in tar.gz", file.Name())
 }

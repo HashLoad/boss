@@ -21,15 +21,15 @@ func Build(pkg *models.Package) {
 
 func saveLoadOrder(queue *graphs.NodeQueue) {
 	var projects = ""
-	for {
-		if queue.IsEmpty() {
-			break
-		}
+	for !queue.IsEmpty() {
 		node := queue.Dequeue()
 		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name(), consts.FilePackage)
-		if dependencyPackage, err := models.LoadPackageOther(dependencyPath); err == nil {
+		if dependencyPackage, err := models.LoadPackageFromFile(dependencyPath); err == nil {
 			for _, value := range dependencyPackage.Projects {
-				projects += strings.TrimSuffix(filepath.Base(value), filepath.Ext(value)) + consts.FileExtensionBpl + "\n"
+				projects += strings.TrimSuffix(
+					filepath.Base(value),
+					filepath.Ext(value),
+				) + consts.FileExtensionBpl + "\n"
 			}
 		}
 	}
@@ -41,22 +41,24 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 func buildOrderedPackages(pkg *models.Package) {
 	pkg.Lock.Save()
 	queue := loadOrderGraph(pkg)
-	for {
-		if queue.IsEmpty() {
-			break
-		}
+	for !queue.IsEmpty() {
 		node := queue.Dequeue()
 		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name())
 
 		dependency := pkg.Lock.GetInstalled(node.Dep)
 
 		msg.Info("Building %s", node.Dep.Name())
+
+		bossPackagePath := filepath.Join(dependencyPath, consts.FilePackage)
 		dependency.Changed = false
-		if dependencyPackage, err := models.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage)); err == nil {
+
+		if dependencyPackage, err := models.LoadPackageFromFile(bossPackagePath); err == nil {
 			dprojs := dependencyPackage.Projects
 			if len(dprojs) > 0 {
 				for _, dproj := range dprojs {
-					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.Name(), dproj))
+					dprojPath, _ := filepath.Abs(
+						filepath.Join(env.GetModulesDir(), node.Dep.Name(), dproj),
+					)
 					if !compile(dprojPath, &node.Dep, pkg.Lock) {
 						dependency.Failed = true
 					}

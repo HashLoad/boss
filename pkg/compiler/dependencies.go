@@ -22,7 +22,12 @@ func LoadOrderGraphAll(pkg *models.Package) *graphs.NodeQueue {
 	return graph.Queue(pkg, true)
 }
 
-func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.Dependency, father *graphs.Node) {
+func loadGraph(
+	graph *graphs.GraphItem,
+	dep *models.Dependency,
+	deps []models.Dependency,
+	father *graphs.Node,
+) {
 	var localFather *graphs.Node
 	if dep != nil {
 		localFather = graphs.NewNode(dep)
@@ -34,7 +39,9 @@ func loadGraph(graph *graphs.GraphItem, dep *models.Dependency, deps []models.De
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
+		pkgModule, err := models.LoadPackageFromFile(
+			filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage),
+		)
 		if err != nil {
 			node := graphs.NewNode(&dep)
 			graph.AddNode(node)

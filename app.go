@@ -7,6 +7,6 @@ import (
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 }

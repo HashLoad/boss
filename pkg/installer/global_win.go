@@ -4,6 +4,7 @@ package installer
 
 import (
 	"io/fs"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
@@ -23,28 +24,6 @@ func GlobalInstall(args []string, pkg *models.Package, lockedVersion bool, noSav
 	EnsureDependency(pkg, args)
 	DoInstall(pkg, lockedVersion)
 	doInstallPackages()
-}
-
-func addPathBpl(ideVersion string) {
-	idePath, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Environment Variables`,
-		registry.ALL_ACCESS)
-	if err != nil {
-		msg.Err("Cannot add automatic bpl path dir")
-		return
-	}
-	value, _, err := idePath.GetStringValue("PATH")
-	utils.HandleError(err)
-
-	currentPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.BplFolder)
-
-	paths := strings.Split(value, ";")
-	if utils.Contains(paths, currentPath) {
-		return
-	}
-
-	paths = append(paths, currentPath)
-	err = idePath.SetStringValue("PATH", strings.Join(paths, ";"))
-	utils.HandleError(err)
 }
 
 func doInstallPackages() {
@@ -103,8 +82,35 @@ func doInstallPackages() {
 }
 
 func isDesignTimeBpl(bplPath string) bool {
+	bplIdentifierPath := filepath.Join(env.GetInternalGlobalDir(), consts.FolderDependencies, consts.BinFolder, consts.BplIdentifierName)
+	if _, err := os.Stat(bplIdentifierPath); os.IsNotExist(err) {
+		msg.Warn("Cannot find bpl identifier, skipping")
+		return false
+	}
 
-	command := exec.Command(filepath.Join(env.GetInternalGlobalDir(), consts.FolderDependencies, consts.BinFolder, consts.BplIdentifierName), bplPath)
+	command := exec.Command(bplIdentifierPath, bplPath)
 	_ = command.Run()
 	return command.ProcessState.ExitCode() == 0
+}
+
+func addPathBpl(ideVersion string) {
+	idePath, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Environment Variables`,
+		registry.ALL_ACCESS)
+	if err != nil {
+		msg.Err("Cannot add automatic bpl path dir")
+		return
+	}
+	value, _, err := idePath.GetStringValue("PATH")
+	utils.HandleError(err)
+
+	currentPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.BplFolder)
+
+	paths := strings.Split(value, ";")
+	if utils.Contains(paths, currentPath) {
+		return
+	}
+
+	paths = append(paths, currentPath)
+	err = idePath.SetStringValue("PATH", strings.Join(paths, ";"))
+	utils.HandleError(err)
 }

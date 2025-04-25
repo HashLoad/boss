@@ -29,7 +29,7 @@ func executeUpdate(version int64, update ...func()) {
 func migration() {
 	executeUpdate(1, one)
 	executeUpdate(2, two)
-	executeUpdate(3, three)
+	executeUpdate(3) // It's a no-op because the update fields was removed
 	executeUpdate(4, cleanup)
 	executeUpdate(5, cleanup)
 	executeUpdate(6, six)

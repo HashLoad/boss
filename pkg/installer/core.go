@@ -93,10 +93,10 @@ func (ic *installContext) processOthers() []models.Dependency {
 
 		_, err := os.Stat(fileName)
 		if os.IsNotExist(err) {
-			msg.Warn("  boss.json not exists in %s", info.Name())
+			continue
 		}
 
-		if packageOther, err := models.LoadPackageOther(fileName); err != nil {
+		if packageOther, err := models.LoadPackageFromFile(fileName); err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
@@ -129,21 +129,22 @@ func (ic *installContext) ensureModules(pkg *models.Package, deps []models.Depen
 
 		wt, err := repository.Worktree()
 		if err != nil {
-			msg.Die("  Error on get worktree from repository %s\n%s", dep.Repository, err)
+			msg.Fatal("  Error on get worktree from repository %s\n%s", dep.Repository, err)
 		}
 
 		status, err := wt.Status()
 		if err != nil {
-			msg.Die("  Error on get status from worktree %s\n%s", dep.Repository, err)
+			msg.Fatal("  Error on get status from worktree %s\n%s", dep.Repository, err)
 		}
 
 		head, er := repository.Head()
 		if er != nil {
-			msg.Die("  Error on get head from repository %s\n%s", dep.Repository, er)
+			msg.Fatal("  Error on get head from repository %s\n%s", dep.Repository, er)
 		}
 
 		currentRef := head.Name()
-		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) && status.IsClean() && referenceName == currentRef {
+		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) && status.IsClean() &&
+			referenceName == currentRef {
 			msg.Info("  %s already updated", dep.Name())
 			continue
 		}
@@ -205,7 +206,7 @@ func (ic *installContext) checkoutAndUpdate(
 	referenceName plumbing.ReferenceName) {
 	worktree, err := repository.Worktree()
 	if err != nil {
-		msg.Die("  Error on get worktree from repository %s\n%s", dep.Repository, err)
+		msg.Fatal("  Error on get worktree from repository %s\n%s", dep.Repository, err)
 	}
 
 	err = worktree.Checkout(&goGit.CheckoutOptions{
@@ -217,7 +218,7 @@ func (ic *installContext) checkoutAndUpdate(
 	ic.rootLocked.Add(dep, referenceName.Short())
 
 	if err != nil {
-		msg.Die("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)
+		msg.Fatal("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)
 	}
 
 	err = worktree.Pull(&goGit.PullOptions{

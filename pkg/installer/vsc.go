@@ -24,11 +24,14 @@ func GetDependency(dep models.Dependency) {
 
 	updatedDependencies = append(updatedDependencies, dep.HashName())
 	var repository *goGit.Repository
+
+	gitSvc := git.New()
+
 	if hasCache(dep) {
-		repository = git.UpdateCache(dep)
+		repository = gitSvc.UpdateCache(dep)
 	} else {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.HashName()))
-		repository = git.CloneCache(dep)
+		repository = gitSvc.CloneCache(dep)
 	}
 	tagsShortNames := git.GetTagsShortName(repository)
 	models.CacheRepositoryDetails(dep, tagsShortNames)

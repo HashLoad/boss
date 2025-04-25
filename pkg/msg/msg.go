@@ -45,8 +45,8 @@ func NewMessenger() *Messenger {
 //nolint:gochecknoglobals // This is a global variable
 var defaultMsg = NewMessenger()
 
-func Die(msg string, args ...any) {
-	defaultMsg.Die(msg, args...)
+func Fatal(msg string, args ...any) {
+	defaultMsg.Fatal(msg, args...)
 }
 
 func Info(msg string, args ...any) {
@@ -105,7 +105,7 @@ func (m *Messenger) Debug(msg string, args ...any) {
 	m.print(pterm.Debug, msg, args...)
 }
 
-func (m *Messenger) Die(msg string, args ...any) {
+func (m *Messenger) Fatal(msg string, args ...any) {
 	m.Err(msg, args...)
 	os.Exit(m.exitStatus)
 }

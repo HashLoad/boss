@@ -57,9 +57,9 @@ func printDependencies(showVersion bool) {
 	pkg, err := models.LoadPackage(false)
 	if err != nil {
 		if os.IsNotExist(err) {
-			msg.Die("boss.json not exists in " + env.GetCurrentDir())
+			msg.Fatal("boss.json not exists in " + env.GetCurrentDir())
 		} else {
-			msg.Die("Fail on open dependencies file: %s", err)
+			msg.Fatal("Fail on open dependencies file: %s", err)
 		}
 	}
 
@@ -83,7 +83,9 @@ func printDeps(dep *models.Dependency,
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
+		pkgModule, err := models.LoadPackageFromFile(
+			filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage),
+		)
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {

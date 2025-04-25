@@ -9,9 +9,12 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
+            "console": "integratedTerminal",
             "program": "${workspaceFolder}",
             "cwd": "${workspaceFolder}/test_dir",
-            "args": ["install", "jhonson"],
+            // "args": ["install", "jhonson"],
+            "args": ["install", "https://github.com/ModernDelphiWorks/fluent4d.git"],
+            // "args": ["upgrade"],
         }
     ]
 }

@@ -10,6 +10,6 @@ func HandleError(err error) {
 
 func HandleErrorFatal(err error) {
 	if err != nil {
-		msg.Die(err.Error())
+		msg.Fatal(err.Error())
 	}
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/hashload/boss/internal/upgrade"
+	"github.com/hashload/boss/pkg/msg"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +17,10 @@ func upgradeCmdRegister(root *cobra.Command) {
 
   Upgrade boss with pre-release:
   boss upgrade --dev`,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return upgrade.BossUpgrade(preRelease)
+		Run: func(_ *cobra.Command, _ []string) {
+			if err := upgrade.BossUpgrade(preRelease); err != nil {
+				msg.Fatal("Failed to upgrade boss: %s", err)
+			}
 		},
 	}
 

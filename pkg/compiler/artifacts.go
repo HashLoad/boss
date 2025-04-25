@@ -11,10 +11,9 @@ import (
 
 func moveArtifacts(dep models.Dependency, rootPath string) {
 	var moduleName = dep.Name()
-	movePath(filepath.Join(rootPath, moduleName, consts.BplFolder), filepath.Join(rootPath, consts.BplFolder))
-	movePath(filepath.Join(rootPath, moduleName, consts.DcpFolder), filepath.Join(rootPath, consts.DcpFolder))
-	movePath(filepath.Join(rootPath, moduleName, consts.BinFolder), filepath.Join(rootPath, consts.BinFolder))
-	movePath(filepath.Join(rootPath, moduleName, consts.DcuFolder), filepath.Join(rootPath, consts.DcuFolder))
+	for _, folder := range consts.DefaultPaths() {
+		movePath(filepath.Join(rootPath, moduleName, folder), filepath.Join(rootPath, folder))
+	}
 }
 
 func movePath(oldPath string, newPath string) {
@@ -23,7 +22,10 @@ func movePath(oldPath string, newPath string) {
 	if err == nil {
 		for _, file := range files {
 			if !file.IsDir() {
-				err = os.Rename(filepath.Join(oldPath, file.Name()), filepath.Join(newPath, file.Name()))
+				err = os.Rename(
+					filepath.Join(oldPath, file.Name()),
+					filepath.Join(newPath, file.Name()),
+				)
 				if err != nil {
 					hasError = true
 				}
@@ -39,14 +41,30 @@ func movePath(oldPath string, newPath string) {
 	}
 }
 
-func ensureArtifacts(lockedDependency *models.LockedDependency, dep models.Dependency, rootPath string) {
+func ensureArtifacts(
+	lockedDependency *models.LockedDependency,
+	dep models.Dependency,
+	rootPath string,
+) {
 	var moduleName = dep.Name()
 	lockedDependency.Artifacts.Clean()
 
-	collectArtifacts(lockedDependency.Artifacts.Bpl, filepath.Join(rootPath, moduleName, consts.BplFolder))
-	collectArtifacts(lockedDependency.Artifacts.Dcu, filepath.Join(rootPath, moduleName, consts.DcuFolder))
-	collectArtifacts(lockedDependency.Artifacts.Bin, filepath.Join(rootPath, moduleName, consts.BinFolder))
-	collectArtifacts(lockedDependency.Artifacts.Dcp, filepath.Join(rootPath, moduleName, consts.DcpFolder))
+	collectArtifacts(
+		lockedDependency.Artifacts.Bpl,
+		filepath.Join(rootPath, moduleName, consts.BplFolder),
+	)
+	collectArtifacts(
+		lockedDependency.Artifacts.Dcu,
+		filepath.Join(rootPath, moduleName, consts.DcuFolder),
+	)
+	collectArtifacts(
+		lockedDependency.Artifacts.Bin,
+		filepath.Join(rootPath, moduleName, consts.BinFolder),
+	)
+	collectArtifacts(
+		lockedDependency.Artifacts.Dcp,
+		filepath.Join(rootPath, moduleName, consts.DcpFolder),
+	)
 }
 
 func collectArtifacts(artifactList []string, path string) {

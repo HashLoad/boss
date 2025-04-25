@@ -43,7 +43,9 @@ func buildSearchPath(dep *models.Dependency) string {
 	if dep != nil {
 		searchPath = filepath.Join(env.GetModulesDir(), dep.Name())
 
-		packageData, err := models.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
+		packageData, err := models.LoadPackageFromFile(
+			filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage),
+		)
 		if err == nil {
 			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.Name(), packageData.MainSrc)
 			for _, lib := range packageData.GetParsedDependencies() {
@@ -59,7 +61,7 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 
 	bossPackagePath := filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage)
 
-	if dependencyPackage, err := models.LoadPackageOther(bossPackagePath); err == nil {
+	if dependencyPackage, err := models.LoadPackageFromFile(bossPackagePath); err == nil {
 		dcp.InjectDpcsFile(dprojPath, dependencyPackage, rootLock)
 	}
 
@@ -82,7 +84,10 @@ func compile(dprojPath string, dep *models.Dependency, rootLock models.PackageLo
 
 	readFileStr += ";" + buildSearchPath(dep)
 
-	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
+	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(
+		env.GetModulesDir(),
+		consts.BplFolder,
+	) + ";"
 	for _, value := range []string{"Win32"} {
 		readFileStr += " \n msbuild \"" +
 			project +

@@ -22,7 +22,7 @@ func GetDcc32DirByCmd() []string {
 	}
 
 	installations := []string{}
-	for _, value := range strings.Split(outputStr, "\n") {
+	for value := range strings.SplitSeq(outputStr, "\n") {
 		if len(strings.TrimSpace(value)) > 0 {
 			installations = append(installations, filepath.Dir(value))
 		}

@@ -56,7 +56,7 @@ func Execute() error {
 	dependenciesCmdRegister(root)
 	versionCmdRegister(root)
 
-	if err := gc.RunGC(false); err != nil {
+	if err := gc.CleanupCache(false, false); err != nil {
 		return err
 	}
 

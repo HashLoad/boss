@@ -17,7 +17,10 @@ func GetDelphiPaths() []string {
 
 func GetCurrentDelphiVersion() string {
 	for version, path := range getDelphiVersionFromRegistry() {
-		if strings.HasPrefix(strings.ToLower(path), strings.ToLower(env.GlobalConfiguration().DelphiPath)) {
+		if strings.HasPrefix(
+			strings.ToLower(path),
+			strings.ToLower(env.GlobalConfiguration().DelphiPath),
+		) {
 			return version
 		}
 	}
