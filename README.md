@@ -9,6 +9,7 @@
 ![GitHub][githubLicenseBadge]
 ![GitHub issues][githubIssuesBadge]
 ![GitHub pull requests][githubPullRequestsBadge]
+[![Ask DeepWiki][deepWikiBadge]](https://deepwiki.com/HashLoad/boss)
 ![GitHub contributors][githubContributorsBadge]
 ![Github Stars][repoStarsBadge]
 
@@ -206,6 +207,7 @@ For example, to specify acceptable version ranges up to 1.0.4, use the following
 [githubLicenseBadge]: https://img.shields.io/github/license/hashload/boss
 [githubIssuesBadge]: https://img.shields.io/github/issues/hashload/boss
 [githubPullRequestsBadge]: https://img.shields.io/github/issues-pr/hashload/boss
+[deepwikiBadge]: https://deepwiki.com/badge.svg
 [telegramBadge]: https://img.shields.io/badge/telegram-join%20channel-7289DA?style=flat-square
 [telegramLink]: https://t.me/hashload
 [repoStarsBadge]: https://img.shields.io/github/stars/hashload/boss?style=social
