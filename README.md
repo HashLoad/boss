@@ -4,7 +4,7 @@
 
 [![GitHub release (latest by date)][latestReleaseBadge]](https://github.com/HashLoad/boss/releases/latest)
 [![GitHub Release Date][releaseDateBadge]](https://github.com/HashLoad/boss/releases)
-![GitHub repo size][repoSizeBadge]
+[![GitHub repo size][repoSizeBadge]](https://github.com/HashLoad/boss/archive/refs/heads/main.zip)
 [![GitHub All Releases][totalDownloadsBadge]](https://github.com/HashLoad/boss/releases)
 [![GitHub][githubLicenseBadge]](https://github.com/HashLoad/boss/blob/main/LICENSE)
 [![GitHub issues][githubIssuesBadge]](https://github.com/HashLoad/boss/issues)
