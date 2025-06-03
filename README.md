@@ -2,15 +2,15 @@
 
 ![Boss][bossLogo]
 
-![GitHub release (latest by date)][latestReleaseBadge]
-![GitHub Release Date][releaseDateBadge]
+[![GitHub release (latest by date)][latestReleaseBadge]](https://github.com/HashLoad/boss/releases/latest)
+[![GitHub Release Date][releaseDateBadge]](https://github.com/HashLoad/boss/releases)
 ![GitHub repo size][repoSizeBadge]
-![GitHub All Releases][totalDownloadsBadge]
-![GitHub][githubLicenseBadge]
-![GitHub issues][githubIssuesBadge]
-![GitHub pull requests][githubPullRequestsBadge]
+[![GitHub All Releases][totalDownloadsBadge]](https://github.com/HashLoad/boss/releases)
+[![GitHub][githubLicenseBadge]](https://github.com/HashLoad/boss/blob/main/LICENSE)
+[![GitHub issues][githubIssuesBadge]](https://github.com/HashLoad/boss/issues)
+[![GitHub pull requests][githubPullRequestsBadge]](https://github.com/HashLoad/boss/pulls)
 [![Ask DeepWiki][deepWikiBadge]](https://deepwiki.com/HashLoad/boss)
-![GitHub contributors][githubContributorsBadge]
+[![GitHub contributors][githubContributorsBadge]](https://github.com/HashLoad/boss?tab=readme-ov-file#-code-contributors)
 ![Github Stars][repoStarsBadge]
 
 _Boss_ is an open source dependency manager inspired by [npm](https://www.npmjs.com/) for projects developed in _Delphi_ and _Lazarus_.
