@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up tooling
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v3
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
