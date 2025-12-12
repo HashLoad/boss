@@ -17,7 +17,8 @@ import (
 
 const PATH string = "PATH"
 
-func defaultModules() []string {
+// DefaultModules returns the list of default internal modules.
+func DefaultModules() []string {
 	return []string{
 		"bpl-identifier",
 	}
@@ -35,9 +36,9 @@ func Initialize() {
 	msg.Debug("\tExecuting migrations")
 	migration()
 	msg.Debug("\tInstalling internal modules")
-	installModules(defaultModules())
+	installModules(DefaultModules())
 	msg.Debug("\tCreating paths")
-	createPaths()
+	CreatePaths()
 
 	InitializePath()
 
@@ -46,7 +47,8 @@ func Initialize() {
 	msg.Debug("finish boss system initialization")
 }
 
-func createPaths() {
+// CreatePaths creates the necessary paths for boss.
+func CreatePaths() {
 	_, err := os.Stat(env.GetGlobalEnvBpl())
 	if os.IsNotExist(err) {
 		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0600)

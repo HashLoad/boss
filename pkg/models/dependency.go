@@ -32,7 +32,8 @@ func (p *Dependency) GetVersion() string {
 	return p.version
 }
 
-func (p *Dependency) sshURL() string {
+// SSHUrl returns the SSH URL format for the repository.
+func (p *Dependency) SSHUrl() string {
 	if strings.Contains(p.Repository, "@") {
 		return p.Repository
 	}
@@ -53,7 +54,7 @@ func (p *Dependency) GetURL() string {
 	auth := env.GlobalConfiguration().Auth[prefix]
 	if auth != nil {
 		if auth.UseSSH {
-			return p.sshURL()
+			return p.SSHUrl()
 		}
 	}
 	var hasHTTPS = regexp.MustCompile(`(?m)^https?:\/\/`)

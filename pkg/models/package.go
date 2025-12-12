@@ -3,15 +3,16 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/fs"
 	"github.com/hashload/boss/utils/parser"
 )
 
 type Package struct {
 	fileName     string
+	fs           fs.FileSystem
 	Name         string            `json:"name"`
 	Description  string            `json:"description"`
 	Version      string            `json:"version"`
@@ -24,11 +25,25 @@ type Package struct {
 	Lock         PackageLock       `json:"-"`
 }
 
+// Save persists the package to disk and returns the marshaled bytes.
 func (p *Package) Save() []byte {
 	marshal, _ := parser.JSONMarshal(p, true)
-	_ = os.WriteFile(p.fileName, marshal, 0600)
+	_ = p.getFS().WriteFile(p.fileName, marshal, 0600)
 	p.Lock.Save()
 	return marshal
+}
+
+// getFS returns the filesystem to use, defaulting to fs.Default.
+func (p *Package) getFS() fs.FileSystem {
+	if p.fs == nil {
+		return fs.Default
+	}
+	return p.fs
+}
+
+// SetFS sets the filesystem implementation for testing.
+func (p *Package) SetFS(filesystem fs.FileSystem) {
+	p.fs = filesystem
 }
 
 func (p *Package) AddDependency(dep string, ver string) {
@@ -64,44 +79,57 @@ func (p *Package) UninstallDependency(dep string) {
 	}
 }
 
-func getNew(file string) *Package {
+func getNewWithFS(file string, filesystem fs.FileSystem) *Package {
 	res := new(Package)
 	res.fileName = file
+	res.fs = filesystem
 
 	res.Dependencies = make(map[string]string)
 	res.Projects = []string{}
-	res.Lock = LoadPackageLock(res)
+	res.Lock = LoadPackageLockWithFS(res, filesystem)
 	return res
 }
 
+// LoadPackage loads the package from the default boss file location.
 func LoadPackage(createNew bool) (*Package, error) {
-	fileBytes, err := os.ReadFile(env.GetBossFile())
+	return LoadPackageWithFS(createNew, fs.Default)
+}
+
+// LoadPackageWithFS loads the package using the specified filesystem.
+func LoadPackageWithFS(createNew bool, filesystem fs.FileSystem) (*Package, error) {
+	fileBytes, err := filesystem.ReadFile(env.GetBossFile())
 	if err != nil {
 		if createNew {
 			err = nil
 		}
-		return getNew(env.GetBossFile()), err
+		return getNewWithFS(env.GetBossFile(), filesystem), err
 	}
-	result := getNew(env.GetBossFile())
+	result := getNewWithFS(env.GetBossFile(), filesystem)
 
 	if err := json.Unmarshal(fileBytes, result); err != nil {
-		if os.IsNotExist(err) {
+		if !filesystem.Exists(env.GetBossFile()) {
 			return nil, err
 		}
 
 		return nil, fmt.Errorf("error on unmarshal file %s: %w", env.GetBossFile(), err)
 	}
-	result.Lock = LoadPackageLock(result)
+	result.Lock = LoadPackageLockWithFS(result, filesystem)
 	return result, nil
 }
 
+// LoadPackageOther loads a package from a specified path.
 func LoadPackageOther(path string) (*Package, error) {
-	fileBytes, err := os.ReadFile(path)
+	return LoadPackageOtherWithFS(path, fs.Default)
+}
+
+// LoadPackageOtherWithFS loads a package from a specified path using the given filesystem.
+func LoadPackageOtherWithFS(path string, filesystem fs.FileSystem) (*Package, error) {
+	fileBytes, err := filesystem.ReadFile(path)
 	if err != nil {
-		return getNew(path), err
+		return getNewWithFS(path, filesystem), err
 	}
 
-	result := getNew(path)
+	result := getNewWithFS(path, filesystem)
 
 	err = json.Unmarshal(fileBytes, result)
 	if err != nil {

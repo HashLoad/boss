@@ -14,7 +14,8 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func buildMessage(path []string) string {
+// BuildMessage creates a message with instructions to add paths to the shell.
+func BuildMessage(path []string) string {
 	if runtime.GOOS == "windows" {
 		advice := "\nTo add the path permanently, run the following command in the terminal:\n\n" +
 			"Press Win + R, type 'sysdm.cpl' and press Enter\n" +
@@ -89,7 +90,7 @@ func InitializePath() {
 		msg.Warn("Please restart your console after complete.")
 
 		if isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			msg.Info(buildMessage(paths))
+			msg.Info(BuildMessage(paths))
 
 			spinner, _ := pterm.DefaultSpinner.Start("Sleeping for 5 seconds")
 			if spinner != nil {

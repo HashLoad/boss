@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
+	"github.com/hashload/boss/pkg/fs"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/masterminds/semver"
@@ -37,24 +38,44 @@ type LockedDependency struct {
 
 type PackageLock struct {
 	fileName  string
+	fs        fs.FileSystem
 	Hash      string                      `json:"hash"`
 	Updated   time.Time                   `json:"updated"`
 	Installed map[string]LockedDependency `json:"installedModules"`
 }
 
-func removeOld(parentPackage *Package) {
+// getFS returns the filesystem to use, defaulting to fs.Default.
+func (p *PackageLock) getFS() fs.FileSystem {
+	if p.fs == nil {
+		return fs.Default
+	}
+	return p.fs
+}
+
+// SetFS sets the filesystem implementation for testing.
+func (p *PackageLock) SetFS(filesystem fs.FileSystem) {
+	p.fs = filesystem
+}
+
+func removeOldWithFS(parentPackage *Package, filesystem fs.FileSystem) {
 	var oldFileName = filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLockOld)
 	var newFileName = filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
-	if _, err := os.Stat(oldFileName); err == nil {
-		err = os.Rename(oldFileName, newFileName)
+	if filesystem.Exists(oldFileName) {
+		err := filesystem.Rename(oldFileName, newFileName)
 		utils.HandleError(err)
 	}
 }
 
+// LoadPackageLock loads the package lock file using the default filesystem.
 func LoadPackageLock(parentPackage *Package) PackageLock {
-	removeOld(parentPackage)
+	return LoadPackageLockWithFS(parentPackage, fs.Default)
+}
+
+// LoadPackageLockWithFS loads the package lock file using the specified filesystem.
+func LoadPackageLockWithFS(parentPackage *Package, filesystem fs.FileSystem) PackageLock {
+	removeOldWithFS(parentPackage, filesystem)
 	packageLockPath := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
-	fileBytes, err := os.ReadFile(packageLockPath)
+	fileBytes, err := filesystem.ReadFile(packageLockPath)
 	if err != nil {
 		//nolint:gosec // We are not using this for security purposes
 		hash := md5.New()
@@ -63,16 +84,17 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 		}
 
 		return PackageLock{
-			fileName: packageLockPath,
-			Updated:  time.Now(),
-			Hash:     hex.EncodeToString(hash.Sum(nil)),
-
+			fileName:  packageLockPath,
+			fs:        filesystem,
+			Updated:   time.Now(),
+			Hash:      hex.EncodeToString(hash.Sum(nil)),
 			Installed: map[string]LockedDependency{},
 		}
 	}
 
 	lockfile := PackageLock{
 		fileName:  packageLockPath,
+		fs:        filesystem,
 		Updated:   time.Now(),
 		Installed: map[string]LockedDependency{},
 	}
@@ -83,13 +105,14 @@ func LoadPackageLock(parentPackage *Package) PackageLock {
 	return lockfile
 }
 
+// Save persists the package lock to disk.
 func (p *PackageLock) Save() {
 	marshal, err := json.MarshalIndent(&p, "", "\t")
 	if err != nil {
 		msg.Die("error %v", err)
 	}
 
-	_ = os.WriteFile(p.fileName, marshal, 0600)
+	_ = p.getFS().WriteFile(p.fileName, marshal, 0600)
 }
 
 func (p *PackageLock) Add(dep Dependency, version string) {
@@ -151,7 +174,9 @@ func (p *DependencyArtifacts) Clean() {
 	p.Dcp = []string{}
 	p.Dcu = []string{}
 }
-func (p *LockedDependency) checkArtifactsType(directory string, artifacts []string) bool {
+
+// CheckArtifactsType verifies if all artifacts of a specific type exist in the given directory.
+func (p *LockedDependency) CheckArtifactsType(directory string, artifacts []string) bool {
 	for _, value := range artifacts {
 		bpl := filepath.Join(directory, value)
 		_, err := os.Stat(bpl)
@@ -165,19 +190,19 @@ func (p *LockedDependency) checkArtifactsType(directory string, artifacts []stri
 func (p *LockedDependency) checkArtifacts(lock *PackageLock) bool {
 	baseModulesDir := filepath.Join(filepath.Dir(lock.fileName), consts.FolderDependencies)
 
-	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.BplFolder), p.Artifacts.Bpl) {
+	if !p.CheckArtifactsType(filepath.Join(baseModulesDir, consts.BplFolder), p.Artifacts.Bpl) {
 		return false
 	}
 
-	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.BinFolder), p.Artifacts.Bin) {
+	if !p.CheckArtifactsType(filepath.Join(baseModulesDir, consts.BinFolder), p.Artifacts.Bin) {
 		return false
 	}
 
-	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.DcpFolder), p.Artifacts.Dcp) {
+	if !p.CheckArtifactsType(filepath.Join(baseModulesDir, consts.DcpFolder), p.Artifacts.Dcp) {
 		return false
 	}
 
-	if !p.checkArtifactsType(filepath.Join(baseModulesDir, consts.DcuFolder), p.Artifacts.Dcu) {
+	if !p.CheckArtifactsType(filepath.Join(baseModulesDir, consts.DcuFolder), p.Artifacts.Dcu) {
 		return false
 	}
 

@@ -2,6 +2,9 @@
 
 ![Boss][bossLogo]
 
+[![CI][ciBadge]][ciLink]
+[![codecov][codecovBadge]][codecovLink]
+[![Go Report Card][goReportBadge]][goReportLink]
 [![GitHub release (latest by date)][latestReleaseBadge]](https://github.com/HashLoad/boss/releases/latest)
 [![GitHub Release Date][releaseDateBadge]](https://github.com/HashLoad/boss/releases)
 [![GitHub repo size][repoSizeBadge]](https://github.com/HashLoad/boss/archive/refs/heads/main.zip)
@@ -199,6 +202,12 @@ For example, to specify acceptable version ranges up to 1.0.4, use the following
 ![GitHub Contributors Image](https://contrib.rocks/image?repo=Hashload/boss)
 
 [githubContributorsBadge]: https://img.shields.io/github/contributors/hashload/boss
+[ciBadge]: https://github.com/hashload/boss/actions/workflows/ci.yml/badge.svg
+[ciLink]: https://github.com/hashload/boss/actions/workflows/ci.yml
+[codecovBadge]: https://codecov.io/gh/hashload/boss/branch/main/graph/badge.svg
+[codecovLink]: https://codecov.io/gh/hashload/boss
+[goReportBadge]: https://goreportcard.com/badge/github.com/hashload/boss
+[goReportLink]: https://goreportcard.com/report/github.com/hashload/boss
 [bossLogo]: ./assets/png/sized/boss-logo-128px.png
 [latestReleaseBadge]: https://img.shields.io/github/v/release/hashload/boss
 [releaseDateBadge]: https://img.shields.io/github/release-date/hashload/boss
