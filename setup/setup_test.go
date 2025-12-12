@@ -113,3 +113,32 @@ func contains(s, substr string) bool {
 	}
 	return false
 }
+
+func TestMigratorFunctions(t *testing.T) {
+	// Test that migrator functions exist and are callable
+	t.Run("DefaultModules returns correct format", func(t *testing.T) {
+		modules := setup.DefaultModules()
+
+		for _, module := range modules {
+			if module == "" {
+				t.Error("Module name should not be empty")
+			}
+		}
+	})
+}
+
+func TestCreatePathsIdempotent(t *testing.T) {
+	// Create a temp directory for BOSS_HOME
+	tempDir := t.TempDir()
+	t.Setenv("BOSS_HOME", tempDir)
+
+	// Create boss home structure
+	bossHome := filepath.Join(tempDir, consts.FolderBossHome)
+	if err := os.MkdirAll(bossHome, 0755); err != nil {
+		t.Fatalf("Failed to create boss home: %v", err)
+	}
+
+	// Call CreatePaths twice - should not panic
+	setup.CreatePaths()
+	setup.CreatePaths()
+}

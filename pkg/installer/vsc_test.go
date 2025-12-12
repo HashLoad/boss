@@ -9,35 +9,58 @@ import (
 	"github.com/hashload/boss/pkg/models"
 )
 
-// TestHasCache_NotExists tests hasCache when directory doesn't exist.
-func TestHasCache_NotExists(t *testing.T) {
+// TestDependencyManager_HasCache_NotExists tests hasCache when directory doesn't exist.
+func TestDependencyManager_HasCache_NotExists(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("BOSS_CACHE_DIR", tempDir)
+
+	dm := NewDefaultDependencyManager()
+	dm.cacheDir = tempDir
+
 	dep := models.Dependency{
 		Repository: "github.com/test/nonexistent-repo-12345",
 	}
 
-	result := hasCache(dep)
+	result := dm.hasCache(dep)
 
 	if result {
 		t.Error("hasCache() should return false for non-existent cache")
 	}
 }
 
-// TestHasCache_Exists tests hasCache when directory exists.
-func TestHasCache_Exists(_ *testing.T) {
-	// This test requires setting up proper environment
-	// We'll just test that the function doesn't panic
+// TestDependencyManager_HasCache_Exists tests hasCache when directory exists.
+func TestDependencyManager_HasCache_Exists(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("BOSS_CACHE_DIR", tempDir)
+
+	dm := NewDefaultDependencyManager()
+	dm.cacheDir = tempDir
+
 	dep := models.Dependency{
 		Repository: "github.com/test/repo",
 	}
 
-	// Just ensure it doesn't panic
-	_ = hasCache(dep)
+	// Create the cache directory
+	cacheDir := filepath.Join(tempDir, dep.HashName())
+	err := os.MkdirAll(cacheDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create cache dir: %v", err)
+	}
+
+	result := dm.hasCache(dep)
+
+	if !result {
+		t.Error("hasCache() should return true when cache directory exists")
+	}
 }
 
-// TestHasCache_FileInsteadOfDir tests hasCache when path is a file.
-func TestHasCache_FileInsteadOfDir(t *testing.T) {
+// TestDependencyManager_HasCache_FileInsteadOfDir tests hasCache when path is a file.
+func TestDependencyManager_HasCache_FileInsteadOfDir(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("BOSS_CACHE_DIR", tempDir)
+
+	dm := NewDefaultDependencyManager()
+	dm.cacheDir = tempDir
 
 	// Create a file where directory is expected
 	dep := models.Dependency{
@@ -51,10 +74,27 @@ func TestHasCache_FileInsteadOfDir(t *testing.T) {
 	}
 
 	// hasCache should handle this case
-	result := hasCache(dep)
+	result := dm.hasCache(dep)
 
 	// After removing the file (inside hasCache), it should return false
 	if result {
 		t.Error("hasCache() should return false after removing file")
+	}
+}
+
+// TestResetDependencyCache tests the global reset function.
+func TestResetDependencyCache(t *testing.T) {
+	// Get the default manager and add some entries
+	dm := getDefaultDependencyManager()
+
+	// Mark something as updated
+	dm.Cache().MarkUpdated("test-dep")
+
+	// Reset
+	ResetDependencyCache()
+
+	// Should be empty now
+	if dm.Cache().IsUpdated("test-dep") {
+		t.Error("Cache should be empty after ResetDependencyCache()")
 	}
 }

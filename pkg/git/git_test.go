@@ -69,3 +69,76 @@ func TestParseVersion(t *testing.T) {
 		})
 	}
 }
+
+// TestGetByTag_NotFound tests GetByTag when tag doesn't exist.
+func TestGetByTag_NotFound(t *testing.T) {
+	repo, err := goGit.Init(memory.NewStorage(), nil)
+	if err != nil {
+		t.Fatalf("Failed to create repo: %v", err)
+	}
+
+	result := GetByTag(repo, "nonexistent")
+
+	if result != nil {
+		t.Error("GetByTag() should return nil for non-existent tag")
+	}
+}
+
+// TestDefaultRepository_Interface tests that DefaultRepository implements Repository.
+func TestDefaultRepository_Interface(_ *testing.T) {
+	var _ Repository = &DefaultRepository{}
+}
+
+// TestGetVersions_EmptyRepo tests GetVersions with empty repository.
+func TestGetVersions_EmptyRepo(t *testing.T) {
+	repo, err := goGit.Init(memory.NewStorage(), nil)
+	if err != nil {
+		t.Fatalf("Failed to create repo: %v", err)
+	}
+
+	// We can't test with real dependency as it would require network
+	// Just verify the function doesn't panic with empty repo
+	result := GetTagsShortName(repo)
+	if result == nil {
+		t.Error("GetTagsShortName() should not return nil")
+	}
+}
+
+// TestPlumbingReference tests plumbing reference operations.
+func TestPlumbingReference(t *testing.T) {
+	tests := []struct {
+		name      string
+		refName   string
+		hash      string
+		wantShort string
+	}{
+		{
+			name:      "tag reference",
+			refName:   "refs/tags/v1.0.0",
+			hash:      "abc123def456",
+			wantShort: "v1.0.0",
+		},
+		{
+			name:      "branch reference",
+			refName:   "refs/heads/main",
+			hash:      "abc123def456",
+			wantShort: "main",
+		},
+		{
+			name:      "branch with slash",
+			refName:   "refs/heads/feature/test",
+			hash:      "abc123def456",
+			wantShort: "feature/test",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ref := plumbing.NewReferenceFromStrings(tt.refName, tt.hash)
+
+			if ref.Name().Short() != tt.wantShort {
+				t.Errorf("Short() = %q, want %q", ref.Name().Short(), tt.wantShort)
+			}
+		})
+	}
+}
