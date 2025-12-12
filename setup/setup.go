@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
+	registry "github.com/hashload/boss/internal/adapters/secondary/registry"
+	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/core/services/installer"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
-	"github.com/hashload/boss/pkg/installer"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/pkg/registry"
 	"github.com/hashload/boss/utils/dcc32"
 )
 
@@ -56,7 +56,7 @@ func CreatePaths() {
 }
 
 func installModules(modules []string) {
-	pkg, _ := models.LoadPackage(true)
+	pkg, _ := domain.LoadPackage(true)
 	encountered := 0
 	for _, newPackage := range modules {
 		for installed := range pkg.Dependencies {

@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
+	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/core/services/installer"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
-	"github.com/hashload/boss/pkg/installer"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 )
@@ -97,7 +97,7 @@ func cleanup() {
 
 	err := os.Remove(filepath.Join(modulesDir, consts.FilePackageLock))
 	utils.HandleError(err)
-	modules, err := models.LoadPackage(false)
+	modules, err := domain.LoadPackage(false)
 	if err != nil {
 		return
 	}

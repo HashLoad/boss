@@ -8,13 +8,13 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
+	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func updateDprojLibraryPath(pkg *models.Package) {
+func updateDprojLibraryPath(pkg *domain.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
 	for _, projectName := range projectNames {
@@ -86,7 +86,7 @@ func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
 	return child
 }
 
-func updateGlobalBrowsingPath(pkg *models.Package) {
+func updateGlobalBrowsingPath(pkg *domain.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
 	for i, projectName := range projectNames {
@@ -140,7 +140,7 @@ func createTagLibraryPath(node *etree.Element) *etree.Element {
 	return child
 }
 
-func GetProjectNames(pkg *models.Package) []string {
+func GetProjectNames(pkg *domain.Package) []string {
 	var result []string
 	var matches = 0
 

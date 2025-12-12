@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
@@ -17,7 +17,7 @@ import (
 	"golang.org/x/text/transform"
 )
 
-func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
+func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
 	dprojNames := librarypath.GetProjectNames(pkg)
 
 	for _, value := range dprojNames {
@@ -27,7 +27,7 @@ func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
 	}
 }
 
-func InjectDpcsFile(fileName string, pkg *models.Package, lock models.PackageLock) {
+func InjectDpcsFile(fileName string, pkg *domain.Package, lock domain.PackageLock) {
 	dprDpkFileName, exists := getDprDpkFromDproj(fileName)
 	if !exists {
 		return

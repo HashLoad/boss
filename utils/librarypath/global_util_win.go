@@ -14,7 +14,7 @@ import (
 	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
 
-	bossRegistry "github.com/hashload/boss/pkg/registry"
+	bossRegistry "github.com/hashload/boss/internal/adapters/secondary/registry"
 )
 
 const SearchPathRegistry = "Search Path"

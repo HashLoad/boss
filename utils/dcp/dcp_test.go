@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashload/boss/pkg/models"
+	"github.com/hashload/boss/internal/core/domain"
 )
 
 // TestGetDcpString tests DCP string generation.
@@ -166,7 +166,7 @@ func TestProcessFile_EmptyDcps(t *testing.T) {
 
 // TestGetRequiresList_NilPackage tests handling of nil package.
 func TestGetRequiresList_NilPackage(t *testing.T) {
-	result := getRequiresList(nil, models.PackageLock{})
+	result := getRequiresList(nil, domain.PackageLock{})
 
 	if len(result) != 0 {
 		t.Errorf("getRequiresList() should return empty list for nil package, got %v", result)
@@ -175,11 +175,11 @@ func TestGetRequiresList_NilPackage(t *testing.T) {
 
 // TestGetRequiresList_NoDependencies tests package with no dependencies.
 func TestGetRequiresList_NoDependencies(t *testing.T) {
-	pkg := &models.Package{
+	pkg := &domain.Package{
 		Dependencies: map[string]string{},
 	}
 
-	result := getRequiresList(pkg, models.PackageLock{})
+	result := getRequiresList(pkg, domain.PackageLock{})
 
 	if len(result) != 0 {
 		t.Errorf("getRequiresList() should return empty list for no deps, got %v", result)

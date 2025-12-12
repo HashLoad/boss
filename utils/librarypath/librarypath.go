@@ -10,14 +10,14 @@ import (
 
 	"slices"
 
+	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 )
 
-func UpdateLibraryPath(pkg *models.Package) {
+func UpdateLibraryPath(pkg *domain.Package) {
 	if env.GetGlobal() {
 		updateGlobalLibraryPath()
 	} else {
@@ -66,7 +66,7 @@ func processBrowsingPath(
 ) []string {
 	var packagePath = filepath.Join(basePath, value.Name(), consts.FilePackage)
 	if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-		other, _ := models.LoadPackageOther(packagePath)
+		other, _ := domain.LoadPackageOther(packagePath)
 		if other.BrowsingPath != "" {
 			dir := filepath.Join(basePath, value.Name(), other.BrowsingPath)
 			paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
@@ -105,7 +105,7 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	for _, value := range matches {
 		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
 		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-			other, _ := models.LoadPackageOther(packagePath)
+			other, _ := domain.LoadPackageOther(packagePath)
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath, rootPath)
 		} else {
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath, rootPath)
