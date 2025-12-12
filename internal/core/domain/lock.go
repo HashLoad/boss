@@ -17,7 +17,7 @@ import (
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
-	"github.com/masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 )
 
 type DependencyArtifacts struct {

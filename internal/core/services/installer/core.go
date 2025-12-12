@@ -17,7 +17,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
-	"github.com/masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 )
 
 type installContext struct {
@@ -184,9 +184,12 @@ func (ic *installContext) getReferenceName(
 	var referenceName plumbing.ReferenceName
 
 	if bestMatch == nil {
+		msg.Warn("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion())
 		if mainBranchReference, err := git.GetMain(repository); err == nil {
+			msg.Info("Falling back to main branch: %s", mainBranchReference.Name)
 			return plumbing.NewBranchReferenceName(mainBranchReference.Name)
 		}
+		msg.Die("Could not find any suitable version or branch for dependency '%s'", dep.Repository)
 	}
 
 	referenceName = bestMatch.Name()
@@ -241,14 +244,16 @@ func (ic *installContext) getVersion(
 	}
 
 	versions := git.GetVersions(repository, dep)
-	constraints, err := semver.NewConstraint(dep.GetVersion())
+	constraints, err := ParseConstraint(dep.GetVersion())
 	if err != nil {
+		msg.Warn("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
+		// Try exact match as fallback
 		for _, version := range versions {
 			if version.Name().Short() == dep.GetVersion() {
 				return version
 			}
 		}
-
+		msg.Warn("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
 		return nil
 	}
 

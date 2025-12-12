@@ -10,7 +10,7 @@ import (
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
-	"github.com/masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/spf13/cobra"
 	"github.com/xlab/treeprint"
 )
