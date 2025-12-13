@@ -56,14 +56,14 @@ func newInstallContext(pkg *domain.Package, options InstallOptions, progress *Pr
 	}
 }
 
-func DoInstall(options InstallOptions, pkg *domain.Package) {
+func DoInstall(options InstallOptions, pkg *domain.Package) error {
 	msg.Info("Analyzing dependencies...\n")
 
 	deps := collectAllDependencies(pkg)
 
 	if len(deps) == 0 {
 		msg.Info("No dependencies to install")
-		return
+		return nil
 	}
 
 	progress := NewProgressTracker(deps)
@@ -83,8 +83,7 @@ func DoInstall(options InstallOptions, pkg *domain.Package) {
 		msg.SetQuietMode(false)
 		msg.SetProgressTracker(nil)
 		progress.Stop()
-		msg.Err("  Installation failed: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("installation failed: %w", err)
 	}
 
 	msg.SetQuietMode(false)
@@ -112,6 +111,7 @@ func DoInstall(options InstallOptions, pkg *domain.Package) {
 	}
 
 	msg.Success("✓ Installation completed successfully!")
+	return nil
 }
 
 func (ic *installContext) addWarning(warning string) {

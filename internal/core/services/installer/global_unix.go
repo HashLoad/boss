@@ -9,10 +9,12 @@ import (
 
 func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
 	EnsureDependency(pkg, args)
-	DoInstall(InstallOptions{
+	if err := DoInstall(InstallOptions{
 		Args:          args,
 		LockedVersion: lockedVersion,
 		NoSave:        noSave,
-	}, pkg)
+	}, pkg); err != nil {
+		msg.Die("%s", err)
+	}
 	msg.Err("Cannot install global packages on this platform, only build and install local")
 }

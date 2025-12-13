@@ -21,11 +21,13 @@ import (
 func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
 	// TODO noSave
 	EnsureDependency(pkg, args)
-	DoInstall(InstallOptions{
+	if err := DoInstall(InstallOptions{
 		Args:          args,
 		LockedVersion: lockedVersion,
 		NoSave:        noSave,
-	}, pkg)
+	}, pkg); err != nil {
+		msg.Die("%s", err)
+	}
 	doInstallPackages()
 }
 
