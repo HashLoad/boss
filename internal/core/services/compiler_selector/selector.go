@@ -7,6 +7,7 @@ import (
 
 	registryadapter "github.com/hashload/boss/internal/adapters/secondary/registry"
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 )
 
@@ -38,7 +39,7 @@ func SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error) {
 
 		platform := tc.Platform
 		if platform == "" {
-			platform = "Win32"
+			platform = consts.PlatformWin32.String()
 		}
 
 		if tc.Compiler != "" {
@@ -63,7 +64,7 @@ func SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error) {
 		return &SelectedCompiler{
 			Path:   filepath.Join(globalPath, "dcc32.exe"),
 			BinDir: globalPath,
-			Arch:   "Win32",
+			Arch:   consts.PlatformWin32.String(),
 		}, nil
 	}
 

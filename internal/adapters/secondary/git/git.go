@@ -8,6 +8,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 )
@@ -50,9 +51,9 @@ func initSubmodules(dep domain.Dependency, repository *goGit.Repository) error {
 }
 
 func GetMain(repository *goGit.Repository) (*config.Branch, error) {
-	branch, err := repository.Branch("main")
+	branch, err := repository.Branch(consts.GitBranchMain)
 	if err != nil {
-		branch, err = repository.Branch("master")
+		branch, err = repository.Branch(consts.GitBranchMaster)
 	}
 	return branch, err
 }

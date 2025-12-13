@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/pkg/consts"
 )
 
 func TestGetCompilerParameters(t *testing.T) {
@@ -23,7 +24,7 @@ func TestGetCompilerParameters(t *testing.T) {
 			name:     "with dependency",
 			rootPath: "/test/modules",
 			dep:      &domain.Dependency{Repository: "github.com/test/lib"},
-			platform: "Win32",
+			platform: consts.PlatformWin32.String(),
 			wantBpl:  true,
 			wantDcp:  true,
 			wantDcu:  true,
@@ -32,7 +33,7 @@ func TestGetCompilerParameters(t *testing.T) {
 			name:     "without dependency",
 			rootPath: "/test/modules",
 			dep:      nil,
-			platform: "Win64",
+			platform: consts.PlatformWin64.String(),
 			wantBpl:  true,
 			wantDcp:  true,
 			wantDcu:  true,

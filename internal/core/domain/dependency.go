@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 
 	"github.com/hashload/boss/pkg/msg"
@@ -90,7 +91,7 @@ func ParseDependency(repo string, info string) Dependency {
 		dependency.version += ".0.0"
 	}
 	if len(parsed) > 1 {
-		dependency.UseSSH = parsed[1] == "ssh"
+		dependency.UseSSH = parsed[1] == consts.GitProtocolSSH
 	}
 	return dependency
 }

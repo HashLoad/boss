@@ -45,6 +45,6 @@ func installCmdRegister(root *cobra.Command) {
 	root.AddCommand(installCmd)
 	installCmd.Flags().BoolVar(&noSaveInstall, "no-save", false, "prevents saving to dependencies")
 	installCmd.Flags().StringVar(&compilerVersion, "compiler", "", "compiler version to use")
-	installCmd.Flags().StringVar(&platform, "platform", "", "platform to use (Win32, Win64)")
+	installCmd.Flags().StringVar(&platform, "platform", "", "platform to use (e.g., Win32, Win64)")
 	installCmd.Flags().BoolVar(&strict, "strict", false, "strict mode for compiler selection")
 }

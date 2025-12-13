@@ -70,7 +70,7 @@ func getDetectedDelphisFromRegistry() []DelphiInstallation {
 			result = append(result, DelphiInstallation{
 				Version: version,
 				Path:    appPath,
-				Arch:    "Win32",
+				Arch:    consts.PlatformWin32.String(),
 			})
 		}
 
@@ -79,7 +79,7 @@ func getDetectedDelphisFromRegistry() []DelphiInstallation {
 			result = append(result, DelphiInstallation{
 				Version: version,
 				Path:    appPath64,
-				Arch:    "Win64",
+				Arch:    consts.PlatformWin64.String(),
 			})
 		}
 		delphiInfo.Close()

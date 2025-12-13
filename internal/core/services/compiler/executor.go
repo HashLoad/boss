@@ -67,7 +67,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	}
 
 	dccDir := env.GetDcc32Dir()
-	platform := "Win32"
+	platform := consts.PlatformWin32.String()
 
 	if selectedCompiler != nil {
 		dccDir = selectedCompiler.BinDir

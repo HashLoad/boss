@@ -10,7 +10,7 @@ import (
 type DelphiInstallation struct {
 	Version string
 	Path    string
-	Arch    string // "Win32" or "Win64"
+	Arch    string // Use consts.PlatformWin32 or consts.PlatformWin64
 }
 
 func GetDelphiPaths() []string {

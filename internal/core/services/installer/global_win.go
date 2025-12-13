@@ -80,7 +80,7 @@ func doInstallPackages() {
 			return nil
 		}
 
-		if !strings.HasSuffix(strings.ToLower(path), ".bpl") {
+		if !strings.HasSuffix(strings.ToLower(path), consts.FileExtensionBpl) {
 			return nil
 		}
 
