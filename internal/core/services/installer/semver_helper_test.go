@@ -138,25 +138,26 @@ func TestConvertNpmConstraint(t *testing.T) {
 	}
 }
 
-func TestNormalizeVersion(t *testing.T) {
+func TestStripVersionPrefix(t *testing.T) {
 	tests := []struct {
 		name     string
 		version  string
 		expected string
 	}{
 		{"with v prefix", "v1.2.3", "1.2.3"},
-		{"with V prefix", "V1.2.3", "1.2.3"},
-		{"with release prefix", "release-1.2.3", "1.2.3"},
-		{"with version prefix", "version-1.2.3", "1.2.3"},
-		{"no prefix", "1.2.3", "1.2.3"},
-		{"prerelease", "1.2.3-alpha", "1.2.3-alpha"},
+		{"with V prefix", "V2.3.4", "2.3.4"},
+		{"no v prefix", "1.2.3", "1.2.3"},
+		{"prerelease with v", "v1.2.3-alpha", "1.2.3-alpha"},
+		{"release- prefix not stripped", "release-1.2.3", "release-1.2.3"},
+		{"version- prefix not stripped", "version-1.2.3", "version-1.2.3"},
+		{"v followed by non-digit", "versionX1.2.3", "versionX1.2.3"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := NormalizeVersion(tt.version)
+			result := stripVersionPrefix(tt.version)
 			if result != tt.expected {
-				t.Errorf("NormalizeVersion() = %v, want %v", result, tt.expected)
+				t.Errorf("stripVersionPrefix() = %v, want %v", result, tt.expected)
 			}
 		})
 	}

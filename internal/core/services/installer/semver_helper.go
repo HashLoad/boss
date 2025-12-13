@@ -43,11 +43,13 @@ func convertNpmConstraint(constraint string) string {
 	return constraint
 }
 
-// NormalizeVersion removes common prefixes and ensures valid semver format.
-func NormalizeVersion(version string) string {
-	version = strings.TrimPrefix(version, "v")
-	version = strings.TrimPrefix(version, "V")
-	version = strings.TrimPrefix(version, "release-")
-	version = strings.TrimPrefix(version, "version-")
+// stripVersionPrefix removes 'v' or 'V' prefix only if followed by a digit.
+// Examples: "v1.0.0" → "1.0.0", "V2.3.4" → "2.3.4", "version-1.0.0" → "version-1.0.0"
+func stripVersionPrefix(version string) string {
+	if len(version) > 1 && (version[0] == 'v' || version[0] == 'V') {
+		if version[1] >= '0' && version[1] <= '9' {
+			return version[1:]
+		}
+	}
 	return version
 }

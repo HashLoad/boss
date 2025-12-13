@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	goGit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	git "github.com/hashload/boss/internal/adapters/secondary/git"
@@ -17,7 +18,6 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
-	"github.com/Masterminds/semver/v3"
 )
 
 type installContext struct {
@@ -270,7 +270,8 @@ func (ic *installContext) getVersionSemantic(
 
 	for _, version := range versions {
 		short := version.Name().Short()
-		newVersion, err := semver.NewVersion(short)
+		withoutPrefix := stripVersionPrefix(short)
+		newVersion, err := semver.NewVersion(withoutPrefix)
 		if err != nil {
 			continue
 		}
@@ -283,6 +284,10 @@ func (ic *installContext) getVersionSemantic(
 			if bestVersion == nil {
 				bestVersion = newVersion
 				bestReference = version
+			} else if bestVersion.Equal(newVersion) {
+				if strings.HasPrefix(short, "v") && !strings.HasPrefix(bestReference.Name().Short(), "v") {
+					bestReference = version
+				}
 			}
 		}
 	}
