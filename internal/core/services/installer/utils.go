@@ -11,15 +11,20 @@ import (
 //nolint:lll // This regex is too long and it's better to keep it like this
 const urlVersionMatcher = `(?m)^(?:http[s]?:\/\/|git@)?(?P<url>[\w\.\-\/:]+?)(?:[@:](?P<version>[\^~]?(?:\d+\.)?(?:\d+\.)?(?:\*|\d+|[\w\-]+)))?$`
 
+var (
+	reURLVersion    = regexp.MustCompile(urlVersionMatcher)
+	reHasSlash      = regexp.MustCompile(`(?m)(([?^/]).*)`)
+	reHasMultiSlash = regexp.MustCompile(`(?m)([?^/].*)(([?^/]).*)`)
+)
+
 func EnsureDependency(pkg *domain.Package, args []string) {
 	for _, dependency := range args {
 		dependency = ParseDependency(dependency)
 
-		re := regexp.MustCompile(urlVersionMatcher)
 		match := make(map[string]string)
-		split := re.FindStringSubmatch(dependency)
+		split := reURLVersion.FindStringSubmatch(dependency)
 
-		for i, name := range re.SubexpNames() {
+		for i, name := range reURLVersion.SubexpNames() {
 			if i != 0 && name != "" {
 				match[name] = split[i]
 			}
@@ -42,12 +47,10 @@ func EnsureDependency(pkg *domain.Package, args []string) {
 }
 
 func ParseDependency(dependencyName string) string {
-	re := regexp.MustCompile(`(?m)(([?^/]).*)`)
-	if !re.MatchString(dependencyName) {
+	if !reHasSlash.MatchString(dependencyName) {
 		return "github.com/hashload/" + dependencyName
 	}
-	re = regexp.MustCompile(`(?m)([?^/].*)(([?^/]).*)`)
-	if !re.MatchString(dependencyName) {
+	if !reHasMultiSlash.MatchString(dependencyName) {
 		return "github.com/" + dependencyName
 	}
 	return dependencyName
