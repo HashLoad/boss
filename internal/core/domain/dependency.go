@@ -22,7 +22,7 @@ type Dependency struct {
 func (p *Dependency) HashName() string {
 	//nolint:gosec // We are not using this for security purposes
 	hash := md5.New()
-	if _, err := io.WriteString(hash, p.Repository); err != nil {
+	if _, err := io.WriteString(hash, strings.ToLower(p.Repository)); err != nil {
 		msg.Warn("Failed on write dependency hash")
 	}
 	return hex.EncodeToString(hash.Sum(nil))
@@ -56,6 +56,9 @@ func (p *Dependency) GetURL() string {
 		if auth.UseSSH {
 			return p.SSHUrl()
 		}
+	}
+	if p.UseSSH {
+		return p.SSHUrl()
 	}
 	var hasHTTPS = regexp.MustCompile(`(?m)^https?:\/\/`)
 	if hasHTTPS.MatchString(p.Repository) {

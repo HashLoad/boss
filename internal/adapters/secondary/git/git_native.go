@@ -138,6 +138,7 @@ func runCommand(cmd *exec.Cmd) error {
 
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
+	cmd.Env = os.Environ()
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
