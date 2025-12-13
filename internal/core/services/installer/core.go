@@ -220,7 +220,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 
 		if ic.shouldSkipDependency(dep) {
 			if ic.progress.IsEnabled() {
-				ic.progress.SetSkipped(depName, "up to date")
+				ic.progress.SetSkipped(depName, consts.StatusMsgUpToDate)
 			} else {
 				msg.Info("  %s already installed", depName)
 			}
@@ -240,7 +240,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 		}
 		repository := git.GetRepository(dep)
 
-		ic.progress.SetChecking(depName, "resolving version")
+		ic.progress.SetChecking(depName, consts.StatusMsgResolvingVer)
 
 		referenceName := ic.getReferenceName(pkg, dep, repository)
 
@@ -267,7 +267,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 		needsUpdate := ic.lockSvc.NeedUpdate(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
 		if !needsUpdate && status.IsClean() && referenceName == currentRef {
 			if ic.progress.IsEnabled() {
-				ic.progress.SetSkipped(depName, "already up to date")
+				ic.progress.SetSkipped(depName, consts.StatusMsgUpToDate)
 			} else {
 				msg.Info("  %s already updated", depName)
 			}

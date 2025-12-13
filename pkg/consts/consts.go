@@ -55,6 +55,13 @@ const (
 	RegexArtifacts = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$|.*.res$)"
 
 	RegistryBasePath = `Software\Embarcadero\BDS\`
+
+	StatusMsgUpToDate        = "up to date"
+	StatusMsgResolvingVer    = "resolving version"
+	StatusMsgNoProjects      = "no projects"
+	StatusMsgNoBossJSON      = "no boss.json"
+	StatusMsgBuildError      = "build error"
+	StatusMsgAlreadyUpToDate = "boss is already up to date"
 )
 
 func DefaultPaths() []string {

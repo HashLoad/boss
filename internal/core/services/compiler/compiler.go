@@ -107,19 +107,19 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 
 				if tracker.IsEnabled() {
 					if hasFailed {
-						tracker.SetFailed(node.Dep.Name(), "build error")
+						tracker.SetFailed(node.Dep.Name(), consts.StatusMsgBuildError)
 					} else {
 						tracker.SetSuccess(node.Dep.Name())
 					}
 				}
 			} else {
 				if tracker.IsEnabled() {
-					tracker.SetSkipped(node.Dep.Name(), "no projects")
+					tracker.SetSkipped(node.Dep.Name(), consts.StatusMsgNoProjects)
 				}
 			}
 		} else {
 			if tracker.IsEnabled() {
-				tracker.SetSkipped(node.Dep.Name(), "no boss.json")
+				tracker.SetSkipped(node.Dep.Name(), consts.StatusMsgNoBossJSON)
 			}
 		}
 		pkg.Lock.SetInstalled(node.Dep, dependency)

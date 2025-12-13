@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/hashload/boss/internal/version"
+	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/minio/selfupdate"
 )
@@ -37,7 +38,7 @@ func BossUpgrade(preRelease bool) error {
 	}
 
 	if *asset.Name == version.Get().Version {
-		msg.Info("boss is already up to date")
+		msg.Info(consts.StatusMsgAlreadyUpToDate)
 		return nil
 	}
 
