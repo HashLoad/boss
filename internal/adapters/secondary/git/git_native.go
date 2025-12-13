@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	git2 "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/paths"
 	"github.com/hashload/boss/pkg/env"
@@ -115,6 +116,20 @@ func initSubmodulesNative(dep domain.Dependency) error {
 		return err
 	}
 	return nil
+}
+
+func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
+	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
+	cmd := exec.Command("git", "checkout", "-f", referenceName.Short())
+	cmd.Dir = dirModule
+	return runCommand(cmd)
+}
+
+func PullNative(dep domain.Dependency) error {
+	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
+	cmd := exec.Command("git", "pull", "--force")
+	cmd.Dir = dirModule
+	return runCommand(cmd)
 }
 
 func runCommand(cmd *exec.Cmd) error {

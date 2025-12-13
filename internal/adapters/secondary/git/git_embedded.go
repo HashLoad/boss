@@ -8,6 +8,7 @@ import (
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	cache2 "github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage"
 	"github.com/go-git/go-git/v5/storage/filesystem"
@@ -96,4 +97,28 @@ func createWorktreeFs(dep domain.Dependency) billy.Filesystem {
 	fs := memfs.New()
 
 	return fs
+}
+
+func CheckoutEmbedded(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
+	repository := GetRepository(dep)
+	worktree, err := repository.Worktree()
+	if err != nil {
+		return err
+	}
+	return worktree.Checkout(&git.CheckoutOptions{
+		Force:  true,
+		Branch: referenceName,
+	})
+}
+
+func PullEmbedded(dep domain.Dependency) error {
+	repository := GetRepository(dep)
+	worktree, err := repository.Worktree()
+	if err != nil {
+		return err
+	}
+	return worktree.Pull(&git.PullOptions{
+		Force: true,
+		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
+	})
 }

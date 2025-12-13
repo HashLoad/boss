@@ -225,6 +225,21 @@ boss config delphi use 22.0
 boss config delphi use 22.0-Win64
 ```
 
+### > Git Client
+
+You can configure which Git client BOSS should use.
+
+- `embedded`: Uses the built-in go-git client (default).
+- `native`: Uses the system's installed git client (git.exe).
+
+Using `native` is recommended on Windows if you need support for `core.autocrlf` (automatic line ending conversion).
+
+```sh
+boss config git mode native
+# or
+boss config git mode embedded
+```
+
 ### > Project Toolchain
 
 You can also specify the required compiler version and platform in your project's `boss.json` file. This ensures that everyone working on the project uses the correct toolchain.

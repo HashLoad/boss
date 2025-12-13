@@ -137,3 +137,17 @@ func GetRepository(dep domain.Dependency) *goGit.Repository {
 
 	return repository
 }
+
+func Checkout(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
+	if env.GlobalConfiguration().GitEmbedded {
+		return CheckoutEmbedded(dep, referenceName)
+	}
+	return CheckoutNative(dep, referenceName)
+}
+
+func Pull(dep domain.Dependency) error {
+	if env.GlobalConfiguration().GitEmbedded {
+		return PullEmbedded(dep)
+	}
+	return PullNative(dep)
+}

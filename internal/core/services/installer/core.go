@@ -365,15 +365,8 @@ func (ic *installContext) checkoutAndUpdate(
 	dep domain.Dependency,
 	repository *goGit.Repository,
 	referenceName plumbing.ReferenceName) error {
-	worktree, err := repository.Worktree()
-	if err != nil {
-		return err
-	}
 
-	err = worktree.Checkout(&goGit.CheckoutOptions{
-		Force:  true,
-		Branch: referenceName,
-	})
+	err := git.Checkout(dep, referenceName)
 
 	ic.lockSvc.AddDependency(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
 
@@ -381,10 +374,7 @@ func (ic *installContext) checkoutAndUpdate(
 		return err
 	}
 
-	err = worktree.Pull(&goGit.PullOptions{
-		Force: true,
-		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
-	})
+	err = git.Pull(dep)
 
 	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
 		if ic.progress.IsEnabled() {
