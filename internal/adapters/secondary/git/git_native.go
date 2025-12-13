@@ -1,8 +1,8 @@
 package gitadapter
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -133,33 +133,26 @@ func PullNative(dep domain.Dependency) error {
 }
 
 func runCommand(cmd *exec.Cmd) error {
-	cmd.Stdout = newWriter(false)
-	cmd.Stderr = newWriter(true)
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
+
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
+
 	if err := cmd.Start(); err != nil {
-		return err
+		return fmt.Errorf("failed to start command: %w", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return err
+		return fmt.Errorf("command failed: %w\nStderr: %s", err, stderrBuf.String())
 	}
+
+	if stdoutBuf.Len() > 0 {
+		msg.Debug("Command stdout: %s", stdoutBuf.String())
+	}
+	if stderrBuf.Len() > 0 {
+		msg.Debug("Command stderr: %s", stderrBuf.String())
+	}
+
 	return nil
-}
-
-type writer struct {
-	io.Writer
-	errorWritter bool
-}
-
-func newWriter(errorWritter bool) *writer {
-	return &writer{errorWritter: errorWritter}
-}
-
-func (writer *writer) Write(p []byte) (int, error) {
-	var str = "  " + string(p)
-	if writer.errorWritter {
-		msg.Err(str)
-	} else {
-		msg.Info(str)
-	}
-	return len(p), nil
 }
