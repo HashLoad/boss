@@ -2,8 +2,6 @@
 
 ![Boss][bossLogo]
 
-[![CI][ciBadge]][ciLink]
-[![codecov][codecovBadge]][codecovLink]
 [![Go Report Card][goReportBadge]][goReportLink]
 [![GitHub release (latest by date)][latestReleaseBadge]](https://github.com/HashLoad/boss/releases/latest)
 [![GitHub Release Date][releaseDateBadge]](https://github.com/HashLoad/boss/releases)
