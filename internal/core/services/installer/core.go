@@ -28,6 +28,7 @@ type installContext struct {
 	rootLocked       *domain.PackageLock
 	root             *domain.Package
 	processed        []string
+	visited          map[string]bool
 	useLockedVersion bool
 	progress         *ProgressTracker
 	lockSvc          *lockService.Service
@@ -46,6 +47,7 @@ func newInstallContext(pkg *domain.Package, options InstallOptions, progress *Pr
 		root:             pkg,
 		useLockedVersion: options.LockedVersion,
 		processed:        consts.DefaultPaths(),
+		visited:          make(map[string]bool),
 		progress:         progress,
 		lockSvc:          lockSvc,
 		modulesDir:       env.GetModulesDir(),
@@ -208,6 +210,11 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Dependency) error {
 	for _, dep := range deps {
 		depName := dep.Name()
+
+		if ic.visited[depName] {
+			continue
+		}
+		ic.visited[depName] = true
 
 		ic.progress.AddDependency(depName)
 
