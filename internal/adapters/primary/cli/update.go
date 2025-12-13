@@ -101,7 +101,8 @@ func updateWithSelect() {
 	msg.Info("Updating %d dependencies...\n", len(selectedDeps))
 	installer.InstallModules(installer.InstallOptions{
 		Args:          selectedDeps,
-		LockedVersion: false,
+		LockedVersion: true,
 		NoSave:        false,
+		ForceUpdate:   selectedDeps,
 	})
 }

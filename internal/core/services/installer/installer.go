@@ -18,6 +18,7 @@ type InstallOptions struct {
 	Compiler      string
 	Platform      string
 	Strict        bool
+	ForceUpdate   []string
 }
 
 // createLockService creates a new lock service instance.

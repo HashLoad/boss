@@ -291,6 +291,10 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 }
 
 func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
+	if utils.Contains(ic.options.ForceUpdate, dep.Name()) {
+		return false
+	}
+
 	if !ic.useLockedVersion {
 		return false
 	}
