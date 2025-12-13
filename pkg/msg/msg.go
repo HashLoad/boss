@@ -120,7 +120,7 @@ func (m *Messenger) Info(msg string, args ...any) {
 	if m.quietMode || m.logLevel < INFO {
 		return
 	}
-	m.print(pterm.Info.MessageStyle, msg, args...)
+	m.print(nil, msg, args...)
 }
 
 func (m *Messenger) Success(msg string, args ...any) {

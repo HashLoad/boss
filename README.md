@@ -41,7 +41,7 @@ Or you can use the following the steps below:
 
 ### > Init
 
-This command initialize a new project. Add `-q` or `--quiet` to initialize the boss with default values.
+Initialize a new project and create a `boss.json` file. Add `-q` or `--quiet` to skip interactive prompts and use default values.
 
 ```shell
 boss init
@@ -51,13 +51,13 @@ boss init --quiet
 
 ### > Install
 
-This command install a new dependency with real-time progress tracking:
+Install one or more dependencies with real-time progress tracking:
 
 ```shell
 boss install <dependency>
 ```
 
-**Progress Tracking:** Boss now displays Docker-style progress for each dependency being installed, showing status icons and real-time updates:
+**Progress Tracking:** Boss displays progress for each dependency being installed:
 
 ```
 ⏳ horse                          Waiting...
@@ -67,13 +67,13 @@ boss install <dependency>
 ✓ boss-core                      Installed
 ```
 
-The dependency is case insensitive. For example, `boss install horse` is the same as the `boss install HORSE` command.
+The dependency name is case insensitive. For example, `boss install horse` is the same as `boss install HORSE`.
 
-```pascal
-boss install horse // By default, look for the Horse project within the GitHub Hashload organization.
-boss install fake/horse // By default, look for the Horse project within the Fake GitHub organization.
-boss install gitlab.com/fake/horse // By default, searches for the Horse project within the Fake GitLab organization.
-boss install https://gitlab.com/fake/horse // You can also pass the full URL for installation
+```shell
+boss install horse                        # HashLoad organization on GitHub
+boss install fake/horse                   # Fake organization on GitHub
+boss install gitlab.com/fake/horse        # Fake organization on GitLab
+boss install https://gitlab.com/fake/horse # Full URL
 ```
 
 You can also specify the compiler version and platform:
@@ -86,7 +86,7 @@ boss install --compiler=35.0 --platform=Win64
 
 ### > Uninstall
 
-This command uninstall a dependency
+Remove a dependency from the project:
 
 ```sh
 boss uninstall <dependency>
@@ -94,43 +94,9 @@ boss uninstall <dependency>
 
 > Aliases: remove, rm, r, un, unlink
 
-### > Cache
-
-This command removes the cache
-
-```sh
- boss config cache rm
-```
-
-> Aliases: remove, rm, r
-
-### > Dependencies
-
-This command print all dependencies and your versions. To see versions, add aliases `-v`
-
-```shell
-boss dependencies
-boss dependencies -v
-```
-
-> Aliases: dep, ls, list, ll, la
-
-### > Version
-
-This command show the client version
-
-```shell
-boss v
-boss version
-boss -v
-boss --version
-```
-
-> Aliases: v
-
 ### > Update
 
-This command update installed dependencies
+Update all installed dependencies to their latest compatible versions:
 
 ```sh
 boss update
@@ -140,59 +106,120 @@ boss update
 
 ### > Upgrade
 
-This command upgrade the client latest version. Add `--dev` to upgrade to the latest pre-release.
+Upgrade the Boss CLI to the latest version. Add `--dev` to upgrade to the latest pre-release:
 
 ```sh
 boss upgrade
 boss upgrade --dev
 ```
 
-### > login
+### > Dependencies
 
-This command Register login to repo
+List all project dependencies in a tree format. Add `-v` to show version information:
+
+```shell
+boss dependencies
+boss dependencies -v
+boss dependencies <package>
+boss dependencies <package> -v
+```
+
+> Aliases: dep, ls, list, ll, la, dependency
+
+### > Run
+
+Execute a custom script defined in your `boss.json` file. Scripts are defined in the `scripts` section:
+
+```json
+{
+  "name": "my-project",
+  "scripts": {
+    "build": "msbuild MyProject.dproj",
+    "test": "MyProject.exe --test",
+    "clean": "del /s *.dcu"
+  }
+}
+```
+
+```sh
+boss run build
+boss run test
+boss run clean
+```
+
+### > Login
+
+Register credentials for a repository. Useful for private repositories:
 
 ```sh
 boss login <repo>
-boss adduser <repo>
-boss add-user <repo>
 boss login <repo> -u UserName -p Password
-boss login <repo> -k PrivateKey -p PassPhrase
+boss login <repo> -s -k PrivateKey -p PassPhrase  # SSH authentication
 ```
 
 > Aliases: adduser, add-user
 
-## Flags
+### > Logout
 
-### > Global
-
-This flag defines a global environment
+Remove saved credentials for a repository:
 
 ```sh
-boss --global
+boss logout <repo>
 ```
 
-> Aliases: -g
+### > Version
 
-### > Help
+Show the Boss CLI version:
 
-This is a helper for boss. Use `boss <command> --help` for more information about a command.
+```shell
+boss version
+boss v
+boss -v
+boss --version
+```
+
+> Aliases: v
+
+## Global Flags
+
+### > Global (-g)
+
+Use global environment for installation. Packages installed globally are available system-wide:
+
+```sh
+boss install -g <dependency>
+boss --global install <dependency>
+```
+
+### > Debug (-d)
+
+Enable debug mode to see detailed output:
+
+```sh
+boss install --debug
+boss -d install
+```
+
+### > Help (-h)
+
+Show help for any command:
 
 ```sh
 boss --help
-```
-
-> Aliases: -h
-
-## Another commands
-
-```sh
-delphi           Configure Delphi version
-gc               Garbage collector
-publish          Publish package to registry
-run              Run cmd script
+boss <command> --help
 ```
 
 ## Configuration
+
+### > Cache
+
+Manage the Boss cache. Remove all cached modules to free up disk space:
+
+```sh
+boss config cache rm
+```
+
+> Aliases: purge, clean
 
 ### > Delphi Version
 
