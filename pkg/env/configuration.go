@@ -56,7 +56,7 @@ func (a *Auth) GetUser() string {
 func (a *Auth) GetPassword() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.Pass)
 	if err != nil {
-		msg.Err("Fail to decrypt pass.", err)
+		msg.Die("Fail to decrypt pass: %s", err)
 		return ""
 	}
 
@@ -67,7 +67,7 @@ func (a *Auth) GetPassword() string {
 func (a *Auth) GetPassPhrase() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.PassPhrase)
 	if err != nil {
-		msg.Err("Fail to decrypt PassPhrase.", err)
+		msg.Die("Fail to decrypt PassPhrase: %s", err)
 		return ""
 	}
 	return ret
@@ -76,7 +76,7 @@ func (a *Auth) GetPassPhrase() string {
 // SetUser encrypts and sets the username
 func (a *Auth) SetUser(user string) {
 	if encryptedUser, err := crypto.Encrypt(crypto.MachineKey(), user); err != nil {
-		msg.Err("Fail to crypt user.", err)
+		msg.Die("Fail to crypt user: %s", err)
 	} else {
 		a.User = encryptedUser
 	}
@@ -85,7 +85,7 @@ func (a *Auth) SetUser(user string) {
 // SetPass encrypts and sets the password
 func (a *Auth) SetPass(pass string) {
 	if cPass, err := crypto.Encrypt(crypto.MachineKey(), pass); err != nil {
-		msg.Err("Fail to crypt pass.")
+		msg.Die("Fail to crypt pass: %s", err)
 	} else {
 		a.Pass = cPass
 	}
@@ -94,7 +94,7 @@ func (a *Auth) SetPass(pass string) {
 // SetPassPhrase encrypts and sets the passphrase
 func (a *Auth) SetPassPhrase(passphrase string) {
 	if cPassPhrase, err := crypto.Encrypt(crypto.MachineKey(), passphrase); err != nil {
-		msg.Err("Fail to crypt PassPhrase.")
+		msg.Die("Fail to crypt PassPhrase: %s", err)
 	} else {
 		a.PassPhrase = cPassPhrase
 	}
