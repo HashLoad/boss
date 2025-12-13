@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Execute executes the root command.
 func Execute() error {
 	var versionPrint bool
 	var global bool

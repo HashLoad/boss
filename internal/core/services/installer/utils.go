@@ -17,6 +17,7 @@ var (
 	reHasMultiSlash = regexp.MustCompile(`(?m)([?^/].*)(([?^/]).*)`)
 )
 
+// EnsureDependency ensures that the dependencies are added to the package.
 func EnsureDependency(pkg *domain.Package, args []string) {
 	for _, dependency := range args {
 		dependency = ParseDependency(dependency)
@@ -46,6 +47,7 @@ func EnsureDependency(pkg *domain.Package, args []string) {
 	}
 }
 
+// ParseDependency parses the dependency name and returns the full URL if needed.
 func ParseDependency(dependencyName string) string {
 	if !reHasSlash.MatchString(dependencyName) {
 		return "github.com/hashload/" + dependencyName

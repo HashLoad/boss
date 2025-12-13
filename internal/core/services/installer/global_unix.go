@@ -7,6 +7,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// GlobalInstall installs dependencies globally (Unix implementation).
 func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
 	EnsureDependency(pkg, args)
 	if err := DoInstall(InstallOptions{

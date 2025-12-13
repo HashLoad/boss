@@ -11,6 +11,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// InstallOptions holds the options for the installation process.
 type InstallOptions struct {
 	Args          []string
 	LockedVersion bool
@@ -28,6 +29,7 @@ func createLockService() *lockService.Service {
 	return lockService.NewService(lockRepo, fs)
 }
 
+// InstallModules installs the modules based on the provided options.
 func InstallModules(options InstallOptions) {
 	pkg, err := domain.LoadPackage(env.GetGlobal())
 	if err != nil {
@@ -45,6 +47,7 @@ func InstallModules(options InstallOptions) {
 	}
 }
 
+// UninstallModules uninstalls the specified modules.
 func UninstallModules(args []string, noSave bool) {
 	pkg, err := domain.LoadPackage(false)
 	if err != nil && !os.IsNotExist(err) {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// ErrRepositoryNil is returned when the repository is nil after cloning or updating.
 var ErrRepositoryNil = errors.New("failed to clone or update repository")
 
 // DependencyManager manages dependency fetching with proper dependency injection.

@@ -8,6 +8,7 @@ import (
 	"github.com/hashload/boss/utils/dcp"
 )
 
+// LocalInstall installs dependencies locally.
 func LocalInstall(options InstallOptions, pkg *domain.Package) {
 	// TODO noSave
 	EnsureDependency(pkg, options.Args)
