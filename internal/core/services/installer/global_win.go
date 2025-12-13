@@ -21,7 +21,11 @@ import (
 func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
 	// TODO noSave
 	EnsureDependency(pkg, args)
-	DoInstall(pkg, lockedVersion)
+	DoInstall(InstallOptions{
+		Args:          args,
+		LockedVersion: lockedVersion,
+		NoSave:        noSave,
+	}, pkg)
 	doInstallPackages()
 }
 

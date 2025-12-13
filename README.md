@@ -76,6 +76,12 @@ boss install gitlab.com/fake/horse // By default, searches for the Horse project
 boss install https://gitlab.com/fake/horse // You can also pass the full URL for installation
 ```
 
+You can also specify the compiler version and platform:
+
+```sh
+boss install --compiler=35.0 --platform=Win64
+```
+
 > Aliases: i, add
 
 ### > Uninstall
@@ -185,6 +191,60 @@ gc               Garbage collector
 publish          Publish package to registry
 run              Run cmd script
 ```
+
+## Configuration
+
+### > Delphi Version
+
+You can configure which Delphi version BOSS should use for compilation. This is useful when you have multiple Delphi versions installed.
+
+#### List available versions
+
+Lists all detected Delphi installations (32-bit and 64-bit) with their indexes.
+
+```sh
+boss config delphi list
+```
+
+#### Select a version
+
+Selects a specific Delphi version to use globally. You can use the index from the list command or the version number.
+
+```sh
+boss config delphi use <index>
+# or
+boss config delphi use <version>
+```
+
+Example:
+```sh
+boss config delphi use 0
+boss config delphi use 22.0
+```
+
+### > Project Toolchain
+
+You can also specify the required compiler version and platform in your project's `boss.json` file. This ensures that everyone working on the project uses the correct toolchain.
+
+Add a `toolchain` section to your `boss.json`:
+
+```json
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "toolchain": {
+    "delphi": "22.0",
+    "platform": "Win64"
+  }
+}
+```
+
+Supported fields in `toolchain`:
+- `delphi`: The Delphi version (e.g., "22.0", "10.4").
+- `compiler`: The compiler version (e.g., "35.0").
+- `platform`: The target platform ("Win32" or "Win64").
+- `path`: Explicit path to the compiler (optional).
+- `strict`: If true, fails if the exact version is not found (optional).
 
 ## Samples
 

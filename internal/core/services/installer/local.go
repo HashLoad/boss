@@ -5,9 +5,9 @@ import (
 	"github.com/hashload/boss/utils/dcp"
 )
 
-func LocalInstall(args []string, pkg *domain.Package, lockedVersion bool, _ /* noSave */ bool) {
+func LocalInstall(options InstallOptions, pkg *domain.Package) {
 	// TODO noSave
-	EnsureDependency(pkg, args)
-	DoInstall(pkg, lockedVersion)
+	EnsureDependency(pkg, options.Args)
+	DoInstall(options, pkg)
 	dcp.InjectDpcs(pkg, pkg.Lock)
 }

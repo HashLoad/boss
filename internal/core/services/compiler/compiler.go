@@ -7,14 +7,27 @@ import (
 
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/compiler/graphs"
+	"github.com/hashload/boss/internal/core/services/compiler_selector"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 )
 
-func Build(pkg *domain.Package) {
-	buildOrderedPackages(pkg)
+func Build(pkg *domain.Package, compilerVersion, platform string) {
+	ctx := compiler_selector.SelectionContext{
+		Package:            pkg,
+		CliCompilerVersion: compilerVersion,
+		CliPlatform:        platform,
+	}
+	selected, err := compiler_selector.SelectCompiler(ctx)
+	if err != nil {
+		msg.Warn("Compiler selection failed: %s. Falling back to default.", err)
+	} else {
+		msg.Info("Using compiler: %s (%s)", selected.Version, selected.Arch)
+	}
+
+	buildOrderedPackages(pkg, selected)
 	graph := LoadOrderGraphAll(pkg)
 	saveLoadOrder(graph)
 }
@@ -38,7 +51,7 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 	utils.HandleError(os.WriteFile(outDir, []byte(projects), 0600))
 }
 
-func buildOrderedPackages(pkg *domain.Package) {
+func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_selector.SelectedCompiler) {
 	pkg.Save()
 	queue := loadOrderGraph(pkg)
 
@@ -84,7 +97,7 @@ func buildOrderedPackages(pkg *domain.Package) {
 					if tracker.IsEnabled() {
 						tracker.SetBuilding(node.Dep.Name(), filepath.Base(dproj))
 					}
-					if !compile(dprojPath, &node.Dep, pkg.Lock, tracker) {
+					if !compile(dprojPath, &node.Dep, pkg.Lock, tracker, selectedCompiler) {
 						dependency.Failed = true
 						hasFailed = true
 					}

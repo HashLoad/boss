@@ -7,12 +7,22 @@ import (
 	"github.com/hashload/boss/pkg/env"
 )
 
+type DelphiInstallation struct {
+	Version string
+	Path    string
+	Arch    string // "Win32" or "Win64"
+}
+
 func GetDelphiPaths() []string {
 	var paths []string
 	for _, path := range getDelphiVersionFromRegistry() {
 		paths = append(paths, filepath.Dir(path))
 	}
 	return paths
+}
+
+func GetDetectedDelphis() []DelphiInstallation {
+	return getDetectedDelphisFromRegistry()
 }
 
 func GetCurrentDelphiVersion() string {

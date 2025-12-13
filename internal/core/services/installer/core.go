@@ -2,6 +2,7 @@ package installer
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,9 +32,10 @@ type installContext struct {
 	progress         *ProgressTracker
 	lockSvc          *lockService.Service
 	modulesDir       string
+	options          InstallOptions
 }
 
-func newInstallContext(pkg *domain.Package, useLockedVersion bool, progress *ProgressTracker) *installContext {
+func newInstallContext(pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
 	fs := filesystem.NewOSFileSystem()
 	lockRepo := repository.NewFileLockRepository(fs)
 	lockSvc := lockService.NewService(lockRepo, fs)
@@ -41,15 +43,16 @@ func newInstallContext(pkg *domain.Package, useLockedVersion bool, progress *Pro
 	return &installContext{
 		rootLocked:       &pkg.Lock,
 		root:             pkg,
-		useLockedVersion: useLockedVersion,
+		useLockedVersion: options.LockedVersion,
 		processed:        consts.DefaultPaths(),
 		progress:         progress,
 		lockSvc:          lockSvc,
 		modulesDir:       env.GetModulesDir(),
+		options:          options,
 	}
 }
 
-func DoInstall(pkg *domain.Package, lockedVersion bool) {
+func DoInstall(options InstallOptions, pkg *domain.Package) {
 	msg.Info("Analyzing dependencies...\n")
 
 	deps := collectAllDependencies(pkg)
@@ -60,7 +63,7 @@ func DoInstall(pkg *domain.Package, lockedVersion bool) {
 	}
 
 	progress := NewProgressTracker(deps)
-	installContext := newInstallContext(pkg, lockedVersion, progress)
+	installContext := newInstallContext(pkg, options, progress)
 
 	msg.Info("Installing %d dependencies:\n", len(deps))
 
@@ -92,7 +95,7 @@ func DoInstall(pkg *domain.Package, lockedVersion bool) {
 
 	librarypath.UpdateLibraryPath(pkg)
 
-	compiler.Build(pkg)
+	compiler.Build(pkg, options.Compiler, options.Platform)
 	pkg.Save()
 	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 	msg.Info("✓ Installation completed successfully!")
@@ -256,6 +259,11 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 			return err
 		}
 
+		if err := ic.verifyDependencyCompatibility(dep); err != nil {
+			ic.progress.SetFailed(depName, err)
+			return err
+		}
+
 		ic.progress.SetCompleted(depName)
 	}
 	return nil
@@ -403,4 +411,44 @@ func (ic *installContext) getVersionSemantic(
 		}
 	}
 	return bestReference
+}
+
+func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) error {
+	depPath := filepath.Join(ic.modulesDir, dep.GetName())
+	depPkg, err := domain.LoadPackage(filepath.Join(depPath, "boss.json"))
+	if err != nil {
+		return nil
+	}
+
+	if depPkg.Engines == nil || len(depPkg.Engines.Platforms) == 0 {
+		return nil
+	}
+
+	targetPlatform := ic.options.Platform
+	if targetPlatform == "" && ic.root.Toolchain != nil {
+		targetPlatform = ic.root.Toolchain.Platform
+	}
+
+	if targetPlatform == "" {
+		return nil
+	}
+
+	for _, p := range depPkg.Engines.Platforms {
+		if strings.EqualFold(p, targetPlatform) {
+			return nil
+		}
+	}
+
+	errorMessage := fmt.Sprintf("Dependency '%s' does not support platform '%s'. Supported: %v", dep.GetName(), targetPlatform, depPkg.Engines.Platforms)
+
+	isStrict := ic.options.Strict
+	if !isStrict && ic.root.Toolchain != nil {
+		isStrict = ic.root.Toolchain.Strict
+	}
+
+	if isStrict {
+		return errors.New(errorMessage)
+	}
+	msg.Warn(errorMessage)
+	return nil
 }

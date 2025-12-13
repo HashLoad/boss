@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/core/services/compiler_selector"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
@@ -54,7 +55,7 @@ func buildSearchPath(dep *domain.Dependency) string {
 	return searchPath
 }
 
-func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker) bool {
+func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker, selectedCompiler *compiler_selector.SelectedCompiler) bool {
 	if tracker == nil || !tracker.IsEnabled() {
 		msg.Info("  Building " + filepath.Base(dprojPath))
 	}
@@ -66,6 +67,15 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	}
 
 	dccDir := env.GetDcc32Dir()
+	platform := "Win32"
+
+	if selectedCompiler != nil {
+		dccDir = selectedCompiler.BinDir
+		if selectedCompiler.Arch != "" {
+			platform = selectedCompiler.Arch
+		}
+	}
+
 	rsvars := filepath.Join(dccDir, "rsvars.bat")
 	fileRes := "build_boss_" + strings.TrimSuffix(filepath.Base(dprojPath), filepath.Ext(dprojPath))
 	abs, _ := filepath.Abs(filepath.Dir(dprojPath))
@@ -85,7 +95,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	readFileStr += ";" + buildSearchPath(dep)
 
 	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
-	for _, value := range []string{"Win32"} {
+	for _, value := range []string{platform} {
 		readFileStr += " \n msbuild \"" +
 			project +
 			"\" /p:Configuration=Debug " +

@@ -67,7 +67,7 @@ type DefaultProjectCompiler struct{}
 
 // Compile compiles a dproj file.
 func (d *DefaultProjectCompiler) Compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock) bool {
-	return compile(dprojPath, dep, rootLock, nil)
+	return compile(dprojPath, dep, rootLock, nil, nil)
 }
 
 // DefaultArtifactManager implements ArtifactManager.

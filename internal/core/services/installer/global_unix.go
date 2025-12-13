@@ -7,8 +7,12 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, _ /* nosave */ bool) {
+func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
 	EnsureDependency(pkg, args)
-	DoInstall(pkg, lockedVersion)
+	DoInstall(InstallOptions{
+		Args:          args,
+		LockedVersion: lockedVersion,
+		NoSave:        noSave,
+	}, pkg)
 	msg.Err("Cannot install global packages on this platform, only build and install local")
 }

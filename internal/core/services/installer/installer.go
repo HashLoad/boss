@@ -11,6 +11,15 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+type InstallOptions struct {
+	Args          []string
+	LockedVersion bool
+	NoSave        bool
+	Compiler      string
+	Platform      string
+	Strict        bool
+}
+
 // createLockService creates a new lock service instance.
 func createLockService() *lockService.Service {
 	fs := filesystem.NewOSFileSystem()
@@ -18,7 +27,7 @@ func createLockService() *lockService.Service {
 	return lockService.NewService(lockRepo, fs)
 }
 
-func InstallModules(args []string, lockedVersion bool, noSave bool) {
+func InstallModules(options InstallOptions) {
 	pkg, err := domain.LoadPackage(env.GetGlobal())
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -29,9 +38,9 @@ func InstallModules(args []string, lockedVersion bool, noSave bool) {
 	}
 
 	if env.GetGlobal() {
-		GlobalInstall(args, pkg, lockedVersion, noSave)
+		GlobalInstall(options.Args, pkg, options.LockedVersion, options.NoSave)
 	} else {
-		LocalInstall(args, pkg, lockedVersion, noSave)
+		LocalInstall(options, pkg)
 	}
 }
 
@@ -54,5 +63,9 @@ func UninstallModules(args []string, noSave bool) {
 	lockSvc := createLockService()
 	_ = lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 
-	InstallModules([]string{}, false, noSave)
+	InstallModules(InstallOptions{
+		Args:          []string{},
+		LockedVersion: false,
+		NoSave:        noSave,
+	})
 }

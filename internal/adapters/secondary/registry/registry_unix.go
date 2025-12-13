@@ -10,3 +10,8 @@ func getDelphiVersionFromRegistry() map[string]string {
 
 	return map[string]string{}
 }
+
+func getDetectedDelphisFromRegistry() []DelphiInstallation {
+	msg.Warn("getDetectedDelphisFromRegistry not implemented on this platform")
+	return []DelphiInstallation{}
+}

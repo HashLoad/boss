@@ -29,7 +29,11 @@ func updateCmdRegister(root *cobra.Command) {
 			if selectMode {
 				updateWithSelect()
 			} else {
-				installer.InstallModules(args, false, false)
+				installer.InstallModules(installer.InstallOptions{
+					Args:          args,
+					LockedVersion: false,
+					NoSave:        false,
+				})
 			}
 		},
 	}
@@ -95,5 +99,9 @@ func updateWithSelect() {
 	}
 
 	msg.Info("Updating %d dependencies...\n", len(selectedDeps))
-	installer.InstallModules(selectedDeps, false, false)
+	installer.InstallModules(installer.InstallOptions{
+		Args:          selectedDeps,
+		LockedVersion: false,
+		NoSave:        false,
+	})
 }

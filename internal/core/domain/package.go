@@ -63,7 +63,23 @@ type Package struct {
 	Projects     []string          `json:"projects"`
 	Scripts      map[string]string `json:"scripts,omitempty"`
 	Dependencies map[string]string `json:"dependencies"`
+	Engines      *PackageEngines   `json:"engines,omitempty"`
+	Toolchain    *PackageToolchain `json:"toolchain,omitempty"`
 	Lock         PackageLock       `json:"-"`
+}
+
+type PackageEngines struct {
+	Delphi    string   `json:"delphi,omitempty"`
+	Compiler  string   `json:"compiler,omitempty"`
+	Platforms []string `json:"platforms,omitempty"`
+}
+
+type PackageToolchain struct {
+	Delphi   string `json:"delphi,omitempty"`
+	Compiler string `json:"compiler,omitempty"`
+	Platform string `json:"platform,omitempty"`
+	Path     string `json:"path,omitempty"`
+	Strict   bool   `json:"strict,omitempty"`
 }
 
 // NewPackage creates a new Package with the given file path.
