@@ -208,18 +208,21 @@ boss config delphi list
 
 #### Select a version
 
-Selects a specific Delphi version to use globally. You can use the index from the list command or the version number.
+Selects a specific Delphi version to use globally. You can use the index from the list command, the version number, or the version with architecture.
 
 ```sh
 boss config delphi use <index>
 # or
 boss config delphi use <version>
+# or
+boss config delphi use <version>-<arch>
 ```
 
 Example:
 ```sh
 boss config delphi use 0
 boss config delphi use 22.0
+boss config delphi use 22.0-Win64
 ```
 
 ### > Project Toolchain

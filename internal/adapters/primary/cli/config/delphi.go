@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -42,12 +41,6 @@ func delphiCmd(root *cobra.Command) {
 			if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 				return err
 			}
-			if _, err := strconv.Atoi(args[0]); err != nil {
-				if _, err = os.Stat(args[0]); os.IsNotExist(err) {
-					return errors.New("invalid path")
-				}
-			}
-
 			return nil
 		},
 		Run: func(_ *cobra.Command, args []string) {
@@ -152,6 +145,13 @@ func useDelphiVersion(pathOrIndex string) {
 					found = true
 					break
 				}
+
+				versionWithArch := fmt.Sprintf("%s-%s", inst.Version, inst.Arch)
+				if strings.EqualFold(versionWithArch, pathOrIndex) {
+					config.DelphiPath = filepath.Dir(inst.Path)
+					found = true
+					break
+				}
 			}
 			if !found {
 				msg.Die("Invalid index or version: %s. Use 'boss config delphi list' to see available options", pathOrIndex)
@@ -160,7 +160,15 @@ func useDelphiVersion(pathOrIndex string) {
 	} else {
 		found := false
 		for _, inst := range installations {
+
 			if inst.Version == pathOrIndex {
+				config.DelphiPath = filepath.Dir(inst.Path)
+				found = true
+				break
+			}
+
+			versionWithArch := fmt.Sprintf("%s-%s", inst.Version, inst.Arch)
+			if strings.EqualFold(versionWithArch, pathOrIndex) {
 				config.DelphiPath = filepath.Dir(inst.Path)
 				found = true
 				break
