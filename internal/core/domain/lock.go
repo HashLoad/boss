@@ -99,7 +99,7 @@ func LoadPackageLockWithFS(parentPackage *Package, filesystem infra.FileSystem) 
 // AddDependency adds a dependency to the lock without performing I/O.
 // The hash must be pre-calculated and passed as a parameter.
 func (p *PackageLock) AddDependency(dep Dependency, version, hash string) {
-	key := strings.ToLower(dep.Repository)
+	key := dep.GetKey()
 	if locked, ok := p.Installed[key]; !ok {
 		p.Installed[key] = LockedDependency{
 			Name:    dep.Name(),
@@ -122,19 +122,19 @@ func (p *PackageLock) AddDependency(dep Dependency, version, hash string) {
 
 // GetInstalled returns the locked dependency for the given dependency.
 func (p *PackageLock) GetInstalled(dep Dependency) LockedDependency {
-	return p.Installed[strings.ToLower(dep.Repository)]
+	return p.Installed[dep.GetKey()]
 }
 
 // SetInstalled sets a locked dependency without performing any I/O operations.
 func (p *PackageLock) SetInstalled(dep Dependency, locked LockedDependency) {
-	p.Installed[strings.ToLower(dep.Repository)] = locked
+	p.Installed[dep.GetKey()] = locked
 }
 
 // CleanRemoved removes dependencies that are no longer in the dependency list.
 func (p *PackageLock) CleanRemoved(deps []Dependency) {
 	var repositories []string
 	for _, dep := range deps {
-		repositories = append(repositories, strings.ToLower(dep.Repository))
+		repositories = append(repositories, dep.GetKey())
 	}
 
 	for key := range p.Installed {

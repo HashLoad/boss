@@ -4,7 +4,6 @@ package lock
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/ports"
@@ -36,7 +35,7 @@ func (s *Service) Save(lock *domain.PackageLock, packageDir string) error {
 
 // NeedUpdate checks if a dependency needs to be updated.
 func (s *Service) NeedUpdate(lock *domain.PackageLock, dep domain.Dependency, version, modulesDir string) bool {
-	key := strings.ToLower(dep.Repository)
+	key := dep.GetKey()
 	locked, ok := lock.Installed[key]
 	if !ok {
 		return true
@@ -72,7 +71,7 @@ func (s *Service) AddDependency(lock *domain.PackageLock, dep domain.Dependency,
 	depDir := filepath.Join(modulesDir, dep.Name())
 	hash := utils.HashDir(depDir)
 
-	key := strings.ToLower(dep.Repository)
+	key := dep.GetKey()
 	if existing, ok := lock.Installed[key]; !ok {
 		lock.Installed[key] = domain.LockedDependency{
 			Name:    dep.Name(),
