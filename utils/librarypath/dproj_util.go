@@ -147,7 +147,6 @@ func createTagLibraryPath(node *etree.Element) *etree.Element {
 
 func GetProjectNames(pkg *domain.Package) []string {
 	var result []string
-	var matches = 0
 
 	if len(pkg.Projects) > 0 {
 		result = pkg.Projects
@@ -158,10 +157,8 @@ func GetProjectNames(pkg *domain.Package) []string {
 		}
 
 		for _, file := range files {
-			matched := reProjectFile.MatchString(file.Name())
-			if matched {
-				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
-				matches++
+			if reProjectFile.MatchString(file.Name()) {
+				result = append(result, filepath.Join(env.GetCurrentDir(), file.Name()))
 			}
 		}
 	}
