@@ -84,11 +84,6 @@ func TestGetByTag_NotFound(t *testing.T) {
 	}
 }
 
-// TestDefaultRepository_Interface tests that DefaultRepository implements Repository.
-func TestDefaultRepository_Interface(_ *testing.T) {
-	var _ Repository = &DefaultRepository{}
-}
-
 // TestGetVersions_EmptyRepo tests GetVersions with empty repository.
 func TestGetVersions_EmptyRepo(t *testing.T) {
 	repo, err := goGit.Init(memory.NewStorage(), nil)

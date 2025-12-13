@@ -1,13 +1,36 @@
 package domain_test
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/infra"
 )
+
+// testFileSystem is a simple test implementation of FileSystem
+type testFileSystem struct {
+	files map[string]bool
+}
+
+var _ infra.FileSystem = (*testFileSystem)(nil)
+
+func (fs *testFileSystem) ReadFile(_ string) ([]byte, error)                 { return nil, nil }
+func (fs *testFileSystem) WriteFile(_ string, _ []byte, _ os.FileMode) error { return nil }
+func (fs *testFileSystem) MkdirAll(_ string, _ os.FileMode) error            { return nil }
+func (fs *testFileSystem) Stat(_ string) (os.FileInfo, error)                { return nil, nil }
+func (fs *testFileSystem) Remove(_ string) error                             { return nil }
+func (fs *testFileSystem) RemoveAll(_ string) error                          { return nil }
+func (fs *testFileSystem) Rename(_, _ string) error                          { return nil }
+func (fs *testFileSystem) Open(_ string) (io.ReadCloser, error)              { return nil, nil }
+func (fs *testFileSystem) Create(_ string) (io.WriteCloser, error)           { return nil, nil }
+func (fs *testFileSystem) IsDir(_ string) bool                               { return false }
+func (fs *testFileSystem) Exists(name string) bool {
+	return fs.files[name]
+}
 
 func TestDependencyArtifacts_Clean(t *testing.T) {
 	artifacts := domain.DependencyArtifacts{
@@ -228,7 +251,7 @@ func TestPackageLock_SetInstalled(t *testing.T) {
 	}
 }
 
-func TestLockedDependency_CheckArtifactsType(t *testing.T) {
+func TestLockedDependency_CheckArtifactsExist(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create test artifact files
@@ -246,22 +269,28 @@ func TestLockedDependency_CheckArtifactsType(t *testing.T) {
 		},
 	}
 
+	// Create a mock filesystem
+	fs := &testFileSystem{files: make(map[string]bool)}
+	for _, f := range artifactFiles {
+		fs.files[filepath.Join(tempDir, f)] = true
+	}
+
 	// Test with existing files - should return true
-	result := locked.CheckArtifactsType(tempDir, locked.Artifacts.Bpl)
+	result := locked.CheckArtifactsExist(tempDir, locked.Artifacts.Bpl, fs)
 	if !result {
-		t.Error("CheckArtifactsType should return true when all artifacts exist")
+		t.Error("CheckArtifactsExist should return true when all artifacts exist")
 	}
 
 	// Test with non-existing files - should return false
-	result = locked.CheckArtifactsType(tempDir, []string{"nonexistent.bpl"})
+	result = locked.CheckArtifactsExist(tempDir, []string{"nonexistent.bpl"}, fs)
 	if result {
-		t.Error("CheckArtifactsType should return false when artifacts don't exist")
+		t.Error("CheckArtifactsExist should return false when artifacts don't exist")
 	}
 
 	// Test with empty artifacts - should return true
-	result = locked.CheckArtifactsType(tempDir, []string{})
+	result = locked.CheckArtifactsExist(tempDir, []string{}, fs)
 	if !result {
-		t.Error("CheckArtifactsType should return true for empty artifact list")
+		t.Error("CheckArtifactsExist should return true for empty artifact list")
 	}
 }
 

@@ -5,7 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/core/services/cache"
 	"github.com/hashload/boss/internal/core/services/installer"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
@@ -123,7 +125,8 @@ func printSingleDependency(
 
 func isOutdated(dependency domain.Dependency, version string) (dependencyStatus, string) {
 	installer.GetDependency(dependency)
-	info, err := domain.RepoData(dependency.HashName())
+	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	info, err := cacheService.LoadRepositoryData(dependency.HashName())
 	if err != nil {
 		utils.HandleError(err)
 	} else {

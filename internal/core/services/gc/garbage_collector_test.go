@@ -7,11 +7,15 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
+	"github.com/hashload/boss/internal/core/services/cache"
 )
 
 // TestRemoveCacheFunc_NilInfo tests that the walk function handles nil info gracefully.
 func TestRemoveCacheFunc_NilInfo(t *testing.T) {
-	fn := removeCache(false)
+	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	fn := removeCache(false, cacheService)
 
 	// Should not panic with nil info
 	err := fn("/some/path", nil, nil)
@@ -24,7 +28,8 @@ func TestRemoveCacheFunc_NilInfo(t *testing.T) {
 func TestRemoveCacheFunc_Directory(t *testing.T) {
 	tempDir := t.TempDir()
 
-	fn := removeCache(false)
+	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	fn := removeCache(false, cacheService)
 
 	info, err := os.Stat(tempDir)
 	if err != nil {
@@ -49,7 +54,8 @@ func TestRemoveCacheFunc_InvalidInfoFile(t *testing.T) {
 		t.Fatalf("Failed to create invalid file: %v", err)
 	}
 
-	fn := removeCache(false)
+	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	fn := removeCache(false, cacheService)
 
 	info, err := os.Stat(invalidFile)
 	if err != nil {
@@ -66,7 +72,7 @@ func TestRemoveCacheFunc_InvalidInfoFile(t *testing.T) {
 // cacheInfo is a minimal struct for creating test cache files.
 type cacheInfo struct {
 	Key        string    `json:"key"`
-	LastUpdate time.Time `json:"lastUpdate"`
+	LastUpdate time.Time `json:"last_update"`
 }
 
 // TestRemoveCacheFunc_ExpiredCache tests removal of expired cache entries.
@@ -104,7 +110,8 @@ func TestRemoveCacheFunc_ExpiredCache(t *testing.T) {
 	}
 
 	t.Run("ignoreLastUpdate forces removal", func(t *testing.T) {
-		fn := removeCache(true)
+		cacheService := cache.NewService(filesystem.NewOSFileSystem())
+		fn := removeCache(true, cacheService)
 
 		fileInfo, err := os.Stat(infoFile)
 		if err != nil {
@@ -148,7 +155,8 @@ func TestRemoveCacheFunc_RecentCache(t *testing.T) {
 		t.Fatalf("Failed to write info file: %v", err)
 	}
 
-	fn := removeCache(false)
+	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	fn := removeCache(false, cacheService)
 
 	fileInfo, err := os.Stat(infoFile)
 	if err != nil {

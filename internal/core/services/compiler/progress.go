@@ -54,7 +54,6 @@ func NewBuildTracker(packageNames []string) *BuildTracker {
 		}
 	}
 
-	// Deduplicate names
 	seen := make(map[string]bool)
 	names := make([]string, 0, len(packageNames))
 	for _, name := range packageNames {
@@ -70,13 +69,6 @@ func NewBuildTracker(packageNames []string) *BuildTracker {
 			DefaultStatus: BuildStatusWaiting,
 			StatusConfig:  buildStatusConfig,
 		}),
-	}
-}
-
-// NewNullBuildTracker creates a disabled tracker (Null Object Pattern).
-func NewNullBuildTracker() *BuildTracker {
-	return &BuildTracker{
-		Tracker: tracker.NewNull[BuildStatus](),
 	}
 }
 

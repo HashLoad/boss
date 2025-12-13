@@ -1,6 +1,8 @@
 package installer
 
 import (
+	"context"
+
 	goGit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -8,8 +10,8 @@ import (
 	"github.com/hashload/boss/internal/core/domain"
 )
 
-// Ensure DefaultGitClient implements GitClient.
-var _ GitClient = (*DefaultGitClient)(nil)
+// Ensure DefaultGitClient implements GitClientV2.
+var _ GitClientV2 = (*DefaultGitClient)(nil)
 
 // DefaultGitClient is the production implementation of GitClient.
 type DefaultGitClient struct{}
@@ -66,4 +68,33 @@ type configBranch struct {
 // Name returns the branch name.
 func (b *configBranch) Name() string {
 	return b.Branch.Name
+}
+
+// CloneCacheWithContext clones with context support for cancellation.
+// Note: go-git's Clone operation doesn't support context natively.
+// We check for cancellation before starting, but the clone operation itself
+// may not be interruptible once started.
+func (c *DefaultGitClient) CloneCacheWithContext(ctx context.Context, dep domain.Dependency) (*goGit.Repository, error) {
+	// Check for cancellation before starting
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	return c.CloneCache(dep)
+}
+
+// UpdateCacheWithContext updates with context support for cancellation.
+// Note: go-git's Fetch operation doesn't support context natively.
+// We check for cancellation before starting, but the update operation itself
+// may not be interruptible once started.
+func (c *DefaultGitClient) UpdateCacheWithContext(ctx context.Context, dep domain.Dependency) (*goGit.Repository, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	return c.UpdateCache(dep)
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/internal/core/domain"
 )
 
@@ -254,6 +255,10 @@ func TestPackage_GetParsedDependencies(t *testing.T) {
 }
 
 func TestLoadPackageOther_ValidPackage(t *testing.T) {
+	// Setup real filesystem for this test
+	domain.SetDefaultFS(filesystem.NewOSFileSystem())
+	defer domain.SetDefaultFS(nil)
+
 	tempDir := t.TempDir()
 
 	pkgContent := map[string]any{
@@ -324,6 +329,10 @@ func TestLoadPackageOther_InvalidJSON(t *testing.T) {
 }
 
 func TestLoadPackageOther_EmptyJSON(t *testing.T) {
+	// Setup real filesystem for this test
+	domain.SetDefaultFS(filesystem.NewOSFileSystem())
+	defer domain.SetDefaultFS(nil)
+
 	tempDir := t.TempDir()
 
 	emptyPath := filepath.Join(tempDir, "empty.json")
@@ -574,26 +583,6 @@ func TestLoadPackageLockWithFS_ExistingLock(t *testing.T) {
 	if len(lock.Installed) != 1 {
 		t.Errorf("Installed count = %d, want 1", len(lock.Installed))
 	}
-}
-
-func TestPackageLock_Save_WithMockFS(_ *testing.T) {
-	mockFS := NewMockFileSystem()
-
-	lock := domain.PackageLock{
-		Hash: "test-hash",
-		Installed: map[string]domain.LockedDependency{
-			"github.com/test/repo": {
-				Name:    "repo",
-				Version: "1.0.0",
-			},
-		},
-	}
-	lock.SetFS(mockFS)
-
-	lock.Save()
-
-	// Since we don't have direct access to fileName, we just verify no panic occurred
-	// The Save method should work without error
 }
 
 func TestDependency_GetURL_SSH(t *testing.T) {

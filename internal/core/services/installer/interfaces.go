@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"context"
 	"sync"
 
 	goGit "github.com/go-git/go-git/v5"
@@ -30,6 +31,18 @@ type GitClient interface {
 
 	// GetTagsShortName returns short names of all tags.
 	GetTagsShortName(repository *goGit.Repository) []string
+}
+
+// GitClientV2 extends GitClient with context support for cancellation and timeouts.
+// New code should implement this interface instead of GitClient.
+type GitClientV2 interface {
+	GitClient
+
+	// CloneCacheWithContext clones with context support for cancellation.
+	CloneCacheWithContext(ctx context.Context, dep domain.Dependency) (*goGit.Repository, error)
+
+	// UpdateCacheWithContext updates with context support for cancellation.
+	UpdateCacheWithContext(ctx context.Context, dep domain.Dependency) (*goGit.Repository, error)
 }
 
 // Branch represents a git branch.
@@ -69,20 +82,6 @@ func (c *DependencyCache) MarkUpdated(hashName string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.updated[hashName] = true
-}
-
-// Reset clears all cached updates.
-func (c *DependencyCache) Reset() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.updated = make(map[string]bool)
-}
-
-// Count returns the number of updated dependencies.
-func (c *DependencyCache) Count() int {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return len(c.updated)
 }
 
 // FileSystem abstracts file system operations for testability.

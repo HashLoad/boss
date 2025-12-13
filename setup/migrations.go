@@ -135,7 +135,7 @@ func oldDecrypt(securemess any) (string, error) {
 	iv := cipherText[:aes.BlockSize]
 	cipherText = cipherText[aes.BlockSize:]
 
-	//nolint:staticcheck // Just use the old decrypt method to migrate the data
+	//nolint:staticcheck,deprecation // Just use the old decrypt method to migrate the data
 	stream := cipher.NewCFBDecrypter(block, iv)
 	stream.XORKeyStream(cipherText, cipherText)
 

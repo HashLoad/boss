@@ -90,13 +90,6 @@ func NewProgressTracker(deps []domain.Dependency) *ProgressTracker {
 	}
 }
 
-// NewNullProgressTracker creates a disabled tracker (Null Object Pattern).
-func NewNullProgressTracker() *ProgressTracker {
-	return &ProgressTracker{
-		Tracker: tracker.NewNull[DependencyStatus](),
-	}
-}
-
 // AddDependency adds a transitive dependency to the tracking list.
 func (pt *ProgressTracker) AddDependency(depName string) {
 	pt.AddItem(depName)

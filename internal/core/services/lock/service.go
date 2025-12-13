@@ -28,29 +28,6 @@ func NewService(repo ports.LockRepository, fs infra.FileSystem) *Service {
 	}
 }
 
-// LoadForPackage loads the lock file for a given package.
-func (s *Service) LoadForPackage(packageDir, packageName string) (*domain.PackageLock, error) {
-	// Handle migration from old format
-	oldPath := filepath.Join(packageDir, consts.FilePackageLockOld)
-	newPath := filepath.Join(packageDir, consts.FilePackageLock)
-
-	if err := s.repo.MigrateOldFormat(oldPath, newPath); err != nil {
-		return nil, err
-	}
-
-	lock, err := s.repo.Load(newPath)
-	if err != nil {
-		// Create new lock if file doesn't exist
-		hash := domain.ComputeMD5Hash(packageName)
-		return &domain.PackageLock{
-			Hash:      hash,
-			Installed: make(map[string]domain.LockedDependency),
-		}, nil
-	}
-
-	return lock, nil
-}
-
 // Save persists the lock file.
 func (s *Service) Save(lock *domain.PackageLock, packageDir string) error {
 	lockPath := filepath.Join(packageDir, consts.FilePackageLock)
@@ -90,22 +67,6 @@ func (s *Service) NeedUpdate(lock *domain.PackageLock, dep domain.Dependency, ve
 	return false
 }
 
-// MarkNeedUpdate marks a dependency as needing update and returns whether update is needed.
-func (s *Service) MarkNeedUpdate(lock *domain.PackageLock, dep domain.Dependency, version, modulesDir string) bool {
-	needUpdate := s.NeedUpdate(lock, dep, version, modulesDir)
-
-	if needUpdate {
-		key := strings.ToLower(dep.Repository)
-		if locked, ok := lock.Installed[key]; ok {
-			locked.Changed = true
-			locked.Failed = false
-			lock.Installed[key] = locked
-		}
-	}
-
-	return needUpdate
-}
-
 // AddDependency adds a dependency to the lock with computed hash.
 func (s *Service) AddDependency(lock *domain.PackageLock, dep domain.Dependency, version, modulesDir string) {
 	depDir := filepath.Join(modulesDir, dep.Name())
@@ -132,14 +93,6 @@ func (s *Service) AddDependency(lock *domain.PackageLock, dep domain.Dependency,
 	}
 }
 
-// SetInstalled updates an installed dependency with computed hash.
-func (s *Service) SetInstalled(lock *domain.PackageLock, dep domain.Dependency, locked domain.LockedDependency, modulesDir string) {
-	depDir := filepath.Join(modulesDir, dep.Name())
-	hash := utils.HashDir(depDir)
-	locked.Hash = hash
-	lock.Installed[strings.ToLower(dep.Repository)] = locked
-}
-
 // checkArtifacts verifies that all artifacts exist on disk.
 func (s *Service) checkArtifacts(locked domain.LockedDependency, modulesDir string) bool {
 	checks := []struct {
@@ -162,16 +115,5 @@ func (s *Service) checkArtifacts(locked domain.LockedDependency, modulesDir stri
 		}
 	}
 
-	return true
-}
-
-// CheckArtifactsExist checks if specific artifacts exist.
-func (s *Service) CheckArtifactsExist(directory string, artifacts []string) bool {
-	for _, artifact := range artifacts {
-		path := filepath.Join(directory, artifact)
-		if !s.fs.Exists(path) {
-			return false
-		}
-	}
 	return true
 }

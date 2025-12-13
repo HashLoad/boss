@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 
 	goGit "github.com/go-git/go-git/v5"
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/core/services/cache"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 )
@@ -15,17 +17,19 @@ var ErrRepositoryNil = errors.New("failed to clone or update repository")
 
 // DependencyManager manages dependency fetching with proper dependency injection.
 type DependencyManager struct {
-	gitClient GitClient
-	cache     *DependencyCache
-	cacheDir  string
+	gitClient    GitClient
+	cache        *DependencyCache
+	cacheDir     string
+	cacheService *cache.Service
 }
 
 // NewDependencyManager creates a new DependencyManager with the given dependencies.
-func NewDependencyManager(gitClient GitClient, cache *DependencyCache) *DependencyManager {
+func NewDependencyManager(gitClient GitClient, depCache *DependencyCache, cacheService *cache.Service) *DependencyManager {
 	return &DependencyManager{
-		gitClient: gitClient,
-		cache:     cache,
-		cacheDir:  env.GetCacheDir(),
+		gitClient:    gitClient,
+		cache:        depCache,
+		cacheDir:     env.GetCacheDir(),
+		cacheService: cacheService,
 	}
 }
 
@@ -34,6 +38,7 @@ func NewDefaultDependencyManager() *DependencyManager {
 	return NewDependencyManager(
 		NewDefaultGitClient(),
 		NewDependencyCache(),
+		cache.NewService(filesystem.NewOSFileSystem()),
 	)
 }
 
@@ -72,7 +77,9 @@ func (dm *DependencyManager) GetDependencyWithProgress(dep domain.Dependency, pr
 	}
 
 	tagsShortNames := dm.gitClient.GetTagsShortName(repository)
-	domain.CacheRepositoryDetails(dep, tagsShortNames)
+	if err := dm.cacheService.SaveRepositoryDetails(dep, tagsShortNames); err != nil {
+		msg.Warn("Failed to cache repository details: %v", err)
+	}
 	return nil
 }
 
@@ -95,14 +102,4 @@ func (dm *DependencyManager) hasCache(dep domain.Dependency) bool {
 	// Other error, try to clean up and return false
 	_ = os.RemoveAll(dir)
 	return false
-}
-
-// Reset clears the dependency cache for a new session.
-func (dm *DependencyManager) Reset() {
-	dm.cache.Reset()
-}
-
-// Cache returns the underlying cache for inspection.
-func (dm *DependencyManager) Cache() *DependencyCache {
-	return dm.cache
 }

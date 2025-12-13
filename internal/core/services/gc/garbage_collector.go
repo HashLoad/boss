@@ -7,7 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
+	"github.com/hashload/boss/internal/core/services/cache"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 )
@@ -19,10 +20,11 @@ func RunGC(ignoreLastUpdate bool) error {
 	}()
 
 	path := filepath.Join(env.GetCacheDir(), "info")
-	return filepath.Walk(path, removeCache(ignoreLastUpdate))
+	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	return filepath.Walk(path, removeCache(ignoreLastUpdate, cacheService))
 }
 
-func removeCache(ignoreLastUpdate bool) filepath.WalkFunc {
+func removeCache(ignoreLastUpdate bool, cacheService *cache.Service) filepath.WalkFunc {
 	return func(_ string, info os.FileInfo, _ error) error {
 		if info == nil || info.IsDir() {
 			return nil
@@ -31,7 +33,7 @@ func removeCache(ignoreLastUpdate bool) filepath.WalkFunc {
 		var extension = filepath.Ext(info.Name())
 		base := filepath.Base(info.Name())
 		var name = strings.TrimRight(base, extension)
-		repoInfo, err := domain.RepoData(name)
+		repoInfo, err := cacheService.LoadRepositoryData(name)
 		if err != nil {
 			msg.Warn("Fail to parse repo info in GC: ", err)
 			return nil

@@ -39,7 +39,7 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 }
 
 func buildOrderedPackages(pkg *domain.Package) {
-	pkg.Lock.Save()
+	pkg.Save()
 	queue := loadOrderGraph(pkg)
 
 	var packageNames []string

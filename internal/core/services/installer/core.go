@@ -9,9 +9,12 @@ import (
 	"github.com/Masterminds/semver/v3"
 	goGit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	git "github.com/hashload/boss/internal/adapters/secondary/git"
+	"github.com/hashload/boss/internal/adapters/secondary/repository"
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/compiler"
+	lockService "github.com/hashload/boss/internal/core/services/lock"
 	"github.com/hashload/boss/internal/core/services/paths"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
@@ -26,15 +29,23 @@ type installContext struct {
 	processed        []string
 	useLockedVersion bool
 	progress         *ProgressTracker
+	lockSvc          *lockService.Service
+	modulesDir       string
 }
 
 func newInstallContext(pkg *domain.Package, useLockedVersion bool, progress *ProgressTracker) *installContext {
+	fs := filesystem.NewOSFileSystem()
+	lockRepo := repository.NewFileLockRepository(fs)
+	lockSvc := lockService.NewService(lockRepo, fs)
+
 	return &installContext{
 		rootLocked:       &pkg.Lock,
 		root:             pkg,
 		useLockedVersion: useLockedVersion,
 		processed:        consts.DefaultPaths(),
 		progress:         progress,
+		lockSvc:          lockSvc,
+		modulesDir:       env.GetModulesDir(),
 	}
 }
 
@@ -77,11 +88,13 @@ func DoInstall(pkg *domain.Package, lockedVersion bool) {
 
 	pkg.Lock.CleanRemoved(dependencies)
 	pkg.Save()
+	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 
 	librarypath.UpdateLibraryPath(pkg)
 
 	compiler.Build(pkg)
 	pkg.Save()
+	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 	msg.Info("✓ Installation completed successfully!")
 }
 
@@ -225,7 +238,9 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 		}
 
 		currentRef := head.Name()
-		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) && status.IsClean() && referenceName == currentRef {
+
+		needsUpdate := ic.lockSvc.NeedUpdate(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
+		if !needsUpdate && status.IsClean() && referenceName == currentRef {
 			if ic.progress.IsEnabled() {
 				ic.progress.SetSkipped(depName, "already up to date")
 			} else {
@@ -310,7 +325,7 @@ func (ic *installContext) checkoutAndUpdate(
 		Branch: referenceName,
 	})
 
-	ic.rootLocked.Add(dep, referenceName.Short())
+	ic.lockSvc.AddDependency(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
 
 	if err != nil {
 		return err
@@ -344,7 +359,6 @@ func (ic *installContext) getVersion(
 	constraints, err := ParseConstraint(dep.GetVersion())
 	if err != nil {
 		msg.Warn("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
-		// Try exact match as fallback
 		for _, version := range versions {
 			if version.Name().Short() == dep.GetVersion() {
 				return version

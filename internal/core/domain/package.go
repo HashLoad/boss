@@ -3,8 +3,6 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"sync"
 
@@ -38,7 +36,7 @@ func GetDefaultFS() infra.FileSystem {
 	return defaultFS
 }
 
-// getOrCreateDefaultFS returns the default filesystem or creates a new OSFileSystem.
+// getOrCreateDefaultFS returns the default filesystem or creates a new ErrorFileSystem.
 // This provides lazy initialization for tests and backward compatibility.
 func getOrCreateDefaultFS() infra.FileSystem {
 	defaultFSMu.RLock()
@@ -49,59 +47,8 @@ func getOrCreateDefaultFS() infra.FileSystem {
 		return fs
 	}
 
-	// Lazy initialization - import filesystem adapter
-	// This creates a temporary filesystem for backward compatibility
-	return &lazyOSFileSystem{}
-}
-
-// lazyOSFileSystem is a simple wrapper that implements FileSystem using standard library.
-// This is used when no filesystem was explicitly set (e.g., in tests).
-type lazyOSFileSystem struct{}
-
-func (l *lazyOSFileSystem) ReadFile(path string) ([]byte, error) {
-	return os.ReadFile(path)
-}
-
-func (l *lazyOSFileSystem) WriteFile(path string, data []byte, perm os.FileMode) error {
-	return os.WriteFile(path, data, perm)
-}
-
-func (l *lazyOSFileSystem) Stat(path string) (os.FileInfo, error) {
-	return os.Stat(path)
-}
-
-func (l *lazyOSFileSystem) MkdirAll(path string, perm os.FileMode) error {
-	return os.MkdirAll(path, perm)
-}
-
-func (l *lazyOSFileSystem) Remove(path string) error {
-	return os.Remove(path)
-}
-
-func (l *lazyOSFileSystem) RemoveAll(path string) error {
-	return os.RemoveAll(path)
-}
-
-func (l *lazyOSFileSystem) Rename(oldpath, newpath string) error {
-	return os.Rename(oldpath, newpath)
-}
-
-func (l *lazyOSFileSystem) Open(name string) (io.ReadCloser, error) {
-	return os.Open(name)
-}
-
-func (l *lazyOSFileSystem) Create(name string) (io.WriteCloser, error) {
-	return os.Create(name)
-}
-
-func (l *lazyOSFileSystem) Exists(name string) bool {
-	_, err := os.Stat(name)
-	return err == nil
-}
-
-func (l *lazyOSFileSystem) IsDir(name string) bool {
-	info, err := os.Stat(name)
-	return err == nil && info.IsDir()
+	// Lazy initialization - return error filesystem to prevent implicit I/O
+	return infra.NewErrorFileSystem()
 }
 
 type Package struct {
@@ -129,10 +76,11 @@ func NewPackage(filePath string) *Package {
 }
 
 // Save persists the package to disk and returns the marshaled bytes.
+// Note: This method only saves the package file, not the lock file.
+// Use lock.Service.Save() to persist the lock file separately.
 func (p *Package) Save() []byte {
 	marshal, _ := parser.JSONMarshal(p, true)
 	_ = p.getFS().WriteFile(p.fileName, marshal, 0600)
-	p.Lock.Save()
 	return marshal
 }
 

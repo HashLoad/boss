@@ -1,7 +1,6 @@
 package domain
 
 import (
-	//nolint:gosec // We are not using this for security purposes
 	"crypto/md5"
 	"encoding/hex"
 	"io"
@@ -114,17 +113,6 @@ func (p *Dependency) Name() string {
 // GetKey returns the normalized key for the dependency (lowercase repository).
 func (p *Dependency) GetKey() string {
 	return strings.ToLower(p.Repository)
-}
-
-// ComputeMD5Hash computes an MD5 hash of the given string.
-//
-//nolint:gosec // We are not using this for security purposes
-func ComputeMD5Hash(input string) string {
-	hash := md5.New()
-	if _, err := io.WriteString(hash, input); err != nil {
-		return ""
-	}
-	return hex.EncodeToString(hash.Sum(nil))
 }
 
 // NeedsVersionUpdate checks if a version update is needed based on semver comparison.

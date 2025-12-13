@@ -81,20 +81,3 @@ func TestDependencyManager_HasCache_FileInsteadOfDir(t *testing.T) {
 		t.Error("hasCache() should return false after removing file")
 	}
 }
-
-// TestResetDependencyCache tests the global reset function.
-func TestResetDependencyCache(t *testing.T) {
-	// Get the default manager and add some entries
-	dm := getDefaultDependencyManager()
-
-	// Mark something as updated
-	dm.Cache().MarkUpdated("test-dep")
-
-	// Reset
-	ResetDependencyCache()
-
-	// Should be empty now
-	if dm.Cache().IsUpdated("test-dep") {
-		t.Error("Cache should be empty after ResetDependencyCache()")
-	}
-}

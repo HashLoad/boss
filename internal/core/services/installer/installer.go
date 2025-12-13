@@ -3,10 +3,20 @@ package installer
 import (
 	"os"
 
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
+	"github.com/hashload/boss/internal/adapters/secondary/repository"
 	"github.com/hashload/boss/internal/core/domain"
+	lockService "github.com/hashload/boss/internal/core/services/lock"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 )
+
+// createLockService creates a new lock service instance.
+func createLockService() *lockService.Service {
+	fs := filesystem.NewOSFileSystem()
+	lockRepo := repository.NewFileLockRepository(fs)
+	return lockService.NewService(lockRepo, fs)
+}
 
 func InstallModules(args []string, lockedVersion bool, noSave bool) {
 	pkg, err := domain.LoadPackage(env.GetGlobal())
@@ -41,7 +51,8 @@ func UninstallModules(args []string, noSave bool) {
 	}
 
 	pkg.Save()
+	lockSvc := createLockService()
+	_ = lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 
-	// TODO implement remove without reinstall process
 	InstallModules([]string{}, false, noSave)
 }

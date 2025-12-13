@@ -15,8 +15,9 @@ func TestDependencyCache_NewDependencyCache(t *testing.T) {
 		t.Fatal("NewDependencyCache() returned nil")
 	}
 
-	if cache.Count() != 0 {
-		t.Errorf("New cache should be empty, got count %d", cache.Count())
+	// New cache should report nothing as updated
+	if cache.IsUpdated("any-dep") {
+		t.Error("New cache should have no dependencies marked as updated")
 	}
 }
 
@@ -49,36 +50,14 @@ func TestDependencyCache_MarkUpdated(t *testing.T) {
 	cache.MarkUpdated("dep2")
 	cache.MarkUpdated("dep3")
 
-	if cache.Count() != 3 {
-		t.Errorf("Count() should be 3, got %d", cache.Count())
+	if !cache.IsUpdated("dep1") || !cache.IsUpdated("dep2") || !cache.IsUpdated("dep3") {
+		t.Error("All marked dependencies should be updated")
 	}
 
-	// Marking same dep twice should not increase count
+	// Marking same dep twice should not cause issues
 	cache.MarkUpdated("dep1")
-	if cache.Count() != 3 {
-		t.Errorf("Count() should still be 3 after duplicate, got %d", cache.Count())
-	}
-}
-
-// TestDependencyCache_Reset tests clearing the cache.
-func TestDependencyCache_Reset(t *testing.T) {
-	cache := installer.NewDependencyCache()
-
-	cache.MarkUpdated("dep1")
-	cache.MarkUpdated("dep2")
-
-	if cache.Count() != 2 {
-		t.Fatalf("Count() should be 2 before reset, got %d", cache.Count())
-	}
-
-	cache.Reset()
-
-	if cache.Count() != 0 {
-		t.Errorf("Count() should be 0 after Reset(), got %d", cache.Count())
-	}
-
-	if cache.IsUpdated("dep1") {
-		t.Error("IsUpdated() should return false after Reset()")
+	if !cache.IsUpdated("dep1") {
+		t.Error("Dependency should still be marked after duplicate MarkUpdated()")
 	}
 }
 
@@ -89,7 +68,7 @@ func TestDependencyCache_Concurrency(t *testing.T) {
 	const numOperations = 100
 
 	var wg sync.WaitGroup
-	wg.Add(numGoroutines * 3)
+	wg.Add(numGoroutines * 2)
 
 	// Writers
 	for i := range numGoroutines {
@@ -111,20 +90,18 @@ func TestDependencyCache_Concurrency(t *testing.T) {
 		}(i)
 	}
 
-	// Count readers
-	for range numGoroutines {
-		go func() {
-			defer wg.Done()
-			for range numOperations {
-				_ = cache.Count()
-			}
-		}()
-	}
-
 	wg.Wait()
 
 	// Should complete without race conditions or panics
-	if cache.Count() == 0 {
+	// At least one dependency should be marked
+	hasAny := false
+	for i := range 26 {
+		if cache.IsUpdated("dep-" + string(rune('A'+i))) {
+			hasAny = true
+			break
+		}
+	}
+	if !hasAny {
 		t.Error("Cache should have some entries after concurrent writes")
 	}
 }
