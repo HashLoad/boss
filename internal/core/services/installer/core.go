@@ -414,8 +414,8 @@ func (ic *installContext) getVersionSemantic(
 }
 
 func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) error {
-	depPath := filepath.Join(ic.modulesDir, dep.GetName())
-	depPkg, err := domain.LoadPackage(filepath.Join(depPath, "boss.json"))
+	depPath := filepath.Join(ic.modulesDir, dep.Name())
+	depPkg, err := domain.LoadPackageOther(filepath.Join(depPath, "boss.json"))
 	if err != nil {
 		return nil
 	}
@@ -439,7 +439,7 @@ func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) e
 		}
 	}
 
-	errorMessage := fmt.Sprintf("Dependency '%s' does not support platform '%s'. Supported: %v", dep.GetName(), targetPlatform, depPkg.Engines.Platforms)
+	errorMessage := fmt.Sprintf("Dependency '%s' does not support platform '%s'. Supported: %v", dep.Name(), targetPlatform, depPkg.Engines.Platforms)
 
 	isStrict := ic.options.Strict
 	if !isStrict && ic.root.Toolchain != nil {
