@@ -79,7 +79,7 @@ boss install https://gitlab.com/fake/horse # Full URL
 You can also specify the compiler version and platform:
 
 ```sh
-boss install --compiler=35.0 --platform=Win64
+boss install --compiler=37.0 --platform=Win64
 ```
 
 > Aliases: i, add
@@ -248,8 +248,8 @@ boss config delphi use <version>-<arch>
 Example:
 ```sh
 boss config delphi use 0
-boss config delphi use 22.0
-boss config delphi use 22.0-Win64
+boss config delphi use 37.0
+boss config delphi use 37.0-Win64
 ```
 
 ### > Git Client
@@ -278,15 +278,15 @@ Add a `toolchain` section to your `boss.json`:
   "name": "my-project",
   "version": "1.0.0",
   "toolchain": {
-    "delphi": "22.0",
+    "delphi": "37.0",
     "platform": "Win64"
   }
 }
 ```
 
 Supported fields in `toolchain`:
-- `delphi`: The Delphi version (e.g., "22.0", "10.4").
-- `compiler`: The compiler version (e.g., "35.0").
+- `delphi`: The Delphi version (e.g., "37.0").
+- `compiler`: The compiler version (e.g., "37.0").
 - `platform`: The target platform ("Win32" or "Win64").
 - `path`: Explicit path to the compiler (optional).
 - `strict`: If true, fails if the exact version is not found (optional).
