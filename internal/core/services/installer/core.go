@@ -308,9 +308,7 @@ func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
 	requiredVersion, err := semver.NewVersion(depv)
 	if err != nil {
 		warnMsg := fmt.Sprintf("Error '%s' on get required version. Updating...", err)
-		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), warnMsg)
-		} else {
+		if !ic.progress.IsEnabled() {
 			msg.Warn("  " + warnMsg)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
@@ -320,9 +318,7 @@ func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
 	installedVersion, err := semver.NewVersion(installed.Version)
 	if err != nil {
 		warnMsg := fmt.Sprintf("Error '%s' on get installed version. Updating...", err)
-		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), warnMsg)
-		} else {
+		if !ic.progress.IsEnabled() {
 			msg.Warn("  " + warnMsg)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
@@ -341,10 +337,8 @@ func (ic *installContext) getReferenceName(
 
 	if bestMatch == nil {
 		warnMsg := fmt.Sprintf("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion())
-		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), warnMsg)
-		} else {
-			msg.Warn(warnMsg)
+		if !ic.progress.IsEnabled() {
+			msg.Warn("  " + warnMsg)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 
@@ -381,11 +375,11 @@ func (ic *installContext) checkoutAndUpdate(
 	err = git.Pull(dep)
 
 	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
-		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Error on pull from dependency %s\n%s", dep.Repository, err))
-		} else {
-			msg.Warn("  Error on pull from dependency %s\n%s", dep.Repository, err)
+		warnMsg := fmt.Sprintf("Error on pull from dependency %s\n%s", dep.Repository, err)
+		if !ic.progress.IsEnabled() {
+			msg.Warn("  " + warnMsg)
 		}
+		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 	}
 	return nil
 }
@@ -407,10 +401,8 @@ func (ic *installContext) getVersion(
 	constraints, err := ParseConstraint(dep.GetVersion())
 	if err != nil {
 		warnMsg := fmt.Sprintf("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
-		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), warnMsg)
-		} else {
-			msg.Warn(warnMsg)
+		if !ic.progress.IsEnabled() {
+			msg.Warn("  " + warnMsg)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 
@@ -420,10 +412,8 @@ func (ic *installContext) getVersion(
 			}
 		}
 		warnMsg2 := fmt.Sprintf("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
-		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), warnMsg2)
-		} else {
-			msg.Warn(warnMsg2)
+		if !ic.progress.IsEnabled() {
+			msg.Warn("  " + warnMsg2)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg2))
 		return nil
