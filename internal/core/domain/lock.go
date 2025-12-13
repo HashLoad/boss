@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	fs "github.com/hashload/boss/internal/adapters/secondary/filesystem"
+	"github.com/hashload/boss/internal/infra"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
@@ -38,26 +38,26 @@ type LockedDependency struct {
 
 type PackageLock struct {
 	fileName  string
-	fs        fs.FileSystem
+	fs        infra.FileSystem
 	Hash      string                      `json:"hash"`
 	Updated   time.Time                   `json:"updated"`
 	Installed map[string]LockedDependency `json:"installedModules"`
 }
 
-// getFS returns the filesystem to use, defaulting to fs.Default.
-func (p *PackageLock) getFS() fs.FileSystem {
+// getFS returns the filesystem to use, defaulting to getOrCreateDefaultFS.
+func (p *PackageLock) getFS() infra.FileSystem {
 	if p.fs == nil {
-		return fs.Default
+		return getOrCreateDefaultFS()
 	}
 	return p.fs
 }
 
 // SetFS sets the filesystem implementation for testing.
-func (p *PackageLock) SetFS(filesystem fs.FileSystem) {
+func (p *PackageLock) SetFS(filesystem infra.FileSystem) {
 	p.fs = filesystem
 }
 
-func removeOldWithFS(parentPackage *Package, filesystem fs.FileSystem) {
+func removeOldWithFS(parentPackage *Package, filesystem infra.FileSystem) {
 	var oldFileName = filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLockOld)
 	var newFileName = filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
 	if filesystem.Exists(oldFileName) {
@@ -68,11 +68,11 @@ func removeOldWithFS(parentPackage *Package, filesystem fs.FileSystem) {
 
 // LoadPackageLock loads the package lock file using the default filesystem.
 func LoadPackageLock(parentPackage *Package) PackageLock {
-	return LoadPackageLockWithFS(parentPackage, fs.Default)
+	return LoadPackageLockWithFS(parentPackage, getOrCreateDefaultFS())
 }
 
 // LoadPackageLockWithFS loads the package lock file using the specified filesystem.
-func LoadPackageLockWithFS(parentPackage *Package, filesystem fs.FileSystem) PackageLock {
+func LoadPackageLockWithFS(parentPackage *Package, filesystem infra.FileSystem) PackageLock {
 	removeOldWithFS(parentPackage, filesystem)
 	packageLockPath := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
 	fileBytes, err := filesystem.ReadFile(packageLockPath)

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/hashload/boss/pkg/env"
 
 	"github.com/hashload/boss/pkg/msg"
@@ -108,4 +109,35 @@ func GetDependenciesNames(deps []Dependency) []string {
 func (p *Dependency) Name() string {
 	var re = regexp.MustCompile(`[^/]+(:?/$|$)`)
 	return re.FindString(p.Repository)
+}
+
+// GetKey returns the normalized key for the dependency (lowercase repository).
+func (p *Dependency) GetKey() string {
+	return strings.ToLower(p.Repository)
+}
+
+// ComputeMD5Hash computes an MD5 hash of the given string.
+//
+//nolint:gosec // We are not using this for security purposes
+func ComputeMD5Hash(input string) string {
+	hash := md5.New()
+	if _, err := io.WriteString(hash, input); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+// NeedsVersionUpdate checks if a version update is needed based on semver comparison.
+func NeedsVersionUpdate(currentVersion, newVersion string) bool {
+	parsedNew, err := semver.NewVersion(newVersion)
+	if err != nil {
+		return newVersion != currentVersion
+	}
+
+	parsedCurrent, err := semver.NewVersion(currentVersion)
+	if err != nil {
+		return newVersion != currentVersion
+	}
+
+	return parsedNew.GreaterThan(parsedCurrent)
 }

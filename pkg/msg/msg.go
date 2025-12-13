@@ -19,6 +19,12 @@ const (
 	DEBUG
 )
 
+// Stoppable is an interface for anything that can be stopped.
+// This is used to stop progress trackers when errors occur.
+type Stoppable interface {
+	Stop()
+}
+
 type Messenger struct {
 	sync.Mutex
 	Stdout          io.Writer
@@ -27,7 +33,7 @@ type Messenger struct {
 	exitStatus      int
 	hasError        bool
 	quietMode       bool
-	progressTracker any
+	progressTracker Stoppable
 
 	logLevel logLevel
 }
@@ -82,15 +88,11 @@ func (m *Messenger) Err(msg string, args ...any) {
 		return
 	}
 
-	// Stop progress tracker if running
 	if m.progressTracker != nil {
-		if tracker, ok := m.progressTracker.(interface{ Stop() }); ok {
-			tracker.Stop()
-		}
+		m.progressTracker.Stop()
 		m.progressTracker = nil
 	}
 
-	// Disable quiet mode to show errors
 	m.quietMode = false
 
 	m.print(pterm.Error, msg, args...)
@@ -102,14 +104,11 @@ func (m *Messenger) Warn(msg string, args ...any) {
 		return
 	}
 
-	// Warnings don't stop the progress tracker, only errors do
-	// But we need to temporarily disable quiet mode to show the warning
 	wasQuiet := m.quietMode
 	m.quietMode = false
 
 	m.print(pterm.Warning, msg, args...)
 
-	// Restore quiet mode after printing warning
 	m.quietMode = wasQuiet
 }
 
@@ -167,11 +166,11 @@ func (m *Messenger) SetQuietMode(quiet bool) {
 	m.Unlock()
 }
 
-func SetProgressTracker(tracker any) {
+func SetProgressTracker(tracker Stoppable) {
 	defaultMsg.SetProgressTracker(tracker)
 }
 
-func (m *Messenger) SetProgressTracker(tracker any) {
+func (m *Messenger) SetProgressTracker(tracker Stoppable) {
 	m.Lock()
 	m.progressTracker = tracker
 	m.Unlock()

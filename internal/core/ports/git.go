@@ -3,6 +3,8 @@
 package ports
 
 import (
+	"context"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -13,10 +15,12 @@ import (
 // This interface is part of the domain and is implemented by adapters.
 type GitRepository interface {
 	// CloneCache clones a dependency repository to cache.
-	CloneCache(dep domain.Dependency) *git.Repository
+	// Returns the cloned repository or an error if cloning fails.
+	CloneCache(ctx context.Context, dep domain.Dependency) (*git.Repository, error)
 
-	// UpdateCache updates a cached dependency repository.
-	UpdateCache(dep domain.Dependency) *git.Repository
+	// UpdateCache updates an existing cached repository.
+	// Returns the updated repository or an error if update fails.
+	UpdateCache(ctx context.Context, dep domain.Dependency) (*git.Repository, error)
 
 	// GetVersions retrieves all versions (tags and branches) from a repository.
 	GetVersions(repository *git.Repository, dep domain.Dependency) []*plumbing.Reference

@@ -28,49 +28,50 @@ type installContext struct {
 	progress         *ProgressTracker
 }
 
-func newInstallContext(pkg *domain.Package, useLockedVersion bool) *installContext {
+func newInstallContext(pkg *domain.Package, useLockedVersion bool, progress *ProgressTracker) *installContext {
 	return &installContext{
 		rootLocked:       &pkg.Lock,
 		root:             pkg,
 		useLockedVersion: useLockedVersion,
 		processed:        consts.DefaultPaths(),
+		progress:         progress,
 	}
 }
 
 func DoInstall(pkg *domain.Package, lockedVersion bool) {
 	msg.Info("Analyzing dependencies...\n")
 
-	installContext := newInstallContext(pkg, lockedVersion)
-	deps := installContext.collectAllDependencies(pkg)
+	deps := collectAllDependencies(pkg)
 
 	if len(deps) == 0 {
 		msg.Info("No dependencies to install")
 		return
 	}
 
-	installContext.progress = NewProgressTracker(deps)
+	progress := NewProgressTracker(deps)
+	installContext := newInstallContext(pkg, lockedVersion, progress)
 
 	msg.Info("Installing %d dependencies:\n", len(deps))
 
-	if err := installContext.progress.Start(); err != nil {
+	if err := progress.Start(); err != nil {
 		msg.Warn("Could not start progress tracker: %s", err)
 	} else {
 		msg.SetQuietMode(true)
-		msg.SetProgressTracker(installContext.progress)
+		msg.SetProgressTracker(progress)
 	}
 
 	dependencies, err := installContext.ensureDependencies(pkg)
 	if err != nil {
 		msg.SetQuietMode(false)
 		msg.SetProgressTracker(nil)
-		installContext.progress.Stop()
+		progress.Stop()
 		msg.Err("  Installation failed: %s", err)
 		os.Exit(1)
 	}
 
 	msg.SetQuietMode(false)
 	msg.SetProgressTracker(nil)
-	installContext.progress.Stop()
+	progress.Stop()
 
 	paths.EnsureCleanModulesDir(dependencies, pkg.Lock)
 
@@ -85,18 +86,12 @@ func DoInstall(pkg *domain.Package, lockedVersion bool) {
 }
 
 // collectAllDependencies makes a dry-run to collect all dependencies without installing.
-func (ic *installContext) collectAllDependencies(pkg *domain.Package) []domain.Dependency {
+func collectAllDependencies(pkg *domain.Package) []domain.Dependency {
 	if pkg.Dependencies == nil {
 		return []domain.Dependency{}
 	}
 
-	deps := pkg.GetParsedDependencies()
-
-	for _, dep := range deps {
-		ic.processed = append(ic.processed, dep.Name())
-	}
-
-	return deps
+	return pkg.GetParsedDependencies()
 }
 
 func (ic *installContext) ensureDependencies(pkg *domain.Package) ([]domain.Dependency, error) {
@@ -140,7 +135,7 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 
 		ic.processed = append(ic.processed, moduleName)
 
-		if ic.progress == nil || !ic.progress.IsEnabled() {
+		if !ic.progress.IsEnabled() {
 			msg.Info("Processing module %s", moduleName)
 		}
 
@@ -157,11 +152,9 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 			}
 			msg.Err("  Error on try load package %s: %s", fileName, err)
 		} else {
-			if ic.progress != nil && ic.progress.IsEnabled() {
-				childDeps := packageOther.GetParsedDependencies()
-				for _, childDep := range childDeps {
-					ic.progress.AddDependency(childDep.Name())
-				}
+			childDeps := packageOther.GetParsedDependencies()
+			for _, childDep := range childDeps {
+				ic.progress.AddDependency(childDep.Name())
 			}
 			deps, err := ic.ensureDependencies(packageOther)
 			if err != nil {
@@ -185,12 +178,10 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 	for _, dep := range deps {
 		depName := dep.Name()
 
-		if ic.progress != nil && ic.progress.IsEnabled() {
-			ic.progress.AddDependency(depName)
-		}
+		ic.progress.AddDependency(depName)
 
 		if ic.shouldSkipDependency(dep) {
-			if ic.progress != nil && ic.progress.IsEnabled() {
+			if ic.progress.IsEnabled() {
 				ic.progress.SetSkipped(depName, "up to date")
 			} else {
 				msg.Info("  %s already installed", depName)
@@ -198,7 +189,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 			continue
 		}
 
-		if ic.progress != nil && ic.progress.IsEnabled() {
+		if ic.progress.IsEnabled() {
 			ic.progress.SetCloning(depName)
 		} else {
 			msg.Info("Processing dependency %s", depName)
@@ -206,46 +197,36 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 
 		err := GetDependencyWithProgress(dep, ic.progress)
 		if err != nil {
-			if ic.progress != nil && ic.progress.IsEnabled() {
-				ic.progress.SetFailed(depName, err)
-			}
+			ic.progress.SetFailed(depName, err)
 			return err
 		}
 		repository := git.GetRepository(dep)
 
-		if ic.progress != nil && ic.progress.IsEnabled() {
-			ic.progress.SetChecking(depName, "resolving version")
-		}
+		ic.progress.SetChecking(depName, "resolving version")
 
 		referenceName := ic.getReferenceName(pkg, dep, repository)
 
 		wt, err := repository.Worktree()
 		if err != nil {
-			if ic.progress != nil && ic.progress.IsEnabled() {
-				ic.progress.SetFailed(depName, err)
-			}
+			ic.progress.SetFailed(depName, err)
 			return err
 		}
 
 		status, err := wt.Status()
 		if err != nil {
-			if ic.progress != nil && ic.progress.IsEnabled() {
-				ic.progress.SetFailed(depName, err)
-			}
+			ic.progress.SetFailed(depName, err)
 			return err
 		}
 
 		head, er := repository.Head()
 		if er != nil {
-			if ic.progress != nil && ic.progress.IsEnabled() {
-				ic.progress.SetFailed(depName, er)
-			}
+			ic.progress.SetFailed(depName, er)
 			return er
 		}
 
 		currentRef := head.Name()
 		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) && status.IsClean() && referenceName == currentRef {
-			if ic.progress != nil && ic.progress.IsEnabled() {
+			if ic.progress.IsEnabled() {
 				ic.progress.SetSkipped(depName, "already up to date")
 			} else {
 				msg.Info("  %s already updated", depName)
@@ -253,20 +234,14 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 			continue
 		}
 
-		if ic.progress != nil && ic.progress.IsEnabled() {
-			ic.progress.SetInstalling(depName)
-		}
+		ic.progress.SetInstalling(depName)
 
 		if err := ic.checkoutAndUpdate(dep, repository, referenceName); err != nil {
-			if ic.progress != nil && ic.progress.IsEnabled() {
-				ic.progress.SetFailed(depName, err)
-			}
+			ic.progress.SetFailed(depName, err)
 			return err
 		}
 
-		if ic.progress != nil && ic.progress.IsEnabled() {
-			ic.progress.SetCompleted(depName)
-		}
+		ic.progress.SetCompleted(depName)
 	}
 	return nil
 }

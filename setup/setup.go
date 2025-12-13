@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	filesystem "github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	registry "github.com/hashload/boss/internal/adapters/secondary/registry"
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/installer"
@@ -25,6 +26,9 @@ func DefaultModules() []string {
 }
 
 func Initialize() {
+
+	initializeInfrastructure()
+
 	var oldGlobal = env.GetGlobal()
 	env.SetInternal(true)
 	env.SetGlobal(true)
@@ -45,6 +49,12 @@ func Initialize() {
 	env.SetGlobal(oldGlobal)
 	env.SetInternal(false)
 	msg.Debug("finish boss system initialization")
+}
+
+// initializeInfrastructure sets up infrastructure dependencies.
+// This is the composition root where we wire up adapters to ports.
+func initializeInfrastructure() { // Set the default filesystem implementation for domain entities
+	domain.SetDefaultFS(filesystem.NewOSFileSystem())
 }
 
 // CreatePaths creates the necessary paths for boss.

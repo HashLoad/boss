@@ -1,12 +1,11 @@
 package compiler
 
 import (
-	"fmt"
-	"sync"
-
+	"github.com/hashload/boss/internal/core/services/tracker"
 	"github.com/pterm/pterm"
 )
 
+// BuildStatus represents the build status of a package.
 type BuildStatus int
 
 const (
@@ -17,168 +16,86 @@ const (
 	BuildStatusSkipped
 )
 
+// buildStatusConfig defines how each build status should be displayed.
+var buildStatusConfig = tracker.StatusConfig[BuildStatus]{
+	BuildStatusWaiting: {
+		Icon:       pterm.LightYellow("⏳"),
+		StatusText: pterm.Gray("Waiting..."),
+	},
+	BuildStatusBuilding: {
+		Icon:       pterm.LightCyan("🔨"),
+		StatusText: pterm.LightCyan("Building..."),
+	},
+	BuildStatusSuccess: {
+		Icon:       pterm.LightGreen("✓"),
+		StatusText: pterm.LightGreen("Built"),
+	},
+	BuildStatusFailed: {
+		Icon:       pterm.LightRed("✗"),
+		StatusText: pterm.LightRed("Failed"),
+	},
+	BuildStatusSkipped: {
+		Icon:       pterm.Gray("→"),
+		StatusText: pterm.Gray("Skipped"),
+	},
+}
+
+// BuildTracker wraps the generic BaseTracker for package compilation.
+// It provides convenience methods with semantic names for build operations.
 type BuildTracker struct {
-	packages map[string]*BuildProgress
-	area     *pterm.AreaPrinter
-	mu       sync.Mutex
-	enabled  bool
-	stopped  bool
-	order    []string
+	tracker.Tracker[BuildStatus]
 }
 
-type BuildProgress struct {
-	Name    string
-	Status  BuildStatus
-	Message string
-}
-
+// NewBuildTracker creates a new BuildTracker for the given package names.
 func NewBuildTracker(packageNames []string) *BuildTracker {
 	if len(packageNames) == 0 {
-		return &BuildTracker{enabled: false}
+		return &BuildTracker{
+			Tracker: tracker.NewNull[BuildStatus](),
+		}
 	}
 
-	bt := &BuildTracker{
-		packages: make(map[string]*BuildProgress),
-		order:    make([]string, 0, len(packageNames)),
-		enabled:  true,
-	}
-
+	// Deduplicate names
+	seen := make(map[string]bool)
+	names := make([]string, 0, len(packageNames))
 	for _, name := range packageNames {
-		if _, exists := bt.packages[name]; exists {
+		if seen[name] {
 			continue
 		}
-
-		bt.packages[name] = &BuildProgress{
-			Name:   name,
-			Status: BuildStatusWaiting,
-		}
-		bt.order = append(bt.order, name)
+		seen[name] = true
+		names = append(names, name)
 	}
 
-	return bt
-}
-
-func (bt *BuildTracker) Start() error {
-	if !bt.enabled {
-		return nil
-	}
-
-	area, _ := pterm.DefaultArea.Start()
-	bt.area = area
-	bt.render()
-
-	return nil
-}
-
-func (bt *BuildTracker) Stop() {
-	if !bt.enabled {
-		return
-	}
-
-	bt.mu.Lock()
-	defer bt.mu.Unlock()
-
-	bt.stopped = true
-	if bt.area != nil {
-		_ = bt.area.Stop()
+	return &BuildTracker{
+		Tracker: tracker.New(names, tracker.Config[BuildStatus]{
+			DefaultStatus: BuildStatusWaiting,
+			StatusConfig:  buildStatusConfig,
+		}),
 	}
 }
 
-func (bt *BuildTracker) UpdateStatus(name string, status BuildStatus, message string) {
-	if !bt.enabled || bt.stopped {
-		return
+// NewNullBuildTracker creates a disabled tracker (Null Object Pattern).
+func NewNullBuildTracker() *BuildTracker {
+	return &BuildTracker{
+		Tracker: tracker.NewNull[BuildStatus](),
 	}
-
-	bt.mu.Lock()
-	defer bt.mu.Unlock()
-
-	progress, exists := bt.packages[name]
-	if !exists {
-		return
-	}
-
-	progress.Status = status
-	progress.Message = message
-	bt.render()
 }
 
-func (bt *BuildTracker) render() {
-	if bt.area == nil || bt.stopped {
-		return
-	}
-
-	var lines []string
-	for _, name := range bt.order {
-		progress := bt.packages[name]
-		if progress != nil {
-			lines = append(lines, bt.formatStatus(progress))
-		}
-	}
-
-	content := ""
-	for _, line := range lines {
-		content += line + "\n"
-	}
-
-	bt.area.Clear()
-	bt.area.Update(content)
-}
-
-func (bt *BuildTracker) formatStatus(progress *BuildProgress) string {
-	var icon string
-	var statusText string
-
-	switch progress.Status {
-	case BuildStatusWaiting:
-		icon = pterm.LightYellow("⏳")
-		statusText = pterm.Gray("Waiting...")
-	case BuildStatusBuilding:
-		icon = pterm.LightCyan("🔨")
-		statusText = pterm.LightCyan("Building...")
-	case BuildStatusSuccess:
-		icon = pterm.LightGreen("✓")
-		statusText = pterm.LightGreen("Built")
-	case BuildStatusFailed:
-		icon = pterm.LightRed("✗")
-		statusText = pterm.LightRed("Failed")
-	case BuildStatusSkipped:
-		icon = pterm.Gray("→")
-		statusText = pterm.Gray("Skipped")
-	}
-
-	name := pterm.Bold.Sprint(progress.Name)
-	padding := 30 - len(progress.Name)
-	if padding < 1 {
-		padding = 1
-	}
-
-	spaces := ""
-	for i := 0; i < padding; i++ {
-		spaces += " "
-	}
-
-	if progress.Message != "" {
-		return fmt.Sprintf("%s %s%s%s %s", icon, name, spaces, statusText, pterm.Gray(progress.Message))
-	}
-	return fmt.Sprintf("%s %s%s%s", icon, name, spaces, statusText)
-}
-
-func (bt *BuildTracker) IsEnabled() bool {
-	return bt.enabled
-}
-
+// SetBuilding sets the status to building with the current project name.
 func (bt *BuildTracker) SetBuilding(name string, project string) {
 	bt.UpdateStatus(name, BuildStatusBuilding, project)
 }
 
+// SetSuccess sets the status to success.
 func (bt *BuildTracker) SetSuccess(name string) {
 	bt.UpdateStatus(name, BuildStatusSuccess, "")
 }
 
+// SetFailed sets the status to failed with a message.
 func (bt *BuildTracker) SetFailed(name string, message string) {
 	bt.UpdateStatus(name, BuildStatusFailed, message)
 }
 
+// SetSkipped sets the status to skipped with a reason.
 func (bt *BuildTracker) SetSkipped(name string, reason string) {
 	bt.UpdateStatus(name, BuildStatusSkipped, reason)
 }
