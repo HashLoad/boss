@@ -14,6 +14,7 @@ import (
 	"github.com/hashload/boss/utils"
 )
 
+// Build compiles the package and its dependencies.
 func Build(pkg *domain.Package, compilerVersion, platform string) {
 	ctx := compiler_selector.SelectionContext{
 		Package:            pkg,

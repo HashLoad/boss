@@ -14,6 +14,7 @@ import (
 	"github.com/snakeice/gogress"
 )
 
+// getBossReleases returns the boss releases
 func getBossReleases() ([]*github.RepositoryRelease, error) {
 	gh := github.NewClient(nil)
 
@@ -48,6 +49,7 @@ func getBossReleases() ([]*github.RepositoryRelease, error) {
 	return releases, nil
 }
 
+// findLatestRelease finds the latest release
 func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*github.RepositoryRelease, error) {
 	var bestRelease *github.RepositoryRelease
 
@@ -68,6 +70,7 @@ func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*
 	return bestRelease, nil
 }
 
+// findAsset finds the asset in the release
 func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) {
 	for _, asset := range release.Assets {
 		if asset.GetName() == getAssetName() {
@@ -78,6 +81,7 @@ func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) 
 	return nil, errors.New("no asset found")
 }
 
+// downloadAsset downloads the asset
 func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, asset.GetBrowserDownloadURL(), nil)
 	if err != nil {

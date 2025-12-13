@@ -19,6 +19,7 @@ var (
 	reLazarusFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `$`)
 )
 
+// updateDprojLibraryPath updates the library path in the project file
 func updateDprojLibraryPath(pkg *domain.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
@@ -31,6 +32,7 @@ func updateDprojLibraryPath(pkg *domain.Package) {
 	}
 }
 
+// updateOtherUnitFilesProject updates the other unit files in the project file
 func updateOtherUnitFilesProject(lpiName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(lpiName)
@@ -70,6 +72,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 	}
 }
 
+// processCompilerOptions processes the compiler options
 func processCompilerOptions(compilerOptions *etree.Element) {
 	searchPaths := compilerOptions.SelectElement(consts.XMLTagNameSearchPaths)
 	if searchPaths == nil {
@@ -85,12 +88,14 @@ func processCompilerOptions(compilerOptions *etree.Element) {
 	value.Value = strings.Join(currentPaths, ";")
 }
 
+// createTagOtherUnitFiles creates the other unit files tag
 func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
 	child := node.CreateElement(consts.XMLTagNameOtherUnitFiles)
 	child.CreateAttr("Value", "")
 	return child
 }
 
+// updateGlobalBrowsingPath updates the global browsing path
 func updateGlobalBrowsingPath(pkg *domain.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
@@ -101,6 +106,7 @@ func updateGlobalBrowsingPath(pkg *domain.Package) {
 	}
 }
 
+// updateLibraryPathProject updates the library path in the project file
 func updateLibraryPathProject(dprojName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(dprojName)
@@ -140,11 +146,13 @@ func updateLibraryPathProject(dprojName string) {
 	}
 }
 
+// createTagLibraryPath creates the library path tag
 func createTagLibraryPath(node *etree.Element) *etree.Element {
 	child := node.CreateElement(consts.XMLTagNameLibraryPath)
 	return child
 }
 
+// GetProjectNames returns the project names
 func GetProjectNames(pkg *domain.Package) []string {
 	var result []string
 
@@ -166,6 +174,7 @@ func GetProjectNames(pkg *domain.Package) []string {
 	return result
 }
 
+// isLazarus checks if the project is a Lazarus project
 func isLazarus() bool {
 	files, err := os.ReadDir(env.GetCurrentDir())
 	if err != nil {
@@ -181,6 +190,7 @@ func isLazarus() bool {
 	return false
 }
 
+// processCurrentPath processes the current path
 func processCurrentPath(node *etree.Element, rootPath string) {
 	currentPaths := strings.Split(node.Text(), ";")
 

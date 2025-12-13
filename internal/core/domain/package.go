@@ -153,6 +153,7 @@ func (p *Package) UninstallDependency(dep string) {
 	}
 }
 
+// getNewWithFS creates a new package with the given file path and filesystem
 func getNewWithFS(file string, filesystem infra.FileSystem) *Package {
 	res := new(Package)
 	res.fileName = file

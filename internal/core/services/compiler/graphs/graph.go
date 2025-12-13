@@ -10,11 +10,13 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// Node represents a node in the dependency graph.
 type Node struct {
 	Value string
 	Dep   domain.Dependency
 }
 
+// NewNode creates a new node for the given dependency.
 func NewNode(dependency *domain.Dependency) *Node {
 	return &Node{Dep: *dependency, Value: strings.ToLower(dependency.Name())}
 }
@@ -23,6 +25,7 @@ func (n *Node) String() string {
 	return n.Dep.Name()
 }
 
+// GraphItem represents a dependency graph.
 type GraphItem struct {
 	nodes     []*Node
 	depends   map[string][]*Node
@@ -38,6 +41,7 @@ func (g *GraphItem) unlock() {
 	g.lockMutex.Unlock()
 }
 
+// AddNode adds a node to the graph.
 func (g *GraphItem) AddNode(n *Node) {
 	g.lock()
 	if !contains(g.nodes, n) {
@@ -78,6 +82,7 @@ func containsAll(list []*Node, in []*Node) bool {
 	return check == len(in)
 }
 
+// AddEdge adds a directed edge from nLeft to nRight.
 func (g *GraphItem) AddEdge(nLeft, nRight *Node) {
 	g.lock()
 	if g.depends == nil {
@@ -122,6 +127,7 @@ func removeNode(nodes []*Node, key int) []*Node {
 	return slices.Delete(nodes, key, key+1)
 }
 
+// Queue creates a queue of nodes to be processed.
 func (g *GraphItem) Queue(pkg *domain.Package, allDeps bool) *NodeQueue {
 	g.lock()
 	queue := NodeQueue{}
@@ -183,11 +189,13 @@ func (g *GraphItem) expandGraphNodes(nodes []*Node, pkg *domain.Package) []*Node
 	return nodes
 }
 
+// NodeQueue represents a queue of nodes.
 type NodeQueue struct {
 	items []Node
 	lock  sync.RWMutex
 }
 
+// New initializes the queue.
 func (s *NodeQueue) New() *NodeQueue {
 	s.lock.Lock()
 	s.items = []Node{}
@@ -195,12 +203,14 @@ func (s *NodeQueue) New() *NodeQueue {
 	return s
 }
 
+// Enqueue adds a node to the queue.
 func (s *NodeQueue) Enqueue(t Node) {
 	s.lock.Lock()
 	s.items = append(s.items, t)
 	s.lock.Unlock()
 }
 
+// Dequeue removes and returns the first node in the queue.
 func (s *NodeQueue) Dequeue() *Node {
 	s.lock.Lock()
 	item := s.items[0]
@@ -209,6 +219,7 @@ func (s *NodeQueue) Dequeue() *Node {
 	return &item
 }
 
+// Front returns the first node in the queue without removing it.
 func (s *NodeQueue) Front() *Node {
 	s.lock.RLock()
 	item := s.items[0]
@@ -216,12 +227,14 @@ func (s *NodeQueue) Front() *Node {
 	return &item
 }
 
+// IsEmpty returns true if the queue is empty.
 func (s *NodeQueue) IsEmpty() bool {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	return len(s.items) == 0
 }
 
+// Size returns the number of nodes in the queue.
 func (s *NodeQueue) Size() int {
 	s.lock.RLock()
 	defer s.lock.RUnlock()

@@ -20,6 +20,7 @@ import (
 const SearchPathRegistry = "Search Path"
 const BrowsingPathRegistry = "Browsing Path"
 
+// updateGlobalLibraryPath updates the global library path
 func updateGlobalLibraryPath() {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
@@ -61,6 +62,7 @@ func updateGlobalLibraryPath() {
 
 }
 
+// updateGlobalBrowsingByProject updates the global browsing path by project
 func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {

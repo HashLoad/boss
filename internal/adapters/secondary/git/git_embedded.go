@@ -18,6 +18,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// CloneCacheEmbedded clones the dependency repository to the cache using the embedded git implementation.
 func CloneCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
 	msg.Info("Downloading dependency %s", dep.Repository)
 	storageCache := makeStorageCache(dep)
@@ -40,6 +41,7 @@ func CloneCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
 	return repository, nil
 }
 
+// UpdateCacheEmbedded updates the dependency repository in the cache using the embedded git implementation.
 func UpdateCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
 	storageCache := makeStorageCache(dep)
 	wtFs := createWorktreeFs(dep)

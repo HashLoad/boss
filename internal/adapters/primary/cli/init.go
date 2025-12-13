@@ -14,6 +14,7 @@ import (
 
 var reFolderName = regexp.MustCompile(`^.+` + regexp.QuoteMeta(string(filepath.Separator)) + `([^\\]+)$`)
 
+// initCmdRegister registers the init command
 func initCmdRegister(root *cobra.Command) {
 	var quiet bool
 
@@ -36,6 +37,7 @@ func initCmdRegister(root *cobra.Command) {
 	root.AddCommand(initCmd)
 }
 
+// doInitialization initializes the project
 func doInitialization(quiet bool) {
 	if !quiet {
 		printHead()
@@ -65,6 +67,7 @@ func doInitialization(quiet bool) {
 	msg.Info("\n" + string(json))
 }
 
+// getParamOrDef gets the parameter or default value
 func getParamOrDef(msg string, def ...string) string {
 	input := &pterm.DefaultInteractiveTextInput
 
@@ -77,6 +80,7 @@ func getParamOrDef(msg string, def ...string) string {
 	return result
 }
 
+// printHead prints the head message
 func printHead() {
 	msg.Info(`
 This utility will walk you through creating a boss.json file.

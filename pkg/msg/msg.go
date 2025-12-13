@@ -171,6 +171,7 @@ func ExitCode(exitStatus int) {
 	defaultMsg.ExitCode(exitStatus)
 }
 
+// print prints a message with the given style
 func (m *Messenger) print(style *pterm.Style, msg string, args ...any) {
 	m.Lock()
 	defer m.Unlock()

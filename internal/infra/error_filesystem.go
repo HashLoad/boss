@@ -10,6 +10,7 @@ import (
 // This is used as a default in the domain layer to prevent implicit I/O.
 type ErrorFileSystem struct{}
 
+// NewErrorFileSystem creates a new ErrorFileSystem.
 func NewErrorFileSystem() *ErrorFileSystem {
 	return &ErrorFileSystem{}
 }

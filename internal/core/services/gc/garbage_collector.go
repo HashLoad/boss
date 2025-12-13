@@ -13,6 +13,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// RunGC runs the garbage collector to remove old cache entries.
 func RunGC(ignoreLastUpdate bool) error {
 	defer func() {
 		env.GlobalConfiguration().LastPurge = time.Now()

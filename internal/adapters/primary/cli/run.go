@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// runCmdRegister registers the run command
 func runCmdRegister(root *cobra.Command) {
 	var runScript = &cobra.Command{
 		Use:   "run",

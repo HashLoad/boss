@@ -157,6 +157,7 @@ func (c *Configuration) SaveConfiguration() {
 	}
 }
 
+// makeDefault creates a default configuration
 func makeDefault(configPath string) *Configuration {
 	return &Configuration{
 		path:                configPath,

@@ -18,6 +18,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
+// GlobalInstall installs dependencies globally (Windows implementation).
 func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
 	// TODO noSave
 	EnsureDependency(pkg, args)

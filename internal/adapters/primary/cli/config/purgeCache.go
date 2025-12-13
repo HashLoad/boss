@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// RegisterCmd registers the cache command
 func RegisterCmd(cmd *cobra.Command) {
 	purgeCacheCmd := &cobra.Command{
 		Use:   "cache",
@@ -33,6 +34,7 @@ func RegisterCmd(cmd *cobra.Command) {
 	cmd.AddCommand(purgeCacheCmd)
 }
 
+// removeCacheWithConfirmation removes the cache with confirmation
 func removeCacheWithConfirmation() error {
 	modulesDir := env.GetModulesDir()
 
@@ -79,6 +81,7 @@ func removeCacheWithConfirmation() error {
 	return gc.RunGC(true)
 }
 
+// formatBytes formats bytes to string
 func formatBytes(bytes int64) string {
 	const unit = 1024
 	if bytes < unit {

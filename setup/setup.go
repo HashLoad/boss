@@ -67,6 +67,7 @@ func CreatePaths() {
 	}
 }
 
+// installModules installs the internal modules
 func installModules(modules []string) {
 	pkg, _ := domain.LoadPackage(true)
 	encountered := 0
@@ -92,6 +93,7 @@ func installModules(modules []string) {
 	moveBptIdentifier()
 }
 
+// moveBptIdentifier moves the bpl identifier
 func moveBptIdentifier() {
 	var outExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
 	if _, err := os.Stat(outExeCompilation); os.IsNotExist(err) {
@@ -110,6 +112,7 @@ func moveBptIdentifier() {
 	}
 }
 
+// initializeDelphiVersion initializes the delphi version
 func initializeDelphiVersion() {
 	if len(env.GlobalConfiguration().DelphiPath) != 0 {
 		return

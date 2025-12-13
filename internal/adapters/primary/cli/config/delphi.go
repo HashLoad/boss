@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// delphiCmd registers the delphi command
 func delphiCmd(root *cobra.Command) {
 	delphiCmd := &cobra.Command{
 		Use:   "delphi",
@@ -54,6 +55,7 @@ func delphiCmd(root *cobra.Command) {
 	delphiCmd.AddCommand(use)
 }
 
+// selectDelphiInteractive selects the delphi version interactively
 func selectDelphiInteractive() {
 	installations := registryadapter.GetDetectedDelphis()
 	if len(installations) == 0 {
@@ -111,6 +113,7 @@ func selectDelphiInteractive() {
 	msg.Info("  Path: %s", config.DelphiPath)
 }
 
+// listDelphiVersions lists the delphi versions
 func listDelphiVersions() {
 	installations := registryadapter.GetDetectedDelphis()
 	if len(installations) == 0 {
@@ -130,6 +133,7 @@ func listDelphiVersions() {
 	}
 }
 
+// useDelphiVersion uses the delphi version
 func useDelphiVersion(pathOrIndex string) {
 	config := env.GlobalConfiguration()
 	installations := registryadapter.GetDetectedDelphis()

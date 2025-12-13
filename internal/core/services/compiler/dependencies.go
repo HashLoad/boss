@@ -15,6 +15,8 @@ func loadOrderGraph(pkg *domain.Package) *graphs.NodeQueue {
 	loadGraph(&graph, nil, deps, nil)
 	return graph.Queue(pkg, false)
 }
+
+// LoadOrderGraphAll loads the dependency graph for all dependencies.
 func LoadOrderGraphAll(pkg *domain.Package) *graphs.NodeQueue {
 	var graph graphs.GraphItem
 	deps := pkg.GetParsedDependencies()

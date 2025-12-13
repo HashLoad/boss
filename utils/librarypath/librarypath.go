@@ -27,6 +27,7 @@ func UpdateLibraryPath(pkg *domain.Package) {
 	}
 }
 
+// cleanPath removes duplicate paths and paths that are already in the modules directory
 func cleanPath(paths []string, fullPath bool) []string {
 	prefix := env.GetModulesDir()
 	var processedPaths []string
@@ -58,6 +59,7 @@ func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setRead
 	return paths
 }
 
+// processBrowsingPath processes a browsing path for a package
 func processBrowsingPath(
 	value os.DirEntry,
 	paths []string,
@@ -80,6 +82,7 @@ func processBrowsingPath(
 	return paths
 }
 
+// setReadOnlyProperty sets the read-only property for a directory
 func setReadOnlyProperty(dir string) {
 	readonlybat := filepath.Join(dir, "readonly.bat")
 	readFileStr := fmt.Sprintf(`attrib +r "%s" /s /d`, filepath.Join(dir, "*"))
@@ -117,6 +120,7 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	return paths
 }
 
+// getDefaultPath returns the default library paths
 func getDefaultPath(fullPath bool, rootPath string) []string {
 	var paths []string
 
@@ -145,6 +149,7 @@ func getDefaultPath(fullPath bool, rootPath string) []string {
 	return append(paths, "$(DCC_UnitSearchPath)")
 }
 
+// cleanEmpty removes empty strings from a slice
 func cleanEmpty(paths []string) []string {
 	for index, value := range paths {
 		if value == "" {
@@ -154,6 +159,7 @@ func cleanEmpty(paths []string) []string {
 	return paths
 }
 
+// getNewBrowsingPathsFromDir returns a list of new browsing paths from a directory
 func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -177,6 +183,7 @@ func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, root
 	return cleanEmpty(paths)
 }
 
+// getNewPathsFromDir returns a list of new paths from a directory
 func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {

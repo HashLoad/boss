@@ -48,6 +48,7 @@ func InjectDpcsFile(fileName string, pkg *domain.Package, lock domain.PackageLoc
 	}
 }
 
+// readFile reads a file with Windows1252 encoding
 func readFile(filename string) string {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -63,6 +64,7 @@ func readFile(filename string) string {
 	return string(bytes)
 }
 
+// writeFile writes a file with Windows1252 encoding
 func writeFile(filename string, content string) {
 	f, err := os.Create(filename)
 	if err != nil {
@@ -78,6 +80,7 @@ func writeFile(filename string, content string) {
 	}
 }
 
+// getDprDpkFromDproj returns the DPR or DPK file name from a DPROJ file name
 func getDprDpkFromDproj(dprojName string) (string, bool) {
 	baseName := strings.TrimSuffix(dprojName, filepath.Ext(dprojName))
 	dpkName := baseName + consts.FileExtensionDpk
@@ -91,6 +94,7 @@ func getDprDpkFromDproj(dprojName string) (string, bool) {
 // CommentBoss is the marker for Boss injected dependencies
 const CommentBoss = "{BOSS}"
 
+// getDcpString returns the DCP requires string
 func getDcpString(dcps []string) string {
 	var dpsLine = "\n"
 
@@ -100,6 +104,7 @@ func getDcpString(dcps []string) string {
 	return dpsLine[:len(dpsLine)-2]
 }
 
+// injectDcps injects DCP dependencies into the file content
 func injectDcps(filecontent string, dcps []string) (string, bool) {
 	resultRegex := reRequires.FindAllStringSubmatch(filecontent, -1)
 	if len(resultRegex) == 0 {
@@ -125,6 +130,7 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 	return result, true
 }
 
+// processFile processes the file content to inject DCP dependencies
 func processFile(content string, dcps []string) (string, bool) {
 	if len(dcps) == 0 {
 		return content, false

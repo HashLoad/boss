@@ -67,6 +67,7 @@ func GetInternalGlobalDir() string {
 	return result
 }
 
+// getwd returns the working directory
 func getwd() string {
 	if global {
 		return filepath.Join(GetBossHome(), consts.FolderDependencies, HashDelphiPath())

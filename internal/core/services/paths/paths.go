@@ -11,6 +11,7 @@ import (
 	"github.com/hashload/boss/utils"
 )
 
+// EnsureCleanModulesDir ensures that the modules directory is clean and contains only the required dependencies.
 func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.PackageLock) {
 	cacheDir := env.GetModulesDir()
 	cacheDirInfo, err := os.Stat(cacheDir)
@@ -50,6 +51,7 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 	}
 }
 
+// EnsureCacheDir ensures that the cache directory exists for the dependency.
 func EnsureCacheDir(dep domain.Dependency) {
 	if !env.GlobalConfiguration().GitEmbedded {
 		return

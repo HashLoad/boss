@@ -11,12 +11,14 @@ import (
 	"github.com/hashload/boss/pkg/env"
 )
 
+// SelectionContext holds the context for compiler selection.
 type SelectionContext struct {
 	CliCompilerVersion string
 	CliPlatform        string
 	Package            *domain.Package
 }
 
+// SelectedCompiler represents the selected compiler configuration.
 type SelectedCompiler struct {
 	Version string
 	Path    string
@@ -24,6 +26,7 @@ type SelectedCompiler struct {
 	BinDir  string
 }
 
+// SelectCompiler selects the appropriate compiler based on the context.
 func SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error) {
 	installations := registryadapter.GetDetectedDelphis()
 	if len(installations) == 0 {

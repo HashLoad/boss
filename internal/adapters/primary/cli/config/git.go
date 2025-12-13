@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// boolToMode converts boolean to mode string
 func boolToMode(embedded bool) string {
 	if embedded {
 		return "embedded"
@@ -16,6 +17,7 @@ func boolToMode(embedded bool) string {
 	return "native"
 }
 
+// registryGitCmd registers the git command
 func registryGitCmd(root *cobra.Command) {
 	gitCmd := &cobra.Command{
 		Use:     "git",

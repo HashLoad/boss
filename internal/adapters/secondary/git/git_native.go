@@ -24,6 +24,7 @@ func checkHasGitClient() {
 	}
 }
 
+// CloneCacheNative clones the dependency repository to the cache using the native git client.
 func CloneCacheNative(dep domain.Dependency) (*git2.Repository, error) {
 	msg.Info("Downloading dependency %s", dep.Repository)
 	if err := doClone(dep); err != nil {
@@ -32,6 +33,7 @@ func CloneCacheNative(dep domain.Dependency) (*git2.Repository, error) {
 	return GetRepository(dep), nil
 }
 
+// UpdateCacheNative updates the dependency repository in the cache using the native git client.
 func UpdateCacheNative(dep domain.Dependency) (*git2.Repository, error) {
 	if err := getWrapperFetch(dep); err != nil {
 		return nil, err

@@ -13,6 +13,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// CloneCache clones the dependency repository to the cache.
 func CloneCache(dep domain.Dependency) (*goGit.Repository, error) {
 	if env.GlobalConfiguration().GitEmbedded {
 		return CloneCacheEmbedded(dep)
@@ -21,6 +22,7 @@ func CloneCache(dep domain.Dependency) (*goGit.Repository, error) {
 	return CloneCacheNative(dep)
 }
 
+// UpdateCache updates the dependency repository in the cache.
 func UpdateCache(dep domain.Dependency) (*goGit.Repository, error) {
 	if env.GlobalConfiguration().GitEmbedded {
 		return UpdateCacheEmbedded(dep)
@@ -50,6 +52,7 @@ func initSubmodules(dep domain.Dependency, repository *goGit.Repository) error {
 	return nil
 }
 
+// GetMain returns the main branch of the repository.
 func GetMain(repository *goGit.Repository) (*config.Branch, error) {
 	branch, err := repository.Branch(consts.GitBranchMain)
 	if err != nil {
@@ -58,6 +61,7 @@ func GetMain(repository *goGit.Repository) (*config.Branch, error) {
 	return branch, err
 }
 
+// GetVersions returns all versions (tags and branches) of the repository.
 func GetVersions(repository *goGit.Repository, dep domain.Dependency) []*plumbing.Reference {
 	var result = make([]*plumbing.Reference, 0)
 

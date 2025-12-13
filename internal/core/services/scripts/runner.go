@@ -10,6 +10,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+// RunCmd executes a command with the given arguments.
 func RunCmd(name string, args ...string) {
 	cmd := exec.Command(name, args...)
 	cmdReader, err := cmd.StdoutPipe()
@@ -40,6 +41,7 @@ func RunCmd(name string, args ...string) {
 	}
 }
 
+// Run executes a script defined in the package.
 func Run(args []string) {
 	if packageData, err := domain.LoadPackage(true); err != nil {
 		msg.Err(err.Error())

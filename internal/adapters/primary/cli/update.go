@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// updateCmdRegister registers the update command
 func updateCmdRegister(root *cobra.Command) {
 	var selectMode bool
 
@@ -42,6 +43,7 @@ func updateCmdRegister(root *cobra.Command) {
 	root.AddCommand(updateCmd)
 }
 
+// updateWithSelect updates the selected dependencies
 func updateWithSelect() {
 	pkg, err := domain.LoadPackage(false)
 	if err != nil {

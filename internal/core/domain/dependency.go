@@ -23,6 +23,7 @@ var (
 	reDepName           = regexp.MustCompile(`[^/]+(:?/$|$)`)
 )
 
+// Dependency represents a package dependency.
 type Dependency struct {
 	Repository string
 	version    string
