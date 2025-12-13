@@ -23,9 +23,9 @@ func Build(pkg *domain.Package, compilerVersion, platform string) {
 	}
 	selected, err := compiler_selector.SelectCompiler(ctx)
 	if err != nil {
-		msg.Warn("Compiler selection failed: %s. Falling back to default.", err)
+		msg.Warn("\nCompiler selection failed: %s. Falling back to default.", err)
 	} else {
-		msg.Info("Using compiler: %s (%s)", selected.Version, selected.Arch)
+		msg.Info("\nUsing compiler: %s (%s)", selected.Version, selected.Arch)
 	}
 
 	buildOrderedPackages(pkg, selected)
@@ -71,6 +71,8 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 		} else {
 			msg.SetQuietMode(true)
 		}
+	} else {
+		msg.Info("No packages to compile.\n")
 	}
 
 	for {

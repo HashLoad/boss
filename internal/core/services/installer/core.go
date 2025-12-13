@@ -84,7 +84,7 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 		msg.SetQuietMode(false)
 		msg.SetProgressTracker(nil)
 		progress.Stop()
-		return fmt.Errorf("installation failed: %w", err)
+		return fmt.Errorf("\n❌ Installation failed: %w", err)
 	}
 
 	msg.SetQuietMode(false)
@@ -221,7 +221,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 
 		if ic.shouldSkipDependency(dep) {
 			if ic.progress.IsEnabled() {
-				ic.progress.SetSkipped(depName, consts.StatusMsgUpToDate)
+				ic.progress.SetSkipped(depName, consts.StatusMsgAlreadyInstalled)
 			} else {
 				msg.Info("  %s already installed", depName)
 			}

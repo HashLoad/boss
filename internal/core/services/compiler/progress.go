@@ -23,19 +23,19 @@ var buildStatusConfig = tracker.StatusConfig[BuildStatus]{
 		StatusText: pterm.Gray("Waiting..."),
 	},
 	BuildStatusBuilding: {
-		Icon:       pterm.LightCyan("🔨"),
+		Icon:       pterm.LightCyan("🔥"),
 		StatusText: pterm.LightCyan("Building..."),
 	},
 	BuildStatusSuccess: {
-		Icon:       pterm.LightGreen("✓"),
+		Icon:       pterm.LightGreen("✅"),
 		StatusText: pterm.LightGreen("Built"),
 	},
 	BuildStatusFailed: {
-		Icon:       pterm.LightRed("✗"),
+		Icon:       pterm.LightRed("❌"),
 		StatusText: pterm.LightRed("Failed"),
 	},
 	BuildStatusSkipped: {
-		Icon:       pterm.Gray("→"),
+		Icon:       pterm.Gray("⏩"),
 		StatusText: pterm.Gray("Skipped"),
 	},
 }

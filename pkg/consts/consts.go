@@ -62,12 +62,13 @@ const (
 	RegistryBasePath = `Software\Embarcadero\BDS\`
 
 	// Status messages for CLI output
-	StatusMsgUpToDate        = "up to date"
-	StatusMsgResolvingVer    = "resolving version"
-	StatusMsgNoProjects      = "no projects"
-	StatusMsgNoBossJSON      = "no boss.json"
-	StatusMsgBuildError      = "build error"
-	StatusMsgAlreadyUpToDate = "boss is already up to date"
+	StatusMsgUpToDate         = "up to date"
+	StatusMsgAlreadyInstalled = "already installed"
+	StatusMsgResolvingVer     = "resolving version"
+	StatusMsgNoProjects       = "no projects"
+	StatusMsgNoBossJSON       = "no boss.json"
+	StatusMsgBuildError       = "build error"
+	StatusMsgAlreadyUpToDate  = "boss is already up to date"
 
 	GitBranchMain   = "main"
 	GitBranchMaster = "master"
