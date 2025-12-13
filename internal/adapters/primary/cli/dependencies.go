@@ -59,7 +59,7 @@ func printDependencies(showVersion bool) {
 	pkg, err := domain.LoadPackage(false)
 	if err != nil {
 		if os.IsNotExist(err) {
-			msg.Die("boss.json not exists in " + env.GetCurrentDir())
+			msg.Die(consts.FilePackage + " not exists in " + env.GetCurrentDir())
 		} else {
 			msg.Die("Fail on open dependencies file: %s", err)
 		}
@@ -117,7 +117,7 @@ func printSingleDependency(
 	case branchOutdated:
 		output += " <- branch outdated"
 	case updated:
-		output += ""
+		// Already up to date, no suffix needed
 	}
 
 	return tree.AddBranch(output)
