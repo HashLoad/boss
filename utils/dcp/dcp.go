@@ -22,6 +22,7 @@ var (
 	reWhitespace = regexp.MustCompile(`[\r\n ]+`)
 )
 
+// InjectDpcs injects DCP dependencies into project files
 func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
 	dprojNames := librarypath.GetProjectNames(pkg)
 
@@ -32,6 +33,7 @@ func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
 	}
 }
 
+// InjectDpcsFile injects DCP dependencies into a specific file
 func InjectDpcsFile(fileName string, pkg *domain.Package, lock domain.PackageLock) {
 	dprDpkFileName, exists := getDprDpkFromDproj(fileName)
 	if !exists {
@@ -86,6 +88,7 @@ func getDprDpkFromDproj(dprojName string) (string, bool) {
 	return "", false
 }
 
+// CommentBoss is the marker for Boss injected dependencies
 const CommentBoss = "{BOSS}"
 
 func getDcpString(dcps []string) string {

@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// GetDcc32DirByCmd returns the directory of the dcc32 executable found in the system path
 func GetDcc32DirByCmd() []string {
 	command := exec.Command("where", "dcc32")
 	output, err := command.Output()

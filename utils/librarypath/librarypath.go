@@ -17,6 +17,7 @@ import (
 	"github.com/hashload/boss/utils"
 )
 
+// UpdateLibraryPath updates the library path for the project or globally
 func UpdateLibraryPath(pkg *domain.Package) {
 	if env.GetGlobal() {
 		updateGlobalLibraryPath()
@@ -44,6 +45,7 @@ func cleanPath(paths []string, fullPath bool) []string {
 	return processedPaths
 }
 
+// GetNewBrowsingPaths returns a list of new browsing paths
 func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setReadOnly bool) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
@@ -96,6 +98,7 @@ func setReadOnlyProperty(dir string) {
 	}
 }
 
+// GetNewPaths returns a list of new paths
 func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()

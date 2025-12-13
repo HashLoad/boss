@@ -18,6 +18,7 @@ func hashByte(contentPtr *[]byte) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
+// HashDir calculates the MD5 hash of a directory's contents
 func HashDir(dir string) string {
 	var err error
 	var finalHash = "b:"

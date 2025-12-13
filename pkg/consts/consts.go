@@ -2,6 +2,7 @@ package consts
 
 import "path/filepath"
 
+// File constants define standard file names and extensions used by Boss
 const (
 	FilePackage        = "boss.json"
 	FilePackageLock    = "boss-lock.json"
@@ -35,6 +36,7 @@ const (
 
 	EnvBossBin = "." + string(filepath.Separator) + FolderDependencies + string(filepath.Separator) + BinFolder
 
+	// XML constants for parsing project files
 	XMLTagNameProperty               string = "PropertyGroup"
 	XMLValueAttribute                       = "value"
 	XMLTagNamePropertyAttribute      string = "Condition"
@@ -59,6 +61,7 @@ const (
 
 	RegistryBasePath = `Software\Embarcadero\BDS\`
 
+	// Status messages for CLI output
 	StatusMsgUpToDate        = "up to date"
 	StatusMsgResolvingVer    = "resolving version"
 	StatusMsgNoProjects      = "no projects"
@@ -72,8 +75,10 @@ const (
 	GitProtocolSSH = "ssh"
 )
 
+// Platform represents a target compilation platform
 type Platform string
 
+// Supported platforms
 const (
 	PlatformWin32        Platform = "Win32"
 	PlatformWin64        Platform = "Win64"
@@ -89,10 +94,12 @@ const (
 	PlatformiOSSimARM64  Platform = "iOSSimARM64"
 )
 
+// String returns the string representation of the platform
 func (p Platform) String() string {
 	return string(p)
 }
 
+// IsValid checks if the platform is supported
 func (p Platform) IsValid() bool {
 	switch p {
 	case PlatformWin32, PlatformWin64, PlatformOSX32, PlatformOSX64, PlatformOSXArm64,

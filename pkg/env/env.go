@@ -21,26 +21,32 @@ var (
 	globalConfiguration, _ = LoadConfiguration(GetBossHome())
 )
 
+// SetGlobal sets the global flag
 func SetGlobal(b bool) {
 	global = b
 }
 
+// SetInternal sets the internal flag
 func SetInternal(b bool) {
 	internal = b
 }
 
+// GetInternal returns the internal flag
 func GetInternal() bool {
 	return internal
 }
 
+// GetGlobal returns the global flag
 func GetGlobal() bool {
 	return global
 }
 
+// GlobalConfiguration returns the global configuration
 func GlobalConfiguration() *Configuration {
 	return globalConfiguration
 }
 
+// HashDelphiPath returns the hash of the Delphi path
 func HashDelphiPath() string {
 	//nolint:gosec // We are not using this for security purposes
 	hasher := md5.New()
@@ -52,6 +58,7 @@ func HashDelphiPath() string {
 	return hashString
 }
 
+// GetInternalGlobalDir returns the internal global directory
 func GetInternalGlobalDir() string {
 	internalOld := internal
 	internal = true
@@ -74,10 +81,12 @@ func getwd() string {
 	return dir
 }
 
+// GetCacheDir returns the cache directory
 func GetCacheDir() string {
 	return filepath.Join(GetBossHome(), "cache")
 }
 
+// GetBossHome returns the Boss home directory
 func GetBossHome() string {
 	homeDir := os.Getenv("BOSS_HOME")
 
@@ -93,32 +102,42 @@ func GetBossHome() string {
 	return filepath.Join(homeDir, consts.FolderBossHome)
 }
 
+// GetBossFile returns the Boss file path
 func GetBossFile() string {
 	return filepath.Join(GetCurrentDir(), consts.FilePackage)
 }
 
+// GetModulesDir returns the modules directory
 func GetModulesDir() string {
 	return filepath.Join(GetCurrentDir(), consts.FolderDependencies)
 }
 
+// GetCurrentDir returns the current directory
 func GetCurrentDir() string {
 	return getwd()
 }
 
+// GetGlobalEnvBpl returns the global environment BPL directory
 func GetGlobalEnvBpl() string {
 	return filepath.Join(GetBossHome(), consts.FolderEnvBpl)
 }
+
+// GetGlobalEnvDcp returns the global environment DCP directory
 func GetGlobalEnvDcp() string {
 	return filepath.Join(GetBossHome(), consts.FolderEnvDcp)
 }
+
+// GetGlobalEnvDcu returns the global environment DCU directory
 func GetGlobalEnvDcu() string {
 	return filepath.Join(GetBossHome(), consts.FolderEnvDcu)
 }
 
+// GetGlobalBinPath returns the global binary path
 func GetGlobalBinPath() string {
 	return filepath.Join(GetBossHome(), consts.FolderDependencies, consts.BinFolder)
 }
 
+// GetDcc32Dir returns the DCC32 directory
 func GetDcc32Dir() string {
 	if GlobalConfiguration().DelphiPath != "" {
 		return GlobalConfiguration().DelphiPath

@@ -16,6 +16,7 @@ import (
 	"github.com/hashload/boss/utils/dcc32"
 )
 
+// PATH is the environment variable for the system path
 const PATH string = "PATH"
 
 // DefaultModules returns the list of default internal modules.
@@ -25,6 +26,7 @@ func DefaultModules() []string {
 	}
 }
 
+// Initialize initializes the Boss environment
 func Initialize() {
 
 	initializeInfrastructure()
