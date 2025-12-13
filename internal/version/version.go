@@ -15,6 +15,7 @@ var (
 	gitCommit = ""
 )
 
+// BuildInfo represents the build information of the application.
 type BuildInfo struct {
 	// Version is the current semver.
 	Version string `json:"version,omitempty"`
@@ -24,6 +25,7 @@ type BuildInfo struct {
 	GoVersion string `json:"go_version,omitempty"`
 }
 
+// GetVersion returns the current version of the application.
 func GetVersion() string {
 	if metadata == "" {
 		return version
@@ -31,6 +33,7 @@ func GetVersion() string {
 	return version + "+" + metadata
 }
 
+// Get returns the build information of the application.
 func Get() BuildInfo {
 	v := BuildInfo{
 		Version:   GetVersion(),
