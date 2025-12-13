@@ -97,7 +97,17 @@ func setAuthWithParams(auth *env.Auth, useSSH bool, privateKey, userName, passwo
 }
 
 func setAuthInteractively(auth *env.Auth) {
-	auth.UseSSH = getParamBoolean("Use SSH")
+	authMethods := []string{"SSH Key", "Username/Password"}
+	selectedMethod, err := pterm.DefaultInteractiveSelect.
+		WithOptions(authMethods).
+		WithDefaultText("Select authentication method:").
+		Show()
+
+	if err != nil {
+		msg.Die("Error selecting authentication method: %s", err)
+	}
+
+	auth.UseSSH = (selectedMethod == "SSH Key")
 
 	if auth.UseSSH {
 		auth.Path = getParamOrDef("Path of ssh private key("+getSSHKeyPath()+")", getSSHKeyPath())
@@ -122,9 +132,4 @@ func getSSHKeyPath() string {
 		msg.Die(err.Error())
 	}
 	return filepath.Join(usr.HomeDir, ".ssh", "id_rsa")
-}
-
-func getParamBoolean(msg string) bool {
-	result, _ := pterm.DefaultInteractiveConfirm.Show(msg)
-	return result
 }

@@ -2,12 +2,14 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils/dcc32"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +19,7 @@ func delphiCmd(root *cobra.Command) {
 		Short: "Configure Delphi version",
 		Long:  `Configure Delphi version to compile modules`,
 		Run: func(cmd *cobra.Command, _ []string) {
-			msg.Info("Running in path %s", env.GlobalConfiguration().DelphiPath)
-			_ = cmd.Usage()
+			selectDelphiInteractive()
 		},
 	}
 
@@ -27,16 +28,7 @@ func delphiCmd(root *cobra.Command) {
 		Short: "List Delphi versions",
 		Long:  `List Delphi versions to compile modules`,
 		Run: func(_ *cobra.Command, _ []string) {
-			paths := dcc32.GetDcc32DirByCmd()
-			if len(paths) == 0 {
-				msg.Warn("Installations not found in $PATH")
-				return
-			}
-
-			msg.Warn("Installations found:")
-			for index, path := range paths {
-				msg.Info("  [%d] %s", index, path)
-			}
+			listDelphiVersions()
 		},
 	}
 
@@ -57,17 +49,7 @@ func delphiCmd(root *cobra.Command) {
 			return nil
 		},
 		Run: func(_ *cobra.Command, args []string) {
-			var path = args[0]
-			config := env.GlobalConfiguration()
-			if index, err := strconv.Atoi(path); err == nil {
-				delphiPaths := dcc32.GetDcc32DirByCmd()
-				config.DelphiPath = delphiPaths[index]
-			} else {
-				config.DelphiPath = args[0]
-			}
-
-			config.SaveConfiguration()
-			msg.Info("Successful!")
+			useDelphiVersion(args[0])
 		},
 	}
 
@@ -75,4 +57,93 @@ func delphiCmd(root *cobra.Command) {
 
 	delphiCmd.AddCommand(list)
 	delphiCmd.AddCommand(use)
+}
+
+func selectDelphiInteractive() {
+	paths := dcc32.GetDcc32DirByCmd()
+	if len(paths) == 0 {
+		msg.Warn("No Delphi installations found in $PATH")
+		msg.Info("You can manually specify a path using: boss config delphi use <path>")
+		return
+	}
+
+	currentPath := env.GlobalConfiguration().DelphiPath
+
+	options := make([]string, len(paths))
+	defaultIndex := 0
+	for i, path := range paths {
+		if path == currentPath {
+			options[i] = fmt.Sprintf("%s (current)", path)
+			defaultIndex = i
+		} else {
+			options[i] = path
+		}
+	}
+
+	msg.Info("Current Delphi path: %s\n", currentPath)
+
+	selectedOption, err := pterm.DefaultInteractiveSelect.
+		WithOptions(options).
+		WithDefaultText("Select Delphi version to use:").
+		WithDefaultOption(options[defaultIndex]).
+		Show()
+
+	if err != nil {
+		msg.Err("Error selecting Delphi version: %s", err)
+		return
+	}
+
+	selectedIndex := -1
+	for i, opt := range options {
+		if opt == selectedOption {
+			selectedIndex = i
+			break
+		}
+	}
+
+	if selectedIndex == -1 {
+		msg.Err("Invalid selection")
+		return
+	}
+
+	config := env.GlobalConfiguration()
+	config.DelphiPath = paths[selectedIndex]
+	config.SaveConfiguration()
+
+	msg.Info("✓ Delphi version updated successfully!")
+	msg.Info("  Path: %s", paths[selectedIndex])
+}
+
+func listDelphiVersions() {
+	paths := dcc32.GetDcc32DirByCmd()
+	if len(paths) == 0 {
+		msg.Warn("Installations not found in $PATH")
+		return
+	}
+
+	currentPath := env.GlobalConfiguration().DelphiPath
+	msg.Warn("Installations found:")
+	for index, path := range paths {
+		if path == currentPath {
+			msg.Info("  [%d] %s (current)", index, path)
+		} else {
+			msg.Info("  [%d] %s", index, path)
+		}
+	}
+}
+
+func useDelphiVersion(pathOrIndex string) {
+	config := env.GlobalConfiguration()
+	if index, err := strconv.Atoi(pathOrIndex); err == nil {
+		delphiPaths := dcc32.GetDcc32DirByCmd()
+		if index < 0 || index >= len(delphiPaths) {
+			msg.Die("Invalid index: %d. Use 'boss config delphi list' to see available options", index)
+		}
+		config.DelphiPath = delphiPaths[index]
+	} else {
+		config.DelphiPath = pathOrIndex
+	}
+
+	config.SaveConfiguration()
+	msg.Info("Successful!")
 }
