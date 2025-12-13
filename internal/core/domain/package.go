@@ -51,6 +51,7 @@ func getOrCreateDefaultFS() infra.FileSystem {
 	return infra.NewErrorFileSystem()
 }
 
+// Package represents the boss.json file structure.
 type Package struct {
 	fileName     string
 	fs           infra.FileSystem
@@ -68,12 +69,14 @@ type Package struct {
 	Lock         PackageLock       `json:"-"`
 }
 
+// PackageEngines represents the engines configuration in boss.json.
 type PackageEngines struct {
 	Delphi    string   `json:"delphi,omitempty"`
 	Compiler  string   `json:"compiler,omitempty"`
 	Platforms []string `json:"platforms,omitempty"`
 }
 
+// PackageToolchain represents the toolchain configuration in boss.json.
 type PackageToolchain struct {
 	Delphi   string `json:"delphi,omitempty"`
 	Compiler string `json:"compiler,omitempty"`
@@ -113,6 +116,7 @@ func (p *Package) SetFS(filesystem infra.FileSystem) {
 	p.fs = filesystem
 }
 
+// AddDependency adds or updates a dependency in the package.
 func (p *Package) AddDependency(dep string, ver string) {
 	for key := range p.Dependencies {
 		if strings.EqualFold(key, dep) {
@@ -124,10 +128,12 @@ func (p *Package) AddDependency(dep string, ver string) {
 	p.Dependencies[dep] = ver
 }
 
+// AddProject adds a project to the package.
 func (p *Package) AddProject(project string) {
 	p.Projects = append(p.Projects, project)
 }
 
+// GetParsedDependencies returns the dependencies parsed as Dependency objects.
 func (p *Package) GetParsedDependencies() []Dependency {
 	if p == nil || len(p.Dependencies) == 0 {
 		return []Dependency{}
@@ -135,6 +141,7 @@ func (p *Package) GetParsedDependencies() []Dependency {
 	return GetDependencies(p.Dependencies)
 }
 
+// UninstallDependency removes a dependency from the package.
 func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
 		for key := range p.Dependencies {
