@@ -17,6 +17,11 @@ import (
 	"golang.org/x/text/transform"
 )
 
+var (
+	reRequires   = regexp.MustCompile(`(?m)^(requires)([\n\r \w,{}\\.]+)(;)`)
+	reWhitespace = regexp.MustCompile(`[\r\n ]+`)
+)
+
 func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
 	dprojNames := librarypath.GetProjectNames(pkg)
 
@@ -93,16 +98,14 @@ func getDcpString(dcps []string) string {
 }
 
 func injectDcps(filecontent string, dcps []string) (string, bool) {
-	regexRequires := regexp.MustCompile(`(?m)^(requires)([\n\r \w,{}\\.]+)(;)`)
-
-	resultRegex := regexRequires.FindAllStringSubmatch(filecontent, -1)
+	resultRegex := reRequires.FindAllStringSubmatch(filecontent, -1)
 	if len(resultRegex) == 0 {
 		return filecontent, false
 	}
 
-	resultRegexIndexes := regexRequires.FindAllStringSubmatchIndex(filecontent, -1)
+	resultRegexIndexes := reRequires.FindAllStringSubmatchIndex(filecontent, -1)
 
-	currentRequiresString := regexp.MustCompile("[\r\n ]+").ReplaceAllString(resultRegex[0][2], "")
+	currentRequiresString := reWhitespace.ReplaceAllString(resultRegex[0][2], "")
 
 	currentRequires := strings.Split(currentRequiresString, ",")
 

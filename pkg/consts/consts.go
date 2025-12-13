@@ -3,12 +3,15 @@ package consts
 import "path/filepath"
 
 const (
-	FilePackage      = "boss.json"
-	FilePackageLock  = "boss-lock.json"
-	FileBplOrder     = "bpl_order.txt"
-	FileExtensionBpl = ".bpl"
-	FileExtensionDcp = ".dcp"
-	FileExtensionDpk = ".dpk"
+	FilePackage        = "boss.json"
+	FilePackageLock    = "boss-lock.json"
+	FileBplOrder       = "bpl_order.txt"
+	FileExtensionBpl   = ".bpl"
+	FileExtensionDcp   = ".dcp"
+	FileExtensionDpk   = ".dpk"
+	FileExtensionDpr   = ".dpr"
+	FileExtensionDproj = ".dproj"
+	FileExtensionLpi   = ".lpi"
 
 	FilePackageLockOld = "boss.lock"
 	FolderDependencies = "modules"

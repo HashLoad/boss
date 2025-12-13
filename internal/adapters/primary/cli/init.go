@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var reFolderName = regexp.MustCompile(`^.+` + regexp.QuoteMeta(string(filepath.Separator)) + `([^\\]+)$`)
+
 func initCmdRegister(root *cobra.Command) {
 	var quiet bool
 
@@ -44,9 +46,7 @@ func doInitialization(quiet bool) {
 		msg.Die("Fail on open dependencies file: %s", err)
 	}
 
-	rxp := regexp.MustCompile(`^.+\` + string(filepath.Separator) + `([^\\]+)$`)
-
-	allString := rxp.FindAllStringSubmatch(env.GetCurrentDir(), -1)
+	allString := reFolderName.FindAllStringSubmatch(env.GetCurrentDir(), -1)
 	folderName := allString[0][1]
 
 	if quiet {

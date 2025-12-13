@@ -14,6 +14,11 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
+var (
+	reProjectFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionDproj) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `$`)
+	reLazarusFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `$`)
+)
+
 func updateDprojLibraryPath(pkg *domain.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
@@ -152,10 +157,8 @@ func GetProjectNames(pkg *domain.Package) []string {
 			panic(err)
 		}
 
-		regex := regexp.MustCompile(".*.dproj|.*.lpi$")
-
 		for _, file := range files {
-			matched := regex.MatchString(file.Name())
+			matched := reProjectFile.MatchString(file.Name())
 			if matched {
 				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
 				matches++
@@ -172,10 +175,8 @@ func isLazarus() bool {
 		panic(err)
 	}
 
-	r := regexp.MustCompile(".*.lpi$")
-
 	for _, file := range files {
-		matched := r.MatchString(file.Name())
+		matched := reLazarusFile.MatchString(file.Name())
 		if matched {
 			return true
 		}
