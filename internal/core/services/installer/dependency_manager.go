@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 )
+
+var ErrRepositoryNil = errors.New("failed to clone or update repository")
 
 // DependencyManager manages dependency fetching with proper dependency injection.
 type DependencyManager struct {
@@ -35,25 +38,42 @@ func NewDefaultDependencyManager() *DependencyManager {
 }
 
 // GetDependency fetches or updates a dependency in cache.
-func (dm *DependencyManager) GetDependency(dep domain.Dependency) {
+func (dm *DependencyManager) GetDependency(dep domain.Dependency) error {
+	return dm.GetDependencyWithProgress(dep, nil)
+}
+
+// GetDependencyWithProgress fetches or updates a dependency with optional progress tracking.
+func (dm *DependencyManager) GetDependencyWithProgress(dep domain.Dependency, progress *ProgressTracker) error {
 	if dm.cache.IsUpdated(dep.HashName()) {
 		msg.Debug("Using cached of %s", dep.Name())
-		return
+		return nil
 	}
 
-	msg.Info("Updating cache of dependency %s", dep.Name())
+	if progress == nil || !progress.IsEnabled() {
+		msg.Info("Updating cache of dependency %s", dep.Name())
+	}
 	dm.cache.MarkUpdated(dep.HashName())
 
 	var repository *goGit.Repository
+	var err error
 	if dm.hasCache(dep) {
-		repository = dm.gitClient.UpdateCache(dep)
+		repository, err = dm.gitClient.UpdateCache(dep)
 	} else {
 		_ = os.RemoveAll(filepath.Join(dm.cacheDir, dep.HashName()))
-		repository = dm.gitClient.CloneCache(dep)
+		repository, err = dm.gitClient.CloneCache(dep)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if repository == nil {
+		return ErrRepositoryNil
 	}
 
 	tagsShortNames := dm.gitClient.GetTagsShortName(repository)
 	domain.CacheRepositoryDetails(dep, tagsShortNames)
+	return nil
 }
 
 // hasCache checks if a dependency is already cached.

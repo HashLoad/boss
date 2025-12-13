@@ -17,7 +17,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func CloneCacheEmbedded(dep domain.Dependency) *git.Repository {
+func CloneCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
 	msg.Info("Downloading dependency %s", dep.Repository)
 	storageCache := makeStorageCache(dep)
 	worktreeFileSystem := createWorktreeFs(dep)
@@ -31,20 +31,26 @@ func CloneCacheEmbedded(dep domain.Dependency) *git.Repository {
 	})
 	if err != nil {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.HashName()))
-		msg.Die("Error to get repository of %s: %s", dep.Repository, err)
+		return nil, err
 	}
-	initSubmodules(dep, repository)
-	return repository
+	if err := initSubmodules(dep, repository); err != nil {
+		return nil, err
+	}
+	return repository, nil
 }
 
-func UpdateCacheEmbedded(dep domain.Dependency) *git.Repository {
+func UpdateCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
 	storageCache := makeStorageCache(dep)
 	wtFs := createWorktreeFs(dep)
 
 	repository, err := git.Open(storageCache, wtFs)
 	if err != nil {
 		msg.Warn("Error to open cache of %s: %s", dep.Repository, err)
-		repository = refreshCopy(dep)
+		var errRefresh error
+		repository, errRefresh = refreshCopy(dep)
+		if errRefresh != nil {
+			return nil, errRefresh
+		}
 	} else {
 		worktree, _ := repository.Worktree()
 		_ = worktree.Reset(&git.ResetOptions{
@@ -58,11 +64,13 @@ func UpdateCacheEmbedded(dep domain.Dependency) *git.Repository {
 	if err != nil && err.Error() != "already up-to-date" {
 		msg.Debug("Error to fetch repository of %s: %s", dep.Repository, err)
 	}
-	initSubmodules(dep, repository)
-	return repository
+	if err := initSubmodules(dep, repository); err != nil {
+		return nil, err
+	}
+	return repository, nil
 }
 
-func refreshCopy(dep domain.Dependency) *git.Repository {
+func refreshCopy(dep domain.Dependency) (*git.Repository, error) {
 	dir := filepath.Join(env.GetCacheDir(), dep.HashName())
 	err := os.RemoveAll(dir)
 	if err == nil {
@@ -71,7 +79,7 @@ func refreshCopy(dep domain.Dependency) *git.Repository {
 
 	msg.Err("Error on retry get refresh copy: %s", err)
 
-	return nil
+	return nil, err
 }
 
 func makeStorageCache(dep domain.Dependency) storage.Storer {

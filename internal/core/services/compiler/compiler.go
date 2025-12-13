@@ -41,6 +41,24 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 func buildOrderedPackages(pkg *domain.Package) {
 	pkg.Lock.Save()
 	queue := loadOrderGraph(pkg)
+
+	var packageNames []string
+	tempQueue := loadOrderGraph(pkg)
+	for !tempQueue.IsEmpty() {
+		node := tempQueue.Dequeue()
+		packageNames = append(packageNames, node.Dep.Name())
+	}
+
+	tracker := NewBuildTracker(packageNames)
+	if len(packageNames) > 0 {
+		msg.Info("Compiling %d packages:\n", len(packageNames))
+		if err := tracker.Start(); err != nil {
+			msg.Warn("Could not start build tracker: %s", err)
+		} else {
+			msg.SetQuietMode(true)
+		}
+	}
+
 	for {
 		if queue.IsEmpty() {
 			break
@@ -50,21 +68,50 @@ func buildOrderedPackages(pkg *domain.Package) {
 
 		dependency := pkg.Lock.GetInstalled(node.Dep)
 
-		msg.Info("Building %s", node.Dep.Name())
+		if tracker.IsEnabled() {
+			tracker.SetBuilding(node.Dep.Name(), "")
+		} else {
+			msg.Info("Building %s", node.Dep.Name())
+		}
+
 		dependency.Changed = false
 		if dependencyPackage, err := domain.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage)); err == nil {
 			dprojs := dependencyPackage.Projects
 			if len(dprojs) > 0 {
+				hasFailed := false
 				for _, dproj := range dprojs {
 					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.Name(), dproj))
-					if !compile(dprojPath, &node.Dep, pkg.Lock) {
+					if tracker.IsEnabled() {
+						tracker.SetBuilding(node.Dep.Name(), filepath.Base(dproj))
+					}
+					if !compile(dprojPath, &node.Dep, pkg.Lock, tracker) {
 						dependency.Failed = true
+						hasFailed = true
 					}
 				}
 				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
 				moveArtifacts(node.Dep, env.GetModulesDir())
+
+				if tracker.IsEnabled() {
+					if hasFailed {
+						tracker.SetFailed(node.Dep.Name(), "build error")
+					} else {
+						tracker.SetSuccess(node.Dep.Name())
+					}
+				}
+			} else {
+				if tracker.IsEnabled() {
+					tracker.SetSkipped(node.Dep.Name(), "no projects")
+				}
+			}
+		} else {
+			if tracker.IsEnabled() {
+				tracker.SetSkipped(node.Dep.Name(), "no boss.json")
 			}
 		}
 		pkg.Lock.SetInstalled(node.Dep, dependency)
 	}
+
+	msg.SetQuietMode(false)
+	tracker.Stop()
 }

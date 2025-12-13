@@ -23,18 +23,22 @@ func checkHasGitClient() {
 	}
 }
 
-func CloneCacheNative(dep domain.Dependency) *git2.Repository {
+func CloneCacheNative(dep domain.Dependency) (*git2.Repository, error) {
 	msg.Info("Downloading dependency %s", dep.Repository)
-	doClone(dep)
-	return GetRepository(dep)
+	if err := doClone(dep); err != nil {
+		return nil, err
+	}
+	return GetRepository(dep), nil
 }
 
-func UpdateCacheNative(dep domain.Dependency) *git2.Repository {
-	getWrapperFetch(dep)
-	return GetRepository(dep)
+func UpdateCacheNative(dep domain.Dependency) (*git2.Repository, error) {
+	if err := getWrapperFetch(dep); err != nil {
+		return nil, err
+	}
+	return GetRepository(dep), nil
 }
 
-func doClone(dep domain.Dependency) {
+func doClone(dep domain.Dependency) error {
 	checkHasGitClient()
 
 	paths.EnsureCacheDir(dep)
@@ -54,11 +58,14 @@ func doClone(dep domain.Dependency) {
 	cmd := exec.Command("git", "clone", dir, dep.GetURL(), dirModule)
 
 	if err = runCommand(cmd); err != nil {
-		msg.Die(err.Error())
+		return err
 	}
-	initSubmodulesNative(dep)
+	if err := initSubmodulesNative(dep); err != nil {
+		return err
+	}
 
 	_ = os.Remove(filepath.Join(dirModule, ".git"))
+	return nil
 }
 
 func writeDotGitFile(dep domain.Dependency) {
@@ -67,7 +74,7 @@ func writeDotGitFile(dep domain.Dependency) {
 	_ = os.WriteFile(path, []byte(mask), 0600)
 }
 
-func getWrapperFetch(dep domain.Dependency) {
+func getWrapperFetch(dep domain.Dependency) error {
 	checkHasGitClient()
 
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
@@ -81,29 +88,33 @@ func getWrapperFetch(dep domain.Dependency) {
 	cmdReset := exec.Command("git", "reset", "--hard")
 	cmdReset.Dir = dirModule
 	if err := runCommand(cmdReset); err != nil {
-		msg.Die(err.Error())
+		return err
 	}
 
 	cmd := exec.Command("git", "fetch", "--all")
 	cmd.Dir = dirModule
 
 	if err := runCommand(cmd); err != nil {
-		msg.Die(err.Error())
+		return err
 	}
 
-	initSubmodulesNative(dep)
+	if err := initSubmodulesNative(dep); err != nil {
+		return err
+	}
 
 	_ = os.Remove(filepath.Join(dirModule, ".git"))
+	return nil
 }
 
-func initSubmodulesNative(dep domain.Dependency) {
+func initSubmodulesNative(dep domain.Dependency) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
 	cmd := exec.Command("git", "submodule", "update", "--init", "--recursive")
 	cmd.Dir = dirModule
 
 	if err := runCommand(cmd); err != nil {
-		msg.Die(err.Error())
+		return err
 	}
+	return nil
 }
 
 func runCommand(cmd *exec.Cmd) error {

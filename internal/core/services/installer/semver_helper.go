@@ -8,7 +8,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
-// npmRangePattern detects npm-style hyphen ranges (1.0.0 - 2.0.0)
+// npmRangePattern detects npm-style hyphen ranges (1.0.0 - 2.0.0).
 var npmRangePattern = regexp.MustCompile(`^\s*([v\d][^\s]*)\s*-\s*([v\d][^\s]*)\s*$`)
 
 // ParseConstraint parses a version constraint, converting npm-style ranges to Go-compatible format.
@@ -44,7 +44,7 @@ func convertNpmConstraint(constraint string) string {
 }
 
 // stripVersionPrefix removes 'v' or 'V' prefix only if followed by a digit.
-// Examples: "v1.0.0" → "1.0.0", "V2.3.4" → "2.3.4", "version-1.0.0" → "version-1.0.0"
+// Examples: "v1.0.0" → "1.0.0", "V2.3.4" → "2.3.4", "version-1.0.0" → "version-1.0.0".
 func stripVersionPrefix(version string) string {
 	if len(version) > 1 && (version[0] == 'v' || version[0] == 'V') {
 		if version[1] >= '0' && version[1] <= '9' {

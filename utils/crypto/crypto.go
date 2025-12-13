@@ -71,7 +71,11 @@ func GetMachineID() string {
 }
 
 func MachineKey() []byte {
-	return []byte(GetMachineID())
+	id := GetMachineID()
+	if len(id) > 16 {
+		return []byte(id[:16])
+	}
+	return []byte(id)
 }
 
 func Md5MachineID() string {

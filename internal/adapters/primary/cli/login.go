@@ -131,5 +131,5 @@ func getSSHKeyPath() string {
 	if err != nil {
 		msg.Die(err.Error())
 	}
-	return filepath.Join(usr.HomeDir, ".ssh", "id_rsa")
+	return filepath.Join(usr.HomeDir, ".ssh", "id_ed25519")
 }

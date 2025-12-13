@@ -22,8 +22,13 @@ func getDefaultDependencyManager() *DependencyManager {
 
 // GetDependency fetches or updates a dependency in cache.
 // Deprecated: Use DependencyManager.GetDependency instead for better testability.
-func GetDependency(dep domain.Dependency) {
-	getDefaultDependencyManager().GetDependency(dep)
+func GetDependency(dep domain.Dependency) error {
+	return getDefaultDependencyManager().GetDependency(dep)
+}
+
+// GetDependencyWithProgress fetches or updates a dependency with optional progress tracking.
+func GetDependencyWithProgress(dep domain.Dependency, progress *ProgressTracker) error {
+	return getDefaultDependencyManager().GetDependencyWithProgress(dep, progress)
 }
 
 // ResetDependencyCache clears the dependency cache for a new session.

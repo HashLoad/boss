@@ -12,7 +12,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func CloneCache(dep domain.Dependency) *goGit.Repository {
+func CloneCache(dep domain.Dependency) (*goGit.Repository, error) {
 	if env.GlobalConfiguration().GitEmbedded {
 		return CloneCacheEmbedded(dep)
 	}
@@ -20,7 +20,7 @@ func CloneCache(dep domain.Dependency) *goGit.Repository {
 	return CloneCacheNative(dep)
 }
 
-func UpdateCache(dep domain.Dependency) *goGit.Repository {
+func UpdateCache(dep domain.Dependency) (*goGit.Repository, error) {
 	if env.GlobalConfiguration().GitEmbedded {
 		return UpdateCacheEmbedded(dep)
 	}
@@ -28,14 +28,14 @@ func UpdateCache(dep domain.Dependency) *goGit.Repository {
 	return UpdateCacheNative(dep)
 }
 
-func initSubmodules(dep domain.Dependency, repository *goGit.Repository) {
+func initSubmodules(dep domain.Dependency, repository *goGit.Repository) error {
 	worktree, err := repository.Worktree()
 	if err != nil {
-		msg.Err("... %s", err)
+		return err
 	}
 	submodules, err := worktree.Submodules()
 	if err != nil {
-		msg.Err("On get submodules... %s", err)
+		return err
 	}
 
 	err = submodules.Update(&goGit.SubmoduleUpdateOptions{
@@ -44,8 +44,9 @@ func initSubmodules(dep domain.Dependency, repository *goGit.Repository) {
 		Auth:              env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
 	})
 	if err != nil {
-		msg.Err("Failed on update submodules from dependency %s: %s", dep.Repository, err.Error())
+		return err
 	}
+	return nil
 }
 
 func GetMain(repository *goGit.Repository) (*config.Branch, error) {

@@ -20,12 +20,12 @@ func NewDefaultGitClient() *DefaultGitClient {
 }
 
 // CloneCache clones a dependency repository to cache.
-func (c *DefaultGitClient) CloneCache(dep domain.Dependency) *goGit.Repository {
+func (c *DefaultGitClient) CloneCache(dep domain.Dependency) (*goGit.Repository, error) {
 	return git.CloneCache(dep)
 }
 
 // UpdateCache updates an existing cached repository.
-func (c *DefaultGitClient) UpdateCache(dep domain.Dependency) *goGit.Repository {
+func (c *DefaultGitClient) UpdateCache(dep domain.Dependency) (*goGit.Repository, error) {
 	return git.UpdateCache(dep)
 }
 

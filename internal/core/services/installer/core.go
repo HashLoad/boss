@@ -25,6 +25,7 @@ type installContext struct {
 	root             *domain.Package
 	processed        []string
 	useLockedVersion bool
+	progress         *ProgressTracker
 }
 
 func newInstallContext(pkg *domain.Package, useLockedVersion bool) *installContext {
@@ -37,11 +38,39 @@ func newInstallContext(pkg *domain.Package, useLockedVersion bool) *installConte
 }
 
 func DoInstall(pkg *domain.Package, lockedVersion bool) {
-	msg.Info("Installing modules in project path")
+	msg.Info("Analyzing dependencies...\n")
 
 	installContext := newInstallContext(pkg, lockedVersion)
+	deps := installContext.collectAllDependencies(pkg)
 
-	dependencies := installContext.ensureDependencies(pkg)
+	if len(deps) == 0 {
+		msg.Info("No dependencies to install")
+		return
+	}
+
+	installContext.progress = NewProgressTracker(deps)
+
+	msg.Info("Installing %d dependencies:\n", len(deps))
+
+	if err := installContext.progress.Start(); err != nil {
+		msg.Warn("Could not start progress tracker: %s", err)
+	} else {
+		msg.SetQuietMode(true)
+		msg.SetProgressTracker(installContext.progress)
+	}
+
+	dependencies, err := installContext.ensureDependencies(pkg)
+	if err != nil {
+		msg.SetQuietMode(false)
+		msg.SetProgressTracker(nil)
+		installContext.progress.Stop()
+		msg.Err("  Installation failed: %s", err)
+		os.Exit(1)
+	}
+
+	msg.SetQuietMode(false)
+	msg.SetProgressTracker(nil)
+	installContext.progress.Stop()
 
 	paths.EnsureCleanModulesDir(dependencies, pkg.Lock)
 
@@ -49,31 +78,53 @@ func DoInstall(pkg *domain.Package, lockedVersion bool) {
 	pkg.Save()
 
 	librarypath.UpdateLibraryPath(pkg)
-	msg.Info("Compiling units")
+
 	compiler.Build(pkg)
 	pkg.Save()
-	msg.Info("Success!")
+	msg.Info("✓ Installation completed successfully!")
 }
 
-func (ic *installContext) ensureDependencies(pkg *domain.Package) []domain.Dependency {
+// collectAllDependencies makes a dry-run to collect all dependencies without installing.
+func (ic *installContext) collectAllDependencies(pkg *domain.Package) []domain.Dependency {
 	if pkg.Dependencies == nil {
 		return []domain.Dependency{}
 	}
+
 	deps := pkg.GetParsedDependencies()
 
-	ic.ensureModules(pkg, deps)
-
-	deps = append(deps, ic.processOthers()...)
+	for _, dep := range deps {
+		ic.processed = append(ic.processed, dep.Name())
+	}
 
 	return deps
 }
 
-func (ic *installContext) processOthers() []domain.Dependency {
+func (ic *installContext) ensureDependencies(pkg *domain.Package) ([]domain.Dependency, error) {
+	if pkg.Dependencies == nil {
+		return []domain.Dependency{}, nil
+	}
+	deps := pkg.GetParsedDependencies()
+
+	if err := ic.ensureModules(pkg, deps); err != nil {
+		return nil, err
+	}
+
+	otherDeps, err := ic.processOthers()
+	if err != nil {
+		return nil, err
+	}
+	deps = append(deps, otherDeps...)
+
+	return deps, nil
+}
+
+func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 	infos, err := os.ReadDir(env.GetModulesDir())
 	var lenProcessedInitial = len(ic.processed)
 	var result []domain.Dependency
 	if err != nil {
 		msg.Err("Error on try load dir of modules: %s", err)
+		return result, err
 	}
 
 	for _, info := range infos {
@@ -81,19 +132,23 @@ func (ic *installContext) processOthers() []domain.Dependency {
 			continue
 		}
 
-		if utils.Contains(ic.processed, info.Name()) {
+		moduleName := info.Name()
+
+		if utils.Contains(ic.processed, moduleName) {
 			continue
 		}
 
-		ic.processed = append(ic.processed, info.Name())
+		ic.processed = append(ic.processed, moduleName)
 
-		msg.Info("Processing module %s", info.Name())
+		if ic.progress == nil || !ic.progress.IsEnabled() {
+			msg.Info("Processing module %s", moduleName)
+		}
 
-		fileName := filepath.Join(env.GetModulesDir(), info.Name(), consts.FilePackage)
+		fileName := filepath.Join(env.GetModulesDir(), moduleName, consts.FilePackage)
 
 		_, err := os.Stat(fileName)
 		if os.IsNotExist(err) {
-			msg.Warn("  boss.json not exists in %s", info.Name())
+			continue
 		}
 
 		if packageOther, err := domain.LoadPackageOther(fileName); err != nil {
@@ -102,52 +157,118 @@ func (ic *installContext) processOthers() []domain.Dependency {
 			}
 			msg.Err("  Error on try load package %s: %s", fileName, err)
 		} else {
-			result = append(result, ic.ensureDependencies(packageOther)...)
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				childDeps := packageOther.GetParsedDependencies()
+				for _, childDep := range childDeps {
+					ic.progress.AddDependency(childDep.Name())
+				}
+			}
+			deps, err := ic.ensureDependencies(packageOther)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, deps...)
 		}
 	}
 	if lenProcessedInitial > len(ic.processed) {
-		result = append(result, ic.processOthers()...)
+		deps, err := ic.processOthers()
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, deps...)
 	}
 
-	return result
+	return result, nil
 }
 
-func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Dependency) {
+func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Dependency) error {
 	for _, dep := range deps {
-		msg.Info("Processing dependency %s", dep.Name())
+		depName := dep.Name()
+
+		if ic.progress != nil && ic.progress.IsEnabled() {
+			ic.progress.AddDependency(depName)
+		}
 
 		if ic.shouldSkipDependency(dep) {
-			msg.Info("Dependency %s already installed", dep.Name())
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				ic.progress.SetSkipped(depName, "up to date")
+			} else {
+				msg.Info("  %s already installed", depName)
+			}
 			continue
 		}
 
-		GetDependency(dep)
+		if ic.progress != nil && ic.progress.IsEnabled() {
+			ic.progress.SetCloning(depName)
+		} else {
+			msg.Info("Processing dependency %s", depName)
+		}
+
+		err := GetDependencyWithProgress(dep, ic.progress)
+		if err != nil {
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				ic.progress.SetFailed(depName, err)
+			}
+			return err
+		}
 		repository := git.GetRepository(dep)
+
+		if ic.progress != nil && ic.progress.IsEnabled() {
+			ic.progress.SetChecking(depName, "resolving version")
+		}
+
 		referenceName := ic.getReferenceName(pkg, dep, repository)
 
 		wt, err := repository.Worktree()
 		if err != nil {
-			msg.Die("  Error on get worktree from repository %s\n%s", dep.Repository, err)
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				ic.progress.SetFailed(depName, err)
+			}
+			return err
 		}
 
 		status, err := wt.Status()
 		if err != nil {
-			msg.Die("  Error on get status from worktree %s\n%s", dep.Repository, err)
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				ic.progress.SetFailed(depName, err)
+			}
+			return err
 		}
 
 		head, er := repository.Head()
 		if er != nil {
-			msg.Die("  Error on get head from repository %s\n%s", dep.Repository, er)
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				ic.progress.SetFailed(depName, er)
+			}
+			return er
 		}
 
 		currentRef := head.Name()
 		if !ic.rootLocked.NeedUpdate(dep, referenceName.Short()) && status.IsClean() && referenceName == currentRef {
-			msg.Info("  %s already updated", dep.Name())
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				ic.progress.SetSkipped(depName, "already up to date")
+			} else {
+				msg.Info("  %s already updated", depName)
+			}
 			continue
 		}
 
-		ic.checkoutAndUpdate(dep, repository, referenceName)
+		if ic.progress != nil && ic.progress.IsEnabled() {
+			ic.progress.SetInstalling(depName)
+		}
+
+		if err := ic.checkoutAndUpdate(dep, repository, referenceName); err != nil {
+			if ic.progress != nil && ic.progress.IsEnabled() {
+				ic.progress.SetFailed(depName, err)
+			}
+			return err
+		}
+
+		if ic.progress != nil && ic.progress.IsEnabled() {
+			ic.progress.SetCompleted(depName)
+		}
 	}
+	return nil
 }
 
 func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
@@ -203,10 +324,10 @@ func (ic *installContext) getReferenceName(
 func (ic *installContext) checkoutAndUpdate(
 	dep domain.Dependency,
 	repository *goGit.Repository,
-	referenceName plumbing.ReferenceName) {
+	referenceName plumbing.ReferenceName) error {
 	worktree, err := repository.Worktree()
 	if err != nil {
-		msg.Die("  Error on get worktree from repository %s\n%s", dep.Repository, err)
+		return err
 	}
 
 	err = worktree.Checkout(&goGit.CheckoutOptions{
@@ -217,7 +338,7 @@ func (ic *installContext) checkoutAndUpdate(
 	ic.rootLocked.Add(dep, referenceName.Short())
 
 	if err != nil {
-		msg.Die("  Error on switch to needed version from dependency %s\n%s", dep.Repository, err)
+		return err
 	}
 
 	err = worktree.Pull(&goGit.PullOptions{
@@ -228,6 +349,7 @@ func (ic *installContext) checkoutAndUpdate(
 	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
 		msg.Warn("  Error on pull from dependency %s\n%s", dep.Repository, err)
 	}
+	return nil
 }
 
 func (ic *installContext) getVersion(

@@ -54,8 +54,10 @@ func buildSearchPath(dep *domain.Dependency) string {
 	return searchPath
 }
 
-func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock) bool {
-	msg.Info("  Building " + filepath.Base(dprojPath))
+func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker) bool {
+	if tracker == nil || !tracker.IsEnabled() {
+		msg.Info("  Building " + filepath.Base(dprojPath))
+	}
 
 	bossPackagePath := filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage)
 
@@ -93,17 +95,23 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 
 	err = os.WriteFile(buildBat, []byte(readFileStr), 0600)
 	if err != nil {
-		msg.Warn("  - error on create build file")
+		if tracker == nil || !tracker.IsEnabled() {
+			msg.Warn("  - error on create build file")
+		}
 		return false
 	}
 
 	command := exec.Command(buildBat)
 	command.Dir = abs
 	if _, err = command.Output(); err != nil {
-		msg.Err("  - Failed to compile, see " + buildLog + " for more information")
+		if tracker == nil || !tracker.IsEnabled() {
+			msg.Err("  - Failed to compile, see " + buildLog + " for more information")
+		}
 		return false
 	}
-	msg.Info("  - Success!")
+	if tracker == nil || !tracker.IsEnabled() {
+		msg.Info("  - Success!")
+	}
 	err = os.Remove(buildLog)
 	utils.HandleError(err)
 	err = os.Remove(buildBat)

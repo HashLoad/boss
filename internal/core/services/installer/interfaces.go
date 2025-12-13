@@ -11,10 +11,10 @@ import (
 // GitClient abstracts Git operations for testability.
 type GitClient interface {
 	// CloneCache clones a dependency repository to cache.
-	CloneCache(dep domain.Dependency) *goGit.Repository
+	CloneCache(dep domain.Dependency) (*goGit.Repository, error)
 
 	// UpdateCache updates an existing cached repository.
-	UpdateCache(dep domain.Dependency) *goGit.Repository
+	UpdateCache(dep domain.Dependency) (*goGit.Repository, error)
 
 	// GetRepository returns the repository for a dependency.
 	GetRepository(dep domain.Dependency) *goGit.Repository

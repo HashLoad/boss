@@ -21,11 +21,13 @@ const (
 
 type Messenger struct {
 	sync.Mutex
-	Stdout     io.Writer
-	Stderr     io.Writer
-	Stdin      io.Reader
-	exitStatus int
-	hasError   bool
+	Stdout          io.Writer
+	Stderr          io.Writer
+	Stdin           io.Reader
+	exitStatus      int
+	hasError        bool
+	quietMode       bool
+	progressTracker any
 
 	logLevel logLevel
 }
@@ -79,6 +81,18 @@ func (m *Messenger) Err(msg string, args ...any) {
 	if m.logLevel < ERROR {
 		return
 	}
+
+	// Stop progress tracker if running
+	if m.progressTracker != nil {
+		if tracker, ok := m.progressTracker.(interface{ Stop() }); ok {
+			tracker.Stop()
+		}
+		m.progressTracker = nil
+	}
+
+	// Disable quiet mode to show errors
+	m.quietMode = false
+
 	m.print(pterm.Error, msg, args...)
 	m.hasError = true
 }
@@ -87,18 +101,27 @@ func (m *Messenger) Warn(msg string, args ...any) {
 	if m.logLevel < WARN {
 		return
 	}
+
+	// Warnings don't stop the progress tracker, only errors do
+	// But we need to temporarily disable quiet mode to show the warning
+	wasQuiet := m.quietMode
+	m.quietMode = false
+
 	m.print(pterm.Warning, msg, args...)
+
+	// Restore quiet mode after printing warning
+	m.quietMode = wasQuiet
 }
 
 func (m *Messenger) Info(msg string, args ...any) {
-	if m.logLevel < INFO {
+	if m.quietMode || m.logLevel < INFO {
 		return
 	}
 	m.print(pterm.Info, msg, args...)
 }
 
 func (m *Messenger) Debug(msg string, args ...any) {
-	if m.logLevel < DEBUG {
+	if m.quietMode || m.logLevel < DEBUG {
 		return
 	}
 
@@ -132,4 +155,24 @@ func (m *Messenger) print(printer pterm.PrefixPrinter, msg string, args ...any) 
 
 func (m *Messenger) HasErrored() bool {
 	return m.hasError
+}
+
+func SetQuietMode(quiet bool) {
+	defaultMsg.SetQuietMode(quiet)
+}
+
+func (m *Messenger) SetQuietMode(quiet bool) {
+	m.Lock()
+	m.quietMode = quiet
+	m.Unlock()
+}
+
+func SetProgressTracker(tracker any) {
+	defaultMsg.SetProgressTracker(tracker)
+}
+
+func (m *Messenger) SetProgressTracker(tracker any) {
+	m.Lock()
+	m.progressTracker = tracker
+	m.Unlock()
 }

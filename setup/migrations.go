@@ -62,7 +62,7 @@ func seven() {
 	}
 
 	for key, value := range auth {
-		authMap, ok := value.(map[string]interface{})
+		authMap, ok := value.(map[string]any)
 		if !ok {
 			continue
 		}

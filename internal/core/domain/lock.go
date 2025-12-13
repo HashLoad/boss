@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	fs "github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
-	"github.com/Masterminds/semver/v3"
 )
 
 type DependencyArtifacts struct {

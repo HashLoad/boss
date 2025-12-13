@@ -9,8 +9,8 @@ import (
 
 // Repository abstracts git repository operations.
 type Repository interface {
-	CloneCache(dep domain.Dependency) *goGit.Repository
-	UpdateCache(dep domain.Dependency) *goGit.Repository
+	CloneCache(dep domain.Dependency) (*goGit.Repository, error)
+	UpdateCache(dep domain.Dependency) (*goGit.Repository, error)
 	GetVersions(repository *goGit.Repository, dep domain.Dependency) []*plumbing.Reference
 	GetMain(repository *goGit.Repository) (*config.Branch, error)
 	GetByTag(repository *goGit.Repository, shortName string) *plumbing.Reference
@@ -22,12 +22,12 @@ type Repository interface {
 type DefaultRepository struct{}
 
 // CloneCache clones a dependency to cache.
-func (d *DefaultRepository) CloneCache(dep domain.Dependency) *goGit.Repository {
+func (d *DefaultRepository) CloneCache(dep domain.Dependency) (*goGit.Repository, error) {
 	return CloneCache(dep)
 }
 
 // UpdateCache updates a cached dependency.
-func (d *DefaultRepository) UpdateCache(dep domain.Dependency) *goGit.Repository {
+func (d *DefaultRepository) UpdateCache(dep domain.Dependency) (*goGit.Repository, error) {
 	return UpdateCache(dep)
 }
 

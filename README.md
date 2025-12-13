@@ -51,10 +51,20 @@ boss init --quiet
 
 ### > Install
 
-This command install a new dependency
+This command install a new dependency with real-time progress tracking:
 
 ```shell
 boss install <dependency>
+```
+
+**Progress Tracking:** Boss now displays Docker-style progress for each dependency being installed, showing status icons and real-time updates:
+
+```
+⏳ horse                          Waiting...
+📥 dataset-serialize              Cloning...
+🔍 jhonson                        Checking...
+⚙️  redis-client                  Installing...
+✓ boss-core                      Installed
 ```
 
 The dependency is case insensitive. For example, `boss install horse` is the same as the `boss install HORSE` command.
