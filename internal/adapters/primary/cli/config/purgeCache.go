@@ -63,10 +63,10 @@ func removeCacheWithConfirmation() error {
 		}
 	}
 
-	pterm.Warning.Printfln("This will remove ALL cached modules")
-	pterm.Info.Printfln("  Modules: %d", moduleCount)
-	pterm.Info.Printfln("  Size: %s", sizeStr)
-	pterm.Info.Printfln("  Path: %s\n", modulesDir)
+	msg.Warn("This will remove ALL cached modules")
+	msg.Info("  Modules: %d", moduleCount)
+	msg.Info("  Size: %s", sizeStr)
+	msg.Info("  Path: %s\n", modulesDir)
 
 	result, _ := pterm.DefaultInteractiveConfirm.
 		WithDefaultValue(false).
