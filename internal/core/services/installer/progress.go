@@ -28,35 +28,35 @@ var dependencyStatusConfig = tracker.StatusConfig[DependencyStatus]{
 		StatusText: pterm.Gray("Waiting..."),
 	},
 	StatusCloning: {
-		Icon:       pterm.LightCyan("📥"),
+		Icon:       pterm.LightCyan("🧬"),
 		StatusText: pterm.LightCyan("Cloning..."),
 	},
 	StatusDownloading: {
-		Icon:       pterm.LightCyan("⬇️"),
+		Icon:       pterm.LightCyan("📥"),
 		StatusText: pterm.LightCyan("Downloading..."),
 	},
 	StatusChecking: {
-		Icon:       pterm.LightBlue("🔍"),
+		Icon:       pterm.LightBlue("🔎"),
 		StatusText: pterm.LightBlue("Checking..."),
 	},
 	StatusInstalling: {
-		Icon:       pterm.LightMagenta("⚙️"),
+		Icon:       pterm.LightMagenta("🔥"),
 		StatusText: pterm.LightMagenta("Installing..."),
 	},
 	StatusCompleted: {
-		Icon:       pterm.LightGreen("✓"),
+		Icon:       pterm.LightGreen("📦"),
 		StatusText: pterm.LightGreen("Installed"),
 	},
 	StatusSkipped: {
-		Icon:       pterm.Gray("→"),
+		Icon:       pterm.Gray("⏩"),
 		StatusText: pterm.Gray("Skipped"),
 	},
 	StatusFailed: {
-		Icon:       pterm.LightRed("✗"),
+		Icon:       pterm.LightRed("⛓️‍💥"),
 		StatusText: pterm.LightRed("Failed"),
 	},
 	StatusWarning: {
-		Icon:       pterm.LightYellow("!"),
+		Icon:       pterm.LightYellow("⚠️"),
 		StatusText: pterm.LightYellow("Warning"),
 	},
 }

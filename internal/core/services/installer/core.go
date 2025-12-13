@@ -56,6 +56,7 @@ func newInstallContext(pkg *domain.Package, options InstallOptions, progress *Pr
 	}
 }
 
+// DoInstall performs the installation of dependencies.
 func DoInstall(options InstallOptions, pkg *domain.Package) error {
 	msg.Info("Analyzing dependencies...\n")
 
@@ -103,14 +104,14 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 
 	if len(installContext.warnings) > 0 {
-		msg.Warn("\nInstallation Warnings:")
+		msg.Warn("\n⚠️ Installation Warnings:")
 		for _, warning := range installContext.warnings {
 			msg.Warn("  - %s", warning)
 		}
 		fmt.Println("")
 	}
 
-	msg.Success("✓ Installation completed successfully!")
+	msg.Success("✅ Installation completed successfully!")
 	return nil
 }
 
