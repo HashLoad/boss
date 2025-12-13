@@ -19,6 +19,8 @@ const (
 	githubRepository   = "boss"
 )
 
+// BossUpgrade performs the self-update of the boss executable.
+// It checks for the latest release on GitHub, downloads it, and applies the update.
 func BossUpgrade(preRelease bool) error {
 	releases, err := getBossReleases()
 	if err != nil {
