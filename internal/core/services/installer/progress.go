@@ -18,6 +18,7 @@ const (
 	StatusCompleted
 	StatusSkipped
 	StatusFailed
+	StatusWarning
 )
 
 // dependencyStatusConfig defines how each status should be displayed.
@@ -53,6 +54,10 @@ var dependencyStatusConfig = tracker.StatusConfig[DependencyStatus]{
 	StatusFailed: {
 		Icon:       pterm.LightRed("✗"),
 		StatusText: pterm.LightRed("Failed"),
+	},
+	StatusWarning: {
+		Icon:       pterm.LightYellow("!"),
+		StatusText: pterm.LightYellow("Warning"),
 	},
 }
 
@@ -133,4 +138,9 @@ func (pt *ProgressTracker) SetSkipped(depName string, reason string) {
 // SetFailed sets the status to failed with an error.
 func (pt *ProgressTracker) SetFailed(depName string, err error) {
 	pt.UpdateStatus(depName, StatusFailed, err.Error())
+}
+
+// SetWarning sets the status to warning with a message.
+func (pt *ProgressTracker) SetWarning(depName string, message string) {
+	pt.UpdateStatus(depName, StatusWarning, message)
 }

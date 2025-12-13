@@ -95,7 +95,7 @@ func (m *Messenger) Err(msg string, args ...any) {
 
 	m.quietMode = false
 
-	m.print(pterm.Error, msg, args...)
+	m.print(pterm.Error.MessageStyle, msg, args...)
 	m.hasError = true
 }
 
@@ -107,7 +107,7 @@ func (m *Messenger) Warn(msg string, args ...any) {
 	wasQuiet := m.quietMode
 	m.quietMode = false
 
-	m.print(pterm.Warning, msg, args...)
+	m.print(pterm.Warning.MessageStyle, msg, args...)
 
 	m.quietMode = wasQuiet
 }
@@ -116,7 +116,7 @@ func (m *Messenger) Info(msg string, args ...any) {
 	if m.quietMode || m.logLevel < INFO {
 		return
 	}
-	m.print(pterm.Info, msg, args...)
+	m.print(pterm.Info.MessageStyle, msg, args...)
 }
 
 func (m *Messenger) Debug(msg string, args ...any) {
@@ -124,7 +124,7 @@ func (m *Messenger) Debug(msg string, args ...any) {
 		return
 	}
 
-	m.print(pterm.Debug, msg, args...)
+	m.print(pterm.Debug.MessageStyle, msg, args...)
 }
 
 func (m *Messenger) Die(msg string, args ...any) {
@@ -142,14 +142,19 @@ func ExitCode(exitStatus int) {
 	defaultMsg.ExitCode(exitStatus)
 }
 
-func (m *Messenger) print(printer pterm.PrefixPrinter, msg string, args ...any) {
+func (m *Messenger) print(style *pterm.Style, msg string, args ...any) {
 	m.Lock()
 	defer m.Unlock()
 	if !strings.HasSuffix(msg, "\n") {
 		msg += "\n"
 	}
 
-	printer.Printf(msg, args...)
+	if style == nil {
+		pterm.Printf(msg, args...)
+		return
+	}
+
+	style.Printf(msg, args...)
 }
 
 func (m *Messenger) HasErrored() bool {

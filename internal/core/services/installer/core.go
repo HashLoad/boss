@@ -259,12 +259,17 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 			return err
 		}
 
-		if err := ic.verifyDependencyCompatibility(dep); err != nil {
+		warning, err := ic.verifyDependencyCompatibility(dep)
+		if err != nil {
 			ic.progress.SetFailed(depName, err)
 			return err
 		}
 
-		ic.progress.SetCompleted(depName)
+		if warning != "" {
+			ic.progress.SetWarning(depName, warning)
+		} else {
+			ic.progress.SetCompleted(depName)
+		}
 	}
 	return nil
 }
@@ -282,13 +287,21 @@ func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
 	depv := strings.NewReplacer("^", "", "~", "").Replace(dep.GetVersion())
 	requiredVersion, err := semver.NewVersion(depv)
 	if err != nil {
-		msg.Warn("  Error '%s' on get required version. Updating...", err)
+		if ic.progress.IsEnabled() {
+			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Error '%s' on get required version. Updating...", err))
+		} else {
+			msg.Warn("  Error '%s' on get required version. Updating...", err)
+		}
 		return false
 	}
 
 	installedVersion, err := semver.NewVersion(installed.Version)
 	if err != nil {
-		msg.Warn("  Error '%s' on get installed version. Updating...", err)
+		if ic.progress.IsEnabled() {
+			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Error '%s' on get installed version. Updating...", err))
+		} else {
+			msg.Warn("  Error '%s' on get installed version. Updating...", err)
+		}
 		return false
 	}
 
@@ -303,9 +316,15 @@ func (ic *installContext) getReferenceName(
 	var referenceName plumbing.ReferenceName
 
 	if bestMatch == nil {
-		msg.Warn("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion())
+		if ic.progress.IsEnabled() {
+			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion()))
+		} else {
+			msg.Warn("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion())
+		}
 		if mainBranchReference, err := git.GetMain(repository); err == nil {
-			msg.Info("Falling back to main branch: %s", mainBranchReference.Name)
+			if !ic.progress.IsEnabled() {
+				msg.Info("Falling back to main branch: %s", mainBranchReference.Name)
+			}
 			return plumbing.NewBranchReferenceName(mainBranchReference.Name)
 		}
 		msg.Die("Could not find any suitable version or branch for dependency '%s'", dep.Repository)
@@ -345,7 +364,11 @@ func (ic *installContext) checkoutAndUpdate(
 	})
 
 	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
-		msg.Warn("  Error on pull from dependency %s\n%s", dep.Repository, err)
+		if ic.progress.IsEnabled() {
+			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Error on pull from dependency %s\n%s", dep.Repository, err))
+		} else {
+			msg.Warn("  Error on pull from dependency %s\n%s", dep.Repository, err)
+		}
 	}
 	return nil
 }
@@ -366,13 +389,21 @@ func (ic *installContext) getVersion(
 	versions := git.GetVersions(repository, dep)
 	constraints, err := ParseConstraint(dep.GetVersion())
 	if err != nil {
-		msg.Warn("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
+		if ic.progress.IsEnabled() {
+			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Version constraint '%s' not supported: %s", dep.GetVersion(), err))
+		} else {
+			msg.Warn("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
+		}
 		for _, version := range versions {
 			if version.Name().Short() == dep.GetVersion() {
 				return version
 			}
 		}
-		msg.Warn("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
+		if ic.progress.IsEnabled() {
+			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions)))
+		} else {
+			msg.Warn("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
+		}
 		return nil
 	}
 
@@ -413,15 +444,15 @@ func (ic *installContext) getVersionSemantic(
 	return bestReference
 }
 
-func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) error {
+func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) (string, error) {
 	depPath := filepath.Join(ic.modulesDir, dep.Name())
 	depPkg, err := domain.LoadPackageOther(filepath.Join(depPath, "boss.json"))
 	if err != nil {
-		return nil
+		return "", nil
 	}
 
 	if depPkg.Engines == nil || len(depPkg.Engines.Platforms) == 0 {
-		return nil
+		return "", nil
 	}
 
 	targetPlatform := ic.options.Platform
@@ -430,12 +461,12 @@ func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) e
 	}
 
 	if targetPlatform == "" {
-		return nil
+		return "", nil
 	}
 
 	for _, p := range depPkg.Engines.Platforms {
 		if strings.EqualFold(p, targetPlatform) {
-			return nil
+			return "", nil
 		}
 	}
 
@@ -447,8 +478,7 @@ func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) e
 	}
 
 	if isStrict {
-		return errors.New(errorMessage)
+		return "", errors.New(errorMessage)
 	}
-	msg.Warn(errorMessage)
-	return nil
+	return errorMessage, nil
 }
