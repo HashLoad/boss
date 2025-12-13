@@ -33,6 +33,7 @@ type installContext struct {
 	lockSvc          *lockService.Service
 	modulesDir       string
 	options          InstallOptions
+	warnings         []string
 }
 
 func newInstallContext(pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
@@ -49,6 +50,7 @@ func newInstallContext(pkg *domain.Package, options InstallOptions, progress *Pr
 		lockSvc:          lockSvc,
 		modulesDir:       env.GetModulesDir(),
 		options:          options,
+		warnings:         make([]string, 0),
 	}
 }
 
@@ -98,7 +100,20 @@ func DoInstall(options InstallOptions, pkg *domain.Package) {
 	compiler.Build(pkg, options.Compiler, options.Platform)
 	pkg.Save()
 	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
-	msg.Info("✓ Installation completed successfully!")
+
+	if len(installContext.warnings) > 0 {
+		msg.Warn("\nInstallation Warnings:")
+		for _, warning := range installContext.warnings {
+			msg.Warn("  - %s", warning)
+		}
+		fmt.Println("")
+	}
+
+	msg.Success("✓ Installation completed successfully!")
+}
+
+func (ic *installContext) addWarning(warning string) {
+	ic.warnings = append(ic.warnings, warning)
 }
 
 // collectAllDependencies makes a dry-run to collect all dependencies without installing.
@@ -267,6 +282,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 
 		if warning != "" {
 			ic.progress.SetWarning(depName, warning)
+			ic.addWarning(fmt.Sprintf("%s: %s", depName, warning))
 		} else {
 			ic.progress.SetCompleted(depName)
 		}
@@ -287,21 +303,25 @@ func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
 	depv := strings.NewReplacer("^", "", "~", "").Replace(dep.GetVersion())
 	requiredVersion, err := semver.NewVersion(depv)
 	if err != nil {
+		warnMsg := fmt.Sprintf("Error '%s' on get required version. Updating...", err)
 		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Error '%s' on get required version. Updating...", err))
+			ic.progress.SetWarning(dep.Name(), warnMsg)
 		} else {
-			msg.Warn("  Error '%s' on get required version. Updating...", err)
+			msg.Warn("  " + warnMsg)
 		}
+		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 		return false
 	}
 
 	installedVersion, err := semver.NewVersion(installed.Version)
 	if err != nil {
+		warnMsg := fmt.Sprintf("Error '%s' on get installed version. Updating...", err)
 		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Error '%s' on get installed version. Updating...", err))
+			ic.progress.SetWarning(dep.Name(), warnMsg)
 		} else {
-			msg.Warn("  Error '%s' on get installed version. Updating...", err)
+			msg.Warn("  " + warnMsg)
 		}
+		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 		return false
 	}
 
@@ -316,11 +336,14 @@ func (ic *installContext) getReferenceName(
 	var referenceName plumbing.ReferenceName
 
 	if bestMatch == nil {
+		warnMsg := fmt.Sprintf("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion())
 		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion()))
+			ic.progress.SetWarning(dep.Name(), warnMsg)
 		} else {
-			msg.Warn("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion())
+			msg.Warn(warnMsg)
 		}
+		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
+
 		if mainBranchReference, err := git.GetMain(repository); err == nil {
 			if !ic.progress.IsEnabled() {
 				msg.Info("Falling back to main branch: %s", mainBranchReference.Name)
@@ -389,21 +412,26 @@ func (ic *installContext) getVersion(
 	versions := git.GetVersions(repository, dep)
 	constraints, err := ParseConstraint(dep.GetVersion())
 	if err != nil {
+		warnMsg := fmt.Sprintf("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
 		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("Version constraint '%s' not supported: %s", dep.GetVersion(), err))
+			ic.progress.SetWarning(dep.Name(), warnMsg)
 		} else {
-			msg.Warn("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
+			msg.Warn(warnMsg)
 		}
+		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
+
 		for _, version := range versions {
 			if version.Name().Short() == dep.GetVersion() {
 				return version
 			}
 		}
+		warnMsg2 := fmt.Sprintf("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
 		if ic.progress.IsEnabled() {
-			ic.progress.SetWarning(dep.Name(), fmt.Sprintf("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions)))
+			ic.progress.SetWarning(dep.Name(), warnMsg2)
 		} else {
-			msg.Warn("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
+			msg.Warn(warnMsg2)
 		}
+		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg2))
 		return nil
 	}
 

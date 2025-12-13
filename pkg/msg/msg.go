@@ -61,6 +61,10 @@ func Info(msg string, args ...any) {
 	defaultMsg.Info(msg, args...)
 }
 
+func Success(msg string, args ...any) {
+	defaultMsg.Success(msg, args...)
+}
+
 func Debug(msg string, args ...any) {
 	defaultMsg.Debug(msg, args...)
 }
@@ -117,6 +121,13 @@ func (m *Messenger) Info(msg string, args ...any) {
 		return
 	}
 	m.print(pterm.Info.MessageStyle, msg, args...)
+}
+
+func (m *Messenger) Success(msg string, args ...any) {
+	if m.quietMode || m.logLevel < INFO {
+		return
+	}
+	m.print(pterm.Success.MessageStyle, msg, args...)
 }
 
 func (m *Messenger) Debug(msg string, args ...any) {
