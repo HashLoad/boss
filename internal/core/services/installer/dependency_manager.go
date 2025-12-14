@@ -51,7 +51,7 @@ func (dm *DependencyManager) GetDependency(dep domain.Dependency) error {
 // GetDependencyWithProgress fetches or updates a dependency with optional progress tracking.
 func (dm *DependencyManager) GetDependencyWithProgress(dep domain.Dependency, progress *ProgressTracker) error {
 	if dm.cache.IsUpdated(dep.HashName()) {
-		msg.Debug("Using cached of %s", dep.Name())
+		msg.Debug("  🍪 Using cached of %s", dep.Name())
 		return nil
 	}
 
@@ -66,7 +66,7 @@ func (dm *DependencyManager) GetDependencyWithProgress(dep domain.Dependency, pr
 	var err error
 	if dm.hasCache(dep) {
 		if progress == nil || !progress.IsEnabled() {
-			msg.Debug("  🔄 Updating existing cache for %s", dep.Name())
+			msg.Debug("  🍪 Updating existing cache for %s", dep.Name())
 		}
 		repository, err = dm.gitClient.UpdateCache(dep)
 	} else {

@@ -24,13 +24,12 @@ func Build(pkg *domain.Package, compilerVersion, platform string) {
 	}
 	selected, err := compiler_selector.SelectCompiler(ctx)
 	if err != nil {
-		msg.Warn("\nCompiler selection failed: %s. Falling back to default.", err)
+		msg.Warn("Compiler selection failed: %s. Falling back to default.", err)
 	} else {
-		msg.Info("\nUsing compiler:")
-		msg.Info("  Version: %s", selected.Version)
-		msg.Info("  Platform: %s", selected.Arch)
-		msg.Info("  Binary: %s", selected.Path)
-		msg.Info("")
+		msg.Info("🛠️ Using compiler:")
+		msg.Info("   Version: %s", selected.Version)
+		msg.Info("   Platform: %s", selected.Arch)
+		msg.Info("   Binary: %s", selected.Path)
 	}
 
 	buildOrderedPackages(pkg, selected)
@@ -77,10 +76,10 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 		trackerPtr = NewBuildTracker(packageNames)
 	}
 	if len(packageNames) > 0 {
-		msg.Info("Compiling %d packages:\n", len(packageNames))
+		msg.Info("📦 Compiling %d packages:\n", len(packageNames))
 		if !msg.IsDebugMode() {
 			if err := trackerPtr.Start(); err != nil {
-				msg.Warn("Could not start build tracker: %s", err)
+				msg.Warn("❌ Could not start build tracker: %s", err)
 			} else {
 				msg.SetQuietMode(true)
 			}
@@ -88,7 +87,7 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 			msg.Debug("Debug mode: progress tracker disabled\n")
 		}
 	} else {
-		msg.Info("No packages to compile.\n")
+		msg.Info("📄 No packages to compile.\n")
 	}
 
 	for {
@@ -116,7 +115,7 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 					if trackerPtr.IsEnabled() {
 						trackerPtr.SetBuilding(node.Dep.Name(), filepath.Base(dproj))
 					} else {
-						msg.Info("  📄 Compiling project: %s", filepath.Base(dproj))
+						msg.Info("  🔥 Compiling project: %s", filepath.Base(dproj))
 					}
 					if !compile(dprojPath, &node.Dep, pkg.Lock, trackerPtr, selectedCompiler) {
 						dependency.Failed = true

@@ -59,7 +59,7 @@ func newInstallContext(pkg *domain.Package, options InstallOptions, progress *Pr
 
 // DoInstall performs the installation of dependencies.
 func DoInstall(options InstallOptions, pkg *domain.Package) error {
-	msg.Info("Analyzing dependencies...\n")
+	msg.Info("🔍 Analyzing dependencies...\n")
 
 	deps := collectAllDependencies(pkg)
 
@@ -78,7 +78,7 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 	}
 	installContext := newInstallContext(pkg, options, progress)
 
-	msg.Info("Installing %d dependencies:\n", len(deps))
+	msg.Info("📦 Installing %d dependencies:\n", len(deps))
 
 	if !msg.IsDebugMode() {
 		if err := progress.Start(); err != nil {
@@ -87,8 +87,6 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 			msg.SetQuietMode(true)
 			msg.SetProgressTracker(progress)
 		}
-	} else {
-		msg.Debug("Debug mode: progress tracker disabled\n")
 	}
 
 	dependencies, err := installContext.ensureDependencies(pkg)
@@ -96,7 +94,7 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 		msg.SetQuietMode(false)
 		msg.SetProgressTracker(nil)
 		progress.Stop()
-		return fmt.Errorf("\n❌ Installation failed: %w", err)
+		return fmt.Errorf("❌ Installation failed: %w", err)
 	}
 
 	msg.SetQuietMode(false)
@@ -116,11 +114,10 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 
 	if len(installContext.warnings) > 0 {
-		msg.Warn("\n⚠️ Installation Warnings:")
+		msg.Warn("⚠️ Installation Warnings:")
 		for _, warning := range installContext.warnings {
-			msg.Warn("  - %s", warning)
+			msg.Warn("   - %s", warning)
 		}
-		fmt.Println("")
 	}
 
 	msg.Success("✅ Installation completed successfully!")
