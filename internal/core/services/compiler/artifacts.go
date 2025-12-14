@@ -70,3 +70,29 @@ func (a *ArtifactService) collectArtifacts(artifactList *[]string, path string) 
 		}
 	}
 }
+
+// DefaultArtifactManager implements ArtifactManager.
+type DefaultArtifactManager struct {
+	service *ArtifactService
+}
+
+// NewDefaultArtifactManager creates a default artifact manager with OS filesystem.
+func NewDefaultArtifactManager(fs infra.FileSystem) *DefaultArtifactManager {
+	return &DefaultArtifactManager{
+		service: NewArtifactService(fs),
+	}
+}
+
+// EnsureArtifacts collects artifacts for a dependency.
+func (d *DefaultArtifactManager) EnsureArtifacts(
+	lockedDependency *domain.LockedDependency,
+	dep domain.Dependency,
+	rootPath string,
+) {
+	d.service.ensureArtifacts(lockedDependency, dep, rootPath)
+}
+
+// MoveArtifacts moves artifacts to the shared folder.
+func (d *DefaultArtifactManager) MoveArtifacts(dep domain.Dependency, rootPath string) {
+	d.service.moveArtifacts(dep, rootPath)
+}

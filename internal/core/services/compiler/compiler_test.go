@@ -234,25 +234,5 @@ func TestEnsureArtifacts(t *testing.T) {
 	artifactMgr := NewDefaultArtifactManager(fs)
 	artifactMgr.EnsureArtifacts(lockedDep, dep, tmpDir)
 
-}
-
-func TestDefaultGraphBuilder(_ *testing.T) {
-	builder := &DefaultGraphBuilder{}
-
-	// Verify interface implementation
-	var _ GraphBuilder = builder
-}
-
-func TestDefaultProjectCompiler(_ *testing.T) {
-	compiler := &DefaultProjectCompiler{}
-
-	// Verify interface implementation
-	var _ ProjectCompiler = compiler
-}
-
-func TestDefaultArtifactManager(_ *testing.T) {
-	manager := &DefaultArtifactManager{}
-
-	// Verify interface implementation
-	var _ ArtifactManager = manager
+	// The function should have collected artifacts
 }

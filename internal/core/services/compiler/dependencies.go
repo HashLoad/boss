@@ -9,6 +9,19 @@ import (
 	"github.com/hashload/boss/pkg/pkgmanager"
 )
 
+// DefaultGraphBuilder implements GraphBuilder using the real graph functions.
+type DefaultGraphBuilder struct{}
+
+// LoadOrderGraph loads the dependency graph for changed packages only.
+func (d *DefaultGraphBuilder) LoadOrderGraph(pkg *domain.Package) *domain.NodeQueue {
+	return loadOrderGraph(pkg)
+}
+
+// LoadOrderGraphAll loads the complete dependency graph.
+func (d *DefaultGraphBuilder) LoadOrderGraphAll(pkg *domain.Package) *domain.NodeQueue {
+	return LoadOrderGraphAll(pkg)
+}
+
 func loadOrderGraph(pkg *domain.Package) *domain.NodeQueue {
 	var graph domain.GraphItem
 	deps := pkg.GetParsedDependencies()
