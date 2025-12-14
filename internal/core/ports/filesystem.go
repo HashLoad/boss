@@ -1,5 +1,5 @@
-// Package domain contains core business entities and their contracts.
-package domain
+// Package ports defines interfaces (ports) for the hexagonal architecture.
+package ports
 
 import (
 	"io"

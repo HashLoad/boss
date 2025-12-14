@@ -2,13 +2,14 @@
 package cli
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
 
-	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -44,7 +45,7 @@ func doInitialization(quiet bool) {
 		printHead()
 	}
 
-	packageData, err := domain.LoadPackage(true)
+	packageData, err := pkgmanager.LoadPackage()
 	if err != nil && !os.IsNotExist(err) {
 		msg.Die("Fail on open dependencies file: %s", err)
 	}
@@ -64,8 +65,15 @@ func doInitialization(quiet bool) {
 		packageData.MainSrc = getParamOrDef("Source folder (./src)", "./src")
 	}
 
-	json := packageData.Save()
-	msg.Info("\n" + string(json))
+	if err := pkgmanager.SavePackageCurrent(packageData); err != nil {
+		msg.Die("Failed to save package: %v", err)
+	}
+
+	jsonData, err := json.MarshalIndent(packageData, "", "  ")
+	if err != nil {
+		msg.Die("Failed to marshal package: %v", err)
+	}
+	msg.Info("\n" + string(jsonData))
 }
 
 // getParamOrDef gets the parameter or default value

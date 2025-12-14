@@ -85,6 +85,41 @@ func (fs *OSFileSystem) IsDir(name string) bool {
 	return info.IsDir()
 }
 
+// dirEntryWrapper wraps os.DirEntry to implement infra.DirEntry.
+type dirEntryWrapper struct {
+	entry os.DirEntry
+}
+
+func (d *dirEntryWrapper) Name() string {
+	return d.entry.Name()
+}
+
+func (d *dirEntryWrapper) IsDir() bool {
+	return d.entry.IsDir()
+}
+
+func (d *dirEntryWrapper) Type() os.FileMode {
+	return d.entry.Type()
+}
+
+func (d *dirEntryWrapper) Info() (os.FileInfo, error) {
+	return d.entry.Info()
+}
+
+// ReadDir reads the directory and returns entries.
+func (fs *OSFileSystem) ReadDir(name string) ([]infra.DirEntry, error) {
+	entries, err := os.ReadDir(name)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]infra.DirEntry, len(entries))
+	for i, entry := range entries {
+		result[i] = &dirEntryWrapper{entry: entry}
+	}
+	return result, nil
+}
+
 // Default is the default filesystem implementation.
 //
 //nolint:gochecknoglobals // This is intentional for ease of use

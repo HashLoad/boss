@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"github.com/hashload/boss/internal/core/domain"
-	"github.com/hashload/boss/internal/core/services/compiler/graphs"
+	"github.com/hashload/boss/internal/infra"
 )
 
 // PackageLoader abstracts loading package information.
@@ -19,8 +19,8 @@ type LockManager interface {
 
 // GraphBuilder abstracts dependency graph construction.
 type GraphBuilder interface {
-	LoadOrderGraph(pkg *domain.Package) *graphs.NodeQueue
-	LoadOrderGraphAll(pkg *domain.Package) *graphs.NodeQueue
+	LoadOrderGraph(pkg *domain.Package) *domain.NodeQueue
+	LoadOrderGraphAll(pkg *domain.Package) *domain.NodeQueue
 }
 
 // ProjectCompiler abstracts project compilation.
@@ -38,12 +38,12 @@ type ArtifactManager interface {
 type DefaultGraphBuilder struct{}
 
 // LoadOrderGraph loads the dependency graph for changed packages only.
-func (d *DefaultGraphBuilder) LoadOrderGraph(pkg *domain.Package) *graphs.NodeQueue {
+func (d *DefaultGraphBuilder) LoadOrderGraph(pkg *domain.Package) *domain.NodeQueue {
 	return loadOrderGraph(pkg)
 }
 
 // LoadOrderGraphAll loads the complete dependency graph.
-func (d *DefaultGraphBuilder) LoadOrderGraphAll(pkg *domain.Package) *graphs.NodeQueue {
+func (d *DefaultGraphBuilder) LoadOrderGraphAll(pkg *domain.Package) *domain.NodeQueue {
 	return LoadOrderGraphAll(pkg)
 }
 
@@ -56,7 +56,16 @@ func (d *DefaultProjectCompiler) Compile(dprojPath string, dep *domain.Dependenc
 }
 
 // DefaultArtifactManager implements ArtifactManager.
-type DefaultArtifactManager struct{}
+type DefaultArtifactManager struct {
+	service *ArtifactService
+}
+
+// NewDefaultArtifactManager creates a default artifact manager with OS filesystem.
+func NewDefaultArtifactManager(fs infra.FileSystem) *DefaultArtifactManager {
+	return &DefaultArtifactManager{
+		service: NewArtifactService(fs),
+	}
+}
 
 // EnsureArtifacts collects artifacts for a dependency.
 func (d *DefaultArtifactManager) EnsureArtifacts(
@@ -64,10 +73,10 @@ func (d *DefaultArtifactManager) EnsureArtifacts(
 	dep domain.Dependency,
 	rootPath string,
 ) {
-	ensureArtifacts(lockedDependency, dep, rootPath)
+	d.service.ensureArtifacts(lockedDependency, dep, rootPath)
 }
 
 // MoveArtifacts moves artifacts to the shared folder.
 func (d *DefaultArtifactManager) MoveArtifacts(dep domain.Dependency, rootPath string) {
-	moveArtifacts(dep, rootPath)
+	d.service.moveArtifacts(dep, rootPath)
 }

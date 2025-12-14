@@ -4,10 +4,10 @@ package cli
 import (
 	"os"
 
-	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/installer"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -51,7 +51,7 @@ func uninstallCmdRegister(root *cobra.Command) {
 
 // uninstallWithSelect uninstalls the selected dependencies
 func uninstallWithSelect(noSave bool) {
-	pkg, err := domain.LoadPackage(false)
+	pkg, err := pkgmanager.LoadPackage()
 	if err != nil {
 		if os.IsNotExist(err) {
 			msg.Die("boss.json not exists in " + env.GetCurrentDir())

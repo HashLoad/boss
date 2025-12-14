@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hashload/boss/pkg/pkgmanager"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/internal/core/domain"
@@ -58,7 +60,7 @@ func dependenciesCmdRegister(root *cobra.Command) {
 // printDependencies prints the dependencies
 func printDependencies(showVersion bool) {
 	var tree = treeprint.New()
-	pkg, err := domain.LoadPackage(false)
+	pkg, err := pkgmanager.LoadPackage()
 	if err != nil {
 		if os.IsNotExist(err) {
 			msg.Die(consts.FilePackage + " not exists in " + env.GetCurrentDir())
@@ -88,7 +90,7 @@ func printDeps(dep *domain.Dependency,
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := domain.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
+		pkgModule, err := pkgmanager.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {

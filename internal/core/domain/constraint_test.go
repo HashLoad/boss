@@ -1,7 +1,9 @@
-package installer
+package domain_test
 
 import (
 	"testing"
+
+	"github.com/hashload/boss/internal/core/domain"
 )
 
 func TestParseConstraint_Standard(t *testing.T) {
@@ -25,7 +27,7 @@ func TestParseConstraint_Standard(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			constraint, err := ParseConstraint(tt.constraint)
+			constraint, err := domain.ParseConstraint(tt.constraint)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseConstraint() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -66,7 +68,7 @@ func TestParseConstraint_NPMStyle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			constraint, err := ParseConstraint(tt.constraint)
+			constraint, err := domain.ParseConstraint(tt.constraint)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseConstraint() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -102,7 +104,7 @@ func TestParseConstraint_VersionMatching(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			constraint, err := ParseConstraint(tt.constraint)
+			constraint, err := domain.ParseConstraint(tt.constraint)
 			if err != nil {
 				t.Fatalf("ParseConstraint() failed: %v", err)
 			}
@@ -130,9 +132,9 @@ func TestConvertNpmConstraint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := convertNpmConstraint(tt.input)
+			result := domain.ConvertNpmConstraint(tt.input)
 			if result != tt.expected {
-				t.Errorf("convertNpmConstraint() = %v, want %v", result, tt.expected)
+				t.Errorf("ConvertNpmConstraint() = %v, want %v", result, tt.expected)
 			}
 		})
 	}
@@ -155,9 +157,9 @@ func TestStripVersionPrefix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := stripVersionPrefix(tt.version)
+			result := domain.StripVersionPrefix(tt.version)
 			if result != tt.expected {
-				t.Errorf("stripVersionPrefix() = %v, want %v", result, tt.expected)
+				t.Errorf("StripVersionPrefix() = %v, want %v", result, tt.expected)
 			}
 		})
 	}

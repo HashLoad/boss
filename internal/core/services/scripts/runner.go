@@ -8,8 +8,8 @@ import (
 	"io"
 	"os/exec"
 
-	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 )
 
 // RunCmd executes a command with the given arguments.
@@ -45,7 +45,7 @@ func RunCmd(name string, args ...string) {
 
 // Run executes a script defined in the package.
 func Run(args []string) {
-	if packageData, err := domain.LoadPackage(true); err != nil {
+	if packageData, err := pkgmanager.LoadPackage(); err != nil {
 		msg.Err("❌ %s", err.Error())
 	} else {
 		if packageData.Scripts == nil {

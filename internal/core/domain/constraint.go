@@ -1,4 +1,4 @@
-package installer
+package domain
 
 import (
 	"regexp"
@@ -26,7 +26,7 @@ func ParseConstraint(constraintStr string) (*semver.Constraints, error) {
 		return semver.NewConstraint(converted)
 	}
 
-	converted := convertNpmConstraint(constraintStr)
+	converted := ConvertNpmConstraint(constraintStr)
 	if converted != constraintStr {
 		msg.Info("♻️ Converting constraint '%s' to '%s'", constraintStr, converted)
 		return semver.NewConstraint(converted)
@@ -35,17 +35,17 @@ func ParseConstraint(constraintStr string) (*semver.Constraints, error) {
 	return nil, err
 }
 
-// convertNpmConstraint converts common npm constraint patterns to Go-compatible format.
-func convertNpmConstraint(constraint string) string {
+// ConvertNpmConstraint converts common npm constraint patterns to Go-compatible format.
+func ConvertNpmConstraint(constraint string) string {
 	constraint = strings.ReplaceAll(constraint, ".x", ".*")
 	constraint = strings.ReplaceAll(constraint, ".X", ".*")
 	constraint = strings.ReplaceAll(constraint, " && ", " ")
 	return constraint
 }
 
-// stripVersionPrefix removes 'v' or 'V' prefix only if followed by a digit.
+// StripVersionPrefix removes 'v' or 'V' prefix only if followed by a digit.
 // Examples: "v1.0.0" → "1.0.0", "V2.3.4" → "2.3.4", "version-1.0.0" → "version-1.0.0".
-func stripVersionPrefix(version string) string {
+func StripVersionPrefix(version string) string {
 	if len(version) > 1 && (version[0] == 'v' || version[0] == 'V') {
 		if version[1] >= '0' && version[1] <= '9' {
 			return version[1:]

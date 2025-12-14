@@ -10,11 +10,13 @@ import (
 
 	filesystem "github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	registry "github.com/hashload/boss/internal/adapters/secondary/registry"
-	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/adapters/secondary/repository"
 	"github.com/hashload/boss/internal/core/services/installer"
+	"github.com/hashload/boss/internal/core/services/packages"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 	"github.com/hashload/boss/utils/dcc32"
 )
 
@@ -57,8 +59,12 @@ func Initialize() {
 
 // initializeInfrastructure sets up infrastructure dependencies.
 // This is the composition root where we wire up adapters to ports.
-func initializeInfrastructure() { // Set the default filesystem implementation for domain entities
-	domain.SetDefaultFS(filesystem.NewOSFileSystem())
+func initializeInfrastructure() {
+	fs := filesystem.NewOSFileSystem()
+	packageRepo := repository.NewFilePackageRepository(fs)
+	lockRepo := repository.NewFileLockRepository(fs)
+	packageService := packages.NewPackageService(packageRepo, lockRepo)
+	pkgmanager.SetInstance(packageService)
 }
 
 // CreatePaths creates the necessary paths for boss.
@@ -71,7 +77,7 @@ func CreatePaths() {
 
 // installModules installs the internal modules
 func installModules(modules []string) {
-	pkg, _ := domain.LoadPackage(true)
+	pkg, _ := pkgmanager.LoadPackage()
 	encountered := 0
 	for _, newPackage := range modules {
 		for installed := range pkg.Dependencies {

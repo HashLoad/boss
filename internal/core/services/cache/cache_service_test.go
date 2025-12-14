@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/infra"
 	"github.com/hashload/boss/pkg/consts"
 )
 
@@ -56,6 +57,10 @@ func (m *MockFileSystem) Remove(_ string) error {
 
 func (m *MockFileSystem) RemoveAll(_ string) error {
 	return nil
+}
+
+func (m *MockFileSystem) ReadDir(_ string) ([]infra.DirEntry, error) {
+	return nil, nil
 }
 
 func (m *MockFileSystem) Rename(_, _ string) error {

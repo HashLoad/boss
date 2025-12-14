@@ -28,9 +28,41 @@ type SelectedCompiler struct {
 	BinDir  string
 }
 
+// Service provides compiler selection functionality.
+type Service struct {
+	registry RegistryAdapter
+	config   env.ConfigProvider
+}
+
+// RegistryAdapter defines the interface for registry operations needed by the service.
+type RegistryAdapter interface {
+	GetDetectedDelphis() []registryadapter.DelphiInstallation
+}
+
+// DefaultRegistryAdapter wraps the registry adapter.
+type DefaultRegistryAdapter struct{}
+
+// GetDetectedDelphis returns detected Delphi installations.
+func (d *DefaultRegistryAdapter) GetDetectedDelphis() []registryadapter.DelphiInstallation {
+	return registryadapter.GetDetectedDelphis()
+}
+
+// NewService creates a new compiler selector service.
+func NewService(registry RegistryAdapter, config env.ConfigProvider) *Service {
+	return &Service{
+		registry: registry,
+		config:   config,
+	}
+}
+
+// NewDefaultService creates a service with default dependencies.
+func NewDefaultService() *Service {
+	return NewService(&DefaultRegistryAdapter{}, env.GlobalConfiguration())
+}
+
 // SelectCompiler selects the appropriate compiler based on the context.
-func SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error) {
-	installations := registryadapter.GetDetectedDelphis()
+func (s *Service) SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error) {
+	installations := s.registry.GetDetectedDelphis()
 	if len(installations) == 0 {
 		return nil, errors.New("no Delphi installation found")
 	}
@@ -56,9 +88,8 @@ func SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error) {
 		}
 	}
 
-	globalPath := env.GlobalConfiguration().DelphiPath
+	globalPath := s.config.GetDelphiPath()
 	if globalPath != "" {
-
 		for _, inst := range installations {
 			instDir := filepath.Dir(inst.Path)
 			if strings.EqualFold(instDir, globalPath) {
@@ -100,15 +131,16 @@ func findCompiler(installations []registryadapter.DelphiInstallation, version st
 }
 
 func createSelectedCompiler(inst registryadapter.DelphiInstallation) *SelectedCompiler {
-	binDir := filepath.Dir(inst.Path)
-	exeName := "dcc32.exe"
-	if inst.Arch == "Win64" {
-		exeName = "dcc64.exe"
-	}
 	return &SelectedCompiler{
 		Version: inst.Version,
-		Path:    filepath.Join(binDir, exeName),
+		Path:    inst.Path,
 		Arch:    inst.Arch,
-		BinDir:  binDir,
+		BinDir:  filepath.Dir(inst.Path),
 	}
+}
+
+// SelectCompiler is a convenience function that uses the default service.
+// For better testability, inject Service directly in new code.
+func SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error) {
+	return NewDefaultService().SelectCompiler(ctx)
 }

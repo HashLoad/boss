@@ -8,6 +8,14 @@ import (
 	"os"
 )
 
+// DirEntry is an entry read from a directory.
+type DirEntry interface {
+	Name() string
+	IsDir() bool
+	Type() os.FileMode
+	Info() (os.FileInfo, error)
+}
+
 // FileSystem defines the contract for file system operations.
 // This abstraction allows for testing and alternative implementations.
 // Domain entities should depend on this interface, not on concrete implementations.
@@ -44,4 +52,7 @@ type FileSystem interface {
 
 	// IsDir returns true if path is a directory.
 	IsDir(name string) bool
+
+	// ReadDir reads the directory and returns entries.
+	ReadDir(name string) ([]DirEntry, error)
 }

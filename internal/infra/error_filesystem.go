@@ -60,3 +60,7 @@ func (l *ErrorFileSystem) Exists(_ string) bool {
 func (l *ErrorFileSystem) IsDir(_ string) bool {
 	return false
 }
+
+func (l *ErrorFileSystem) ReadDir(_ string) ([]DirEntry, error) {
+	return nil, errors.New("IO operation not allowed in domain: ReadDir")
+}

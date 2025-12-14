@@ -1,10 +1,9 @@
-package graphs_test
+package domain_test
 
 import (
 	"testing"
 
 	"github.com/hashload/boss/internal/core/domain"
-	"github.com/hashload/boss/internal/core/services/compiler/graphs"
 )
 
 // TestNewNode tests node creation from dependency.
@@ -13,7 +12,7 @@ func TestNewNode(t *testing.T) {
 		Repository: "github.com/test/repo",
 	}
 
-	node := graphs.NewNode(&dep)
+	node := domain.NewNode(&dep)
 
 	if node == nil {
 		t.Fatal("NewNode() returned nil")
@@ -34,7 +33,7 @@ func TestNode_String(t *testing.T) {
 		Repository: "github.com/test/myrepo",
 	}
 
-	node := graphs.NewNode(&dep)
+	node := domain.NewNode(&dep)
 	str := node.String()
 
 	if str == "" {
@@ -44,13 +43,13 @@ func TestNode_String(t *testing.T) {
 
 // TestGraphItem_AddNode tests adding nodes to graph.
 func TestGraphItem_AddNode(_ *testing.T) {
-	g := &graphs.GraphItem{}
+	g := &domain.GraphItem{}
 
 	dep1 := domain.Dependency{Repository: "github.com/test/repo1"}
 	dep2 := domain.Dependency{Repository: "github.com/test/repo2"}
 
-	node1 := graphs.NewNode(&dep1)
-	node2 := graphs.NewNode(&dep2)
+	node1 := domain.NewNode(&dep1)
+	node2 := domain.NewNode(&dep2)
 
 	g.AddNode(node1)
 	g.AddNode(node2)
@@ -61,13 +60,13 @@ func TestGraphItem_AddNode(_ *testing.T) {
 
 // TestGraphItem_AddEdge tests adding edges between nodes.
 func TestGraphItem_AddEdge(_ *testing.T) {
-	g := &graphs.GraphItem{}
+	g := &domain.GraphItem{}
 
 	dep1 := domain.Dependency{Repository: "github.com/test/repo1"}
 	dep2 := domain.Dependency{Repository: "github.com/test/repo2"}
 
-	node1 := graphs.NewNode(&dep1)
-	node2 := graphs.NewNode(&dep2)
+	node1 := domain.NewNode(&dep1)
+	node2 := domain.NewNode(&dep2)
 
 	g.AddNode(node1)
 	g.AddNode(node2)
@@ -81,7 +80,7 @@ func TestGraphItem_AddEdge(_ *testing.T) {
 
 // TestNodeQueue_Operations tests queue operations.
 func TestNodeQueue_Operations(t *testing.T) {
-	q := &graphs.NodeQueue{}
+	q := &domain.NodeQueue{}
 	q.New()
 
 	if !q.IsEmpty() {
@@ -96,8 +95,8 @@ func TestNodeQueue_Operations(t *testing.T) {
 	dep1 := domain.Dependency{Repository: "github.com/test/repo1"}
 	dep2 := domain.Dependency{Repository: "github.com/test/repo2"}
 
-	node1 := graphs.NewNode(&dep1)
-	node2 := graphs.NewNode(&dep2)
+	node1 := domain.NewNode(&dep1)
+	node2 := domain.NewNode(&dep2)
 
 	q.Enqueue(*node1)
 

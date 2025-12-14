@@ -1,4 +1,4 @@
-package graphs
+package domain
 
 import (
 	"strings"
@@ -6,18 +6,17 @@ import (
 
 	"slices"
 
-	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/msg"
 )
 
 // Node represents a node in the dependency graph.
 type Node struct {
 	Value string
-	Dep   domain.Dependency
+	Dep   Dependency
 }
 
 // NewNode creates a new node for the given dependency.
-func NewNode(dependency *domain.Dependency) *Node {
+func NewNode(dependency *Dependency) *Node {
 	return &Node{Dep: *dependency, Value: strings.ToLower(dependency.Name())}
 }
 
@@ -128,7 +127,7 @@ func removeNode(nodes []*Node, key int) []*Node {
 }
 
 // Queue creates a queue of nodes to be processed.
-func (g *GraphItem) Queue(pkg *domain.Package, allDeps bool) *NodeQueue {
+func (g *GraphItem) Queue(pkg *Package, allDeps bool) *NodeQueue {
 	g.lock()
 	queue := NodeQueue{}
 	queue.New()
@@ -164,7 +163,7 @@ func (g *GraphItem) processNodes(nodes []*Node, queue *NodeQueue) {
 	}
 }
 
-func (g *GraphItem) expandGraphNodes(nodes []*Node, pkg *domain.Package) []*Node {
+func (g *GraphItem) expandGraphNodes(nodes []*Node, pkg *Package) []*Node {
 	var redo = true
 	for {
 		if !redo {

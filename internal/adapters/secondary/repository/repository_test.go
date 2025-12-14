@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/infra"
 )
 
 // MockFileSystem implements infra.FileSystem for testing.
@@ -66,6 +67,10 @@ func (m *MockFileSystem) Rename(oldpath, newpath string) error {
 	return errors.New("file not found")
 }
 
+func (m *MockFileSystem) ReadDir(_ string) ([]infra.DirEntry, error) {
+	return nil, nil
+}
+
 func (m *MockFileSystem) Open(_ string) (io.ReadCloser, error) {
 	return nil, errors.New("not implemented")
 }
@@ -88,7 +93,7 @@ func TestFileLockRepository_Load_Success(t *testing.T) {
 
 	lockData := domain.PackageLock{
 		Hash:    "testhash",
-		Updated: time.Now(),
+		Updated: time.Now().Format(time.RFC3339),
 		Installed: map[string]domain.LockedDependency{
 			"github.com/test/repo": {
 				Name:    "repo",
@@ -122,10 +127,17 @@ func TestFileLockRepository_Load_FileNotFound(t *testing.T) {
 	fs := NewMockFileSystem()
 	repo := NewFileLockRepository(fs)
 
-	_, err := repo.Load("/nonexistent/boss-lock.json")
+	lock, err := repo.Load("/nonexistent/boss-lock.json")
 
-	if err == nil {
-		t.Error("expected error when file not found")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if lock == nil {
+		t.Error("expected empty lock to be returned, got nil")
+		return
+	}
+	if lock.Installed == nil {
+		t.Error("expected Installed map to be initialized")
 	}
 }
 
@@ -148,7 +160,7 @@ func TestFileLockRepository_Save_Success(t *testing.T) {
 
 	lock := &domain.PackageLock{
 		Hash:      "savehash",
-		Updated:   time.Now(),
+		Updated:   time.Now().Format(time.RFC3339),
 		Installed: make(map[string]domain.LockedDependency),
 	}
 

@@ -1,18 +1,8 @@
 package domain
 
 import (
-	//nolint:gosec // We are not using this for security purposes
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/json"
-	"io"
-	"path/filepath"
 	"strings"
-	"time"
 
-	"github.com/hashload/boss/internal/infra"
-	"github.com/hashload/boss/pkg/consts"
-	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 )
 
@@ -35,67 +25,11 @@ type LockedDependency struct {
 }
 
 // PackageLock represents the lock file for a package.
+// This is a pure domain entity. Use LockRepository for persistence.
 type PackageLock struct {
-	fileName  string
-	fs        infra.FileSystem
 	Hash      string                      `json:"hash"`
-	Updated   time.Time                   `json:"updated"`
+	Updated   string                      `json:"updated"` // ISO 8601 timestamp
 	Installed map[string]LockedDependency `json:"installedModules"`
-}
-
-// SetFS sets the filesystem implementation for testing.
-func (p *PackageLock) SetFS(filesystem infra.FileSystem) {
-	p.fs = filesystem
-}
-
-// GetFileName returns the lock file path.
-func (p *PackageLock) GetFileName() string {
-	return p.fileName
-}
-
-func removeOldWithFS(parentPackage *Package, filesystem infra.FileSystem) {
-	oldFileName := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLockOld)
-	newFileName := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
-	if filesystem.Exists(oldFileName) {
-		err := filesystem.Rename(oldFileName, newFileName)
-		if err != nil {
-			msg.Warn("⚠️ Failed to rename old lock file: %v", err)
-		}
-	}
-}
-
-// LoadPackageLockWithFS loads the package lock file using the specified filesystem.
-func LoadPackageLockWithFS(parentPackage *Package, filesystem infra.FileSystem) PackageLock {
-	removeOldWithFS(parentPackage, filesystem)
-	packageLockPath := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
-	fileBytes, err := filesystem.ReadFile(packageLockPath)
-	if err != nil {
-		//nolint:gosec // We are not using this for security purposes
-		hash := md5.New()
-		if _, err := io.WriteString(hash, parentPackage.Name); err != nil {
-			msg.Warn("⚠️ Failed on write machine id to hash")
-		}
-
-		return PackageLock{
-			fileName:  packageLockPath,
-			fs:        filesystem,
-			Updated:   time.Now(),
-			Hash:      hex.EncodeToString(hash.Sum(nil)),
-			Installed: map[string]LockedDependency{},
-		}
-	}
-
-	lockfile := PackageLock{
-		fileName:  packageLockPath,
-		fs:        filesystem,
-		Updated:   time.Now(),
-		Installed: map[string]LockedDependency{},
-	}
-
-	if err := json.Unmarshal(fileBytes, &lockfile); err != nil {
-		msg.Die("❌ Error parsing lock file %s: %s", packageLockPath, err.Error())
-	}
-	return lockfile
 }
 
 // AddDependency adds a dependency to the lock without performing I/O.
@@ -171,15 +105,4 @@ func (p *LockedDependency) GetArtifacts() []string {
 	result = append(result, p.Artifacts.Bin...)
 	result = append(result, p.Artifacts.Bpl...)
 	return result
-}
-
-// CheckArtifactsExist verifies if all artifacts exist in the given directory.
-func (p *LockedDependency) CheckArtifactsExist(directory string, artifacts []string, fs infra.FileSystem) bool {
-	for _, artifact := range artifacts {
-		path := filepath.Join(directory, artifact)
-		if !fs.Exists(path) {
-			return false
-		}
-	}
-	return true
 }

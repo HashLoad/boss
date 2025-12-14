@@ -8,9 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashload/boss/internal/core/domain"
-	"github.com/hashload/boss/internal/core/services/compiler/graphs"
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/internal/core/services/compilerselector"
+	"github.com/hashload/boss/pkg/pkgmanager"
+
+	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/tracker"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
@@ -41,7 +43,7 @@ func Build(pkg *domain.Package, compilerVersion, platform string) {
 	}
 }
 
-func saveLoadOrder(queue *graphs.NodeQueue) error {
+func saveLoadOrder(queue *domain.NodeQueue) error {
 	var projects = ""
 	for {
 		if queue.IsEmpty() {
@@ -49,7 +51,7 @@ func saveLoadOrder(queue *graphs.NodeQueue) error {
 		}
 		node := queue.Dequeue()
 		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name(), consts.FilePackage)
-		if dependencyPackage, err := domain.LoadPackageOther(dependencyPath); err == nil {
+		if dependencyPackage, err := pkgmanager.LoadPackageOther(dependencyPath); err == nil {
 			for _, value := range dependencyPackage.Projects {
 				projects += strings.TrimSuffix(filepath.Base(value), filepath.Ext(value)) + consts.FileExtensionBpl + "\n"
 			}
@@ -64,7 +66,7 @@ func saveLoadOrder(queue *graphs.NodeQueue) error {
 }
 
 func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compilerselector.SelectedCompiler) {
-	pkg.Save()
+	_ = pkgmanager.SavePackageCurrent(pkg)
 	queue := loadOrderGraph(pkg)
 	packageNames := extractPackageNames(pkg)
 
@@ -117,21 +119,25 @@ func initializeBuildTracker(packageNames []string) *BuildTracker {
 
 func processPackageQueue(
 	pkg *domain.Package,
-	queue *graphs.NodeQueue,
+	queue *domain.NodeQueue,
 	trackerPtr *BuildTracker,
 	selectedCompiler *compilerselector.SelectedCompiler,
 ) {
+	fs := filesystem.NewOSFileSystem()
+	artifactMgr := NewDefaultArtifactManager(fs)
+
 	for !queue.IsEmpty() {
 		node := queue.Dequeue()
-		processPackageNode(pkg, node, trackerPtr, selectedCompiler)
+		processPackageNode(pkg, node, trackerPtr, selectedCompiler, artifactMgr)
 	}
 }
 
 func processPackageNode(
 	pkg *domain.Package,
-	node *graphs.Node,
+	node *domain.Node,
 	trackerPtr *BuildTracker,
 	selectedCompiler *compilerselector.SelectedCompiler,
+	artifactMgr *DefaultArtifactManager,
 ) {
 	dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name())
 	dependency := pkg.Lock.GetInstalled(node.Dep)
@@ -139,7 +145,7 @@ func processPackageNode(
 	reportBuildStart(trackerPtr, node.Dep.Name())
 
 	dependency.Changed = false
-	dependencyPackage, err := domain.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage))
+	dependencyPackage, err := pkgmanager.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage))
 
 	if err != nil {
 		reportNoBossJSON(trackerPtr, node.Dep.Name())
@@ -162,8 +168,8 @@ func processPackageNode(
 		pkg.Lock,
 	)
 
-	ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
-	moveArtifacts(node.Dep, env.GetModulesDir())
+	artifactMgr.EnsureArtifacts(&dependency, node.Dep, env.GetModulesDir())
+	artifactMgr.MoveArtifacts(node.Dep, env.GetModulesDir())
 
 	reportBuildResult(trackerPtr, node.Dep.Name(), hasFailed)
 	pkg.Lock.SetInstalled(node.Dep, dependency)

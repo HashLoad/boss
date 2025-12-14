@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/installer"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +46,7 @@ func updateCmdRegister(root *cobra.Command) {
 
 // updateWithSelect updates the selected dependencies
 func updateWithSelect() {
-	pkg, err := domain.LoadPackage(false)
+	pkg, err := pkgmanager.LoadPackage()
 	if err != nil {
 		if os.IsNotExist(err) {
 			msg.Die("boss.json not exists in " + env.GetCurrentDir())

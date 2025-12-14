@@ -7,10 +7,10 @@ import (
 
 	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/internal/adapters/secondary/repository"
-	"github.com/hashload/boss/internal/core/domain"
 	lockService "github.com/hashload/boss/internal/core/services/lock"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 )
 
 // InstallOptions holds the options for the installation process.
@@ -33,7 +33,7 @@ func createLockService() *lockService.LockService {
 
 // InstallModules installs the modules based on the provided options.
 func InstallModules(options InstallOptions) {
-	pkg, err := domain.LoadPackage(env.GetGlobal())
+	pkg, err := pkgmanager.LoadPackage()
 	if err != nil {
 		if os.IsNotExist(err) {
 			msg.Die("❌ 'boss.json' not exists in " + env.GetCurrentDir())
@@ -51,7 +51,7 @@ func InstallModules(options InstallOptions) {
 
 // UninstallModules uninstalls the specified modules.
 func UninstallModules(args []string, noSave bool) {
-	pkg, err := domain.LoadPackage(false)
+	pkg, err := pkgmanager.LoadPackage()
 	if err != nil && !os.IsNotExist(err) {
 		msg.Die("❌ Fail on open dependencies file: %s", err)
 	}
@@ -65,7 +65,7 @@ func UninstallModules(args []string, noSave bool) {
 		pkg.UninstallDependency(dependencyRepository)
 	}
 
-	pkg.Save()
+	pkgmanager.SavePackageCurrent(pkg)
 	lockSvc := createLockService()
 	_ = lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 

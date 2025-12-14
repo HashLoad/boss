@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/infra"
 )
 
 // MockFileSystem implements infra.FileSystem for testing.
@@ -48,6 +49,10 @@ func (m *MockFileSystem) RemoveAll(path string) error {
 
 func (m *MockFileSystem) Rename(oldpath, newpath string) error {
 	return nil
+}
+
+func (m *MockFileSystem) ReadDir(_ string) ([]infra.DirEntry, error) {
+	return nil, nil
 }
 
 func (m *MockFileSystem) Open(name string) (io.ReadCloser, error) {

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashload/boss/pkg/pkgmanager"
+
 	"github.com/Masterminds/semver/v3"
 	goGit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -37,6 +39,7 @@ type installContext struct {
 	modulesDir       string
 	options          InstallOptions
 	warnings         []string
+	depManager       *DependencyManager
 }
 
 func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
@@ -56,6 +59,7 @@ func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options I
 		modulesDir:       env.GetModulesDir(),
 		options:          options,
 		warnings:         make([]string, 0),
+		depManager:       NewDefaultDependencyManager(config),
 	}
 }
 
@@ -106,7 +110,7 @@ func DoInstall(config env.ConfigProvider, options InstallOptions, pkg *domain.Pa
 	paths.EnsureCleanModulesDir(dependencies, pkg.Lock)
 
 	pkg.Lock.CleanRemoved(dependencies)
-	pkg.Save()
+	pkgmanager.SavePackageCurrent(pkg)
 	if err := installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir()); err != nil {
 		msg.Warn("⚠️ Failed to save lock file: %v", err)
 	}
@@ -114,7 +118,7 @@ func DoInstall(config env.ConfigProvider, options InstallOptions, pkg *domain.Pa
 	librarypath.UpdateLibraryPath(pkg)
 
 	compiler.Build(pkg, options.Compiler, options.Platform)
-	pkg.Save()
+	pkgmanager.SavePackageCurrent(pkg)
 	if err := installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir()); err != nil {
 		msg.Warn("⚠️ Failed to save lock file: %v", err)
 	}
@@ -195,7 +199,7 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 			continue
 		}
 
-		if packageOther, err := domain.LoadPackageOther(fileName); err != nil {
+		if packageOther, err := pkgmanager.LoadPackageOther(fileName); err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
@@ -493,7 +497,7 @@ func (ic *installContext) getVersion(
 	}
 
 	versions := git.GetVersions(ic.config, repository, dep)
-	constraints, err := ParseConstraint(dep.GetVersion())
+	constraints, err := domain.ParseConstraint(dep.GetVersion())
 	if err != nil {
 		warnMsg := fmt.Sprintf("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
 		if !ic.progress.IsEnabled() {
@@ -525,9 +529,9 @@ func (ic *installContext) getVersionSemantic(
 	var bestVersion *semver.Version
 	var bestReference *plumbing.Reference
 
-	for _, version := range versions {
-		short := version.Name().Short()
-		withoutPrefix := stripVersionPrefix(short)
+	for _, versionRef := range versions {
+		short := versionRef.Name().Short()
+		withoutPrefix := domain.StripVersionPrefix(short)
 		newVersion, err := semver.NewVersion(withoutPrefix)
 		if err != nil {
 			continue
@@ -535,15 +539,15 @@ func (ic *installContext) getVersionSemantic(
 		if contraint.Check(newVersion) {
 			if bestVersion != nil && newVersion.GreaterThan(bestVersion) {
 				bestVersion = newVersion
-				bestReference = version
+				bestReference = versionRef
 			}
 
 			if bestVersion == nil {
 				bestVersion = newVersion
-				bestReference = version
+				bestReference = versionRef
 			} else if bestVersion.Equal(newVersion) {
 				if strings.HasPrefix(short, "v") && !strings.HasPrefix(bestReference.Name().Short(), "v") {
-					bestReference = version
+					bestReference = versionRef
 				}
 			}
 		}
@@ -553,7 +557,7 @@ func (ic *installContext) getVersionSemantic(
 
 func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) (string, error) {
 	depPath := filepath.Join(ic.modulesDir, dep.Name())
-	depPkg, err := domain.LoadPackageOther(filepath.Join(depPath, "boss.json"))
+	depPkg, err := pkgmanager.LoadPackageOther(filepath.Join(depPath, "boss.json"))
 	if err != nil {
 		return "", nil
 	}

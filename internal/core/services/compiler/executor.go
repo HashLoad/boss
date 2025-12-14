@@ -11,6 +11,7 @@ import (
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 	"github.com/hashload/boss/utils/dcp"
 )
 
@@ -43,7 +44,7 @@ func buildSearchPath(dep *domain.Dependency) string {
 	if dep != nil {
 		searchPath = filepath.Join(env.GetModulesDir(), dep.Name())
 
-		packageData, err := domain.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
+		packageData, err := pkgmanager.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
 		if err == nil {
 			searchPath += ";" + filepath.Join(env.GetModulesDir(), dep.Name(), packageData.MainSrc)
 			for _, lib := range packageData.GetParsedDependencies() {
@@ -61,7 +62,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 
 	bossPackagePath := filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage)
 
-	if dependencyPackage, err := domain.LoadPackageOther(bossPackagePath); err == nil {
+	if dependencyPackage, err := pkgmanager.LoadPackageOther(bossPackagePath); err == nil {
 		dcp.InjectDpcsFile(dprojPath, dependencyPackage, rootLock)
 	}
 

@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
-	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/installer"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
+	"github.com/hashload/boss/pkg/pkgmanager"
 )
 
 // one sets the internal refresh rate to 5
@@ -115,7 +115,7 @@ func cleanup() {
 	if err := os.Remove(filepath.Join(modulesDir, consts.FilePackageLock)); err != nil && !os.IsNotExist(err) {
 		msg.Debug("Cleanup: could not remove lock file: %v", err)
 	}
-	modules, err := domain.LoadPackage(false)
+	modules, err := pkgmanager.LoadPackage()
 	if err != nil {
 		return
 	}

@@ -3,6 +3,7 @@
 package librarypath
 
 import (
+	"github.com/hashload/boss/pkg/pkgmanager"
 	"fmt"
 	"os"
 	"os/exec"
@@ -73,7 +74,7 @@ func processBrowsingPath(
 ) []string {
 	var packagePath = filepath.Join(basePath, value.Name(), consts.FilePackage)
 	if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-		other, _ := domain.LoadPackageOther(packagePath)
+		other, _ := pkgmanager.LoadPackageOther(packagePath)
 		if other.BrowsingPath != "" {
 			dir := filepath.Join(basePath, value.Name(), other.BrowsingPath)
 			paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
@@ -114,7 +115,7 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	for _, value := range matches {
 		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
 		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-			other, _ := domain.LoadPackageOther(packagePath)
+			other, _ := pkgmanager.LoadPackageOther(packagePath)
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath, rootPath)
 		} else {
 			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath, rootPath)

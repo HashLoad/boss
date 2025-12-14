@@ -3,7 +3,6 @@ package domain_test
 import (
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -28,6 +27,7 @@ func (fs *testFileSystem) Rename(_, _ string) error                          { r
 func (fs *testFileSystem) Open(_ string) (io.ReadCloser, error)              { return nil, nil }
 func (fs *testFileSystem) Create(_ string) (io.WriteCloser, error)           { return nil, nil }
 func (fs *testFileSystem) IsDir(_ string) bool                               { return false }
+func (fs *testFileSystem) ReadDir(_ string) ([]infra.DirEntry, error)        { return nil, nil }
 func (fs *testFileSystem) Exists(name string) bool {
 	return fs.files[name]
 }
@@ -248,49 +248,6 @@ func TestPackageLock_SetInstalled(t *testing.T) {
 	}
 	if result.Version != "1.0.0" {
 		t.Errorf("SetInstalled did not store version correctly, got Version = %q", result.Version)
-	}
-}
-
-func TestLockedDependency_CheckArtifactsExist(t *testing.T) {
-	tempDir := t.TempDir()
-
-	// Create test artifact files
-	artifactFiles := []string{"test.bpl", "test2.bpl"}
-	for _, f := range artifactFiles {
-		path := filepath.Join(tempDir, f)
-		if err := os.WriteFile(path, []byte("test"), 0644); err != nil {
-			t.Fatalf("Failed to create test file: %v", err)
-		}
-	}
-
-	locked := domain.LockedDependency{
-		Artifacts: domain.DependencyArtifacts{
-			Bpl: artifactFiles,
-		},
-	}
-
-	// Create a mock filesystem
-	fs := &testFileSystem{files: make(map[string]bool)}
-	for _, f := range artifactFiles {
-		fs.files[filepath.Join(tempDir, f)] = true
-	}
-
-	// Test with existing files - should return true
-	result := locked.CheckArtifactsExist(tempDir, locked.Artifacts.Bpl, fs)
-	if !result {
-		t.Error("CheckArtifactsExist should return true when all artifacts exist")
-	}
-
-	// Test with non-existing files - should return false
-	result = locked.CheckArtifactsExist(tempDir, []string{"nonexistent.bpl"}, fs)
-	if result {
-		t.Error("CheckArtifactsExist should return false when artifacts don't exist")
-	}
-
-	// Test with empty artifacts - should return true
-	result = locked.CheckArtifactsExist(tempDir, []string{}, fs)
-	if !result {
-		t.Error("CheckArtifactsExist should return true for empty artifact list")
 	}
 }
 
