@@ -17,6 +17,7 @@ import (
 	"github.com/hashload/boss/internal/core/services/compiler"
 	lockService "github.com/hashload/boss/internal/core/services/lock"
 	"github.com/hashload/boss/internal/core/services/paths"
+	"github.com/hashload/boss/internal/core/services/tracker"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
@@ -67,16 +68,27 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 		return nil
 	}
 
-	progress := NewProgressTracker(deps)
+	var progress *ProgressTracker
+	if msg.IsDebugMode() {
+		progress = &ProgressTracker{
+			Tracker: tracker.NewNull[DependencyStatus](),
+		}
+	} else {
+		progress = NewProgressTracker(deps)
+	}
 	installContext := newInstallContext(pkg, options, progress)
 
 	msg.Info("Installing %d dependencies:\n", len(deps))
 
-	if err := progress.Start(); err != nil {
-		msg.Warn("Could not start progress tracker: %s", err)
+	if !msg.IsDebugMode() {
+		if err := progress.Start(); err != nil {
+			msg.Warn("Could not start progress tracker: %s", err)
+		} else {
+			msg.SetQuietMode(true)
+			msg.SetProgressTracker(progress)
+		}
 	} else {
-		msg.SetQuietMode(true)
-		msg.SetProgressTracker(progress)
+		msg.Debug("Debug mode: progress tracker disabled\n")
 	}
 
 	dependencies, err := installContext.ensureDependencies(pkg)
@@ -152,7 +164,7 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 	var lenProcessedInitial = len(ic.processed)
 	var result []domain.Dependency
 	if err != nil {
-		msg.Err("Error on try load dir of modules: %s", err)
+		msg.Err("  ❌ Error on try load dir of modules: %s", err)
 		return result, err
 	}
 
@@ -170,7 +182,7 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 		ic.processed = append(ic.processed, moduleName)
 
 		if !ic.progress.IsEnabled() {
-			msg.Info("Processing module %s", moduleName)
+			msg.Info("  ⚙️ Processing module %s", moduleName)
 		}
 
 		fileName := filepath.Join(env.GetModulesDir(), moduleName, consts.FilePackage)
@@ -184,7 +196,7 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 			if os.IsNotExist(err) {
 				continue
 			}
-			msg.Err("  Error on try load package %s: %s", fileName, err)
+			msg.Err("  ❌ Error on try load package %s: %s", fileName, err)
 		} else {
 			childDeps := packageOther.GetParsedDependencies()
 			for _, childDep := range childDeps {
@@ -223,7 +235,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 			if ic.progress.IsEnabled() {
 				ic.progress.SetSkipped(depName, consts.StatusMsgAlreadyInstalled)
 			} else {
-				msg.Info("  %s already installed", depName)
+				msg.Info("  ✅️ %s already installed", depName)
 			}
 			continue
 		}
@@ -231,7 +243,7 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 		if ic.progress.IsEnabled() {
 			ic.progress.SetCloning(depName)
 		} else {
-			msg.Info("Processing dependency %s", depName)
+			msg.Info("🧬 Cloning %s...", depName)
 		}
 
 		err := GetDependencyWithProgress(dep, ic.progress)
@@ -241,7 +253,11 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 		}
 		repository := git.GetRepository(dep)
 
-		ic.progress.SetChecking(depName, consts.StatusMsgResolvingVer)
+		if ic.progress.IsEnabled() {
+			ic.progress.SetChecking(depName, consts.StatusMsgResolvingVer)
+		} else {
+			msg.Info("  🔍 Checking version for %s...", depName)
+		}
 
 		referenceName := ic.getReferenceName(pkg, dep, repository)
 
@@ -270,12 +286,16 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 			if ic.progress.IsEnabled() {
 				ic.progress.SetSkipped(depName, consts.StatusMsgUpToDate)
 			} else {
-				msg.Info("  %s already updated", depName)
+				msg.Info("  ✅️ %s already updated", depName)
 			}
 			continue
 		}
 
-		ic.progress.SetInstalling(depName)
+		if ic.progress.IsEnabled() {
+			ic.progress.SetInstalling(depName)
+		} else {
+			msg.Info("  🔥 Installing %s...", depName)
+		}
 
 		if err := ic.checkoutAndUpdate(dep, repository, referenceName); err != nil {
 			ic.progress.SetFailed(depName, err)
@@ -289,10 +309,18 @@ func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Depen
 		}
 
 		if warning != "" {
-			ic.progress.SetWarning(depName, warning)
+			if ic.progress.IsEnabled() {
+				ic.progress.SetWarning(depName, warning)
+			} else {
+				msg.Warn("  ⚠️  %s: %s", depName, warning)
+			}
 			ic.addWarning(fmt.Sprintf("%s: %s", depName, warning))
 		} else {
-			ic.progress.SetCompleted(depName)
+			if ic.progress.IsEnabled() {
+				ic.progress.SetCompleted(depName)
+			} else {
+				msg.Info("  ✅️ %s installed successfully", depName)
+			}
 		}
 	}
 	return nil
@@ -317,7 +345,7 @@ func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
 	if err != nil {
 		warnMsg := fmt.Sprintf("Error '%s' on get required version. Updating...", err)
 		if !ic.progress.IsEnabled() {
-			msg.Warn("  " + warnMsg)
+			msg.Warn("  ⚠️ " + warnMsg)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 		return false
@@ -346,13 +374,15 @@ func (ic *installContext) getReferenceName(
 	if bestMatch == nil {
 		warnMsg := fmt.Sprintf("No matching version found for '%s' with constraint '%s'", dep.Repository, dep.GetVersion())
 		if !ic.progress.IsEnabled() {
-			msg.Warn("  " + warnMsg)
+			msg.Warn("  ⚠️ " + warnMsg)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 
 		if mainBranchReference, err := git.GetMain(repository); err == nil {
 			if !ic.progress.IsEnabled() {
-				msg.Info("Falling back to main branch: %s", mainBranchReference.Name)
+				warnMsg := fmt.Sprintf("Falling back to main branch: %s", mainBranchReference.Name)
+				msg.Warn("  ⚠️ %s: %s", dep.Name(), warnMsg)
+				ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 			}
 			return plumbing.NewBranchReferenceName(mainBranchReference.Name)
 		}
@@ -372,12 +402,20 @@ func (ic *installContext) checkoutAndUpdate(
 	repository *goGit.Repository,
 	referenceName plumbing.ReferenceName) error {
 
+	if !ic.progress.IsEnabled() {
+		msg.Debug("  🔍 Checking out %s to %s", dep.Name(), referenceName.Short())
+	}
+
 	err := git.Checkout(dep, referenceName)
 
 	ic.lockSvc.AddDependency(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
 
 	if err != nil {
 		return err
+	}
+
+	if !ic.progress.IsEnabled() {
+		msg.Debug("  📥 Pulling latest changes for %s", dep.Name())
 	}
 
 	err = git.Pull(dep)
@@ -410,7 +448,7 @@ func (ic *installContext) getVersion(
 	if err != nil {
 		warnMsg := fmt.Sprintf("Version constraint '%s' not supported: %s", dep.GetVersion(), err)
 		if !ic.progress.IsEnabled() {
-			msg.Warn("  " + warnMsg)
+			msg.Warn("  ⚠️ " + warnMsg)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 
@@ -421,7 +459,7 @@ func (ic *installContext) getVersion(
 		}
 		warnMsg2 := fmt.Sprintf("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
 		if !ic.progress.IsEnabled() {
-			msg.Warn("  " + warnMsg2)
+			msg.Warn("  ⚠️ " + warnMsg2)
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg2))
 		return nil

@@ -13,6 +13,7 @@ const (
 	StatusWaiting DependencyStatus = iota
 	StatusCloning
 	StatusDownloading
+	StatusUpdating
 	StatusChecking
 	StatusInstalling
 	StatusCompleted
@@ -34,6 +35,10 @@ var dependencyStatusConfig = tracker.StatusConfig[DependencyStatus]{
 	StatusDownloading: {
 		Icon:       pterm.LightCyan("📥"),
 		StatusText: pterm.LightCyan("Downloading..."),
+	},
+	StatusUpdating: {
+		Icon:       pterm.LightCyan("🔄"),
+		StatusText: pterm.LightCyan("Updating..."),
 	},
 	StatusChecking: {
 		Icon:       pterm.LightBlue("🔎"),
@@ -113,6 +118,11 @@ func (pt *ProgressTracker) SetCloning(depName string) {
 // SetDownloading sets the status to downloading with a message.
 func (pt *ProgressTracker) SetDownloading(depName string, message string) {
 	pt.UpdateStatus(depName, StatusDownloading, message)
+}
+
+// SetUpdating sets the status to updating with a message.
+func (pt *ProgressTracker) SetUpdating(depName string, message string) {
+	pt.UpdateStatus(depName, StatusUpdating, message)
 }
 
 // SetChecking sets the status to checking with a message.

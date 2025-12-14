@@ -97,6 +97,18 @@ func (m *Messenger) LogLevel(level logLevel) {
 	m.Unlock()
 }
 
+// IsDebugMode returns true if the log level is set to DEBUG
+func IsDebugMode() bool {
+	return defaultMsg.IsDebugMode()
+}
+
+// IsDebugMode returns true if the log level is set to DEBUG
+func (m *Messenger) IsDebugMode() bool {
+	m.Lock()
+	defer m.Unlock()
+	return m.logLevel >= DEBUG
+}
+
 // Err prints an error message
 func (m *Messenger) Err(msg string, args ...any) {
 	if m.logLevel < ERROR {
@@ -130,7 +142,10 @@ func (m *Messenger) Warn(msg string, args ...any) {
 
 // Info prints an informational message
 func (m *Messenger) Info(msg string, args ...any) {
-	if m.quietMode || m.logLevel < INFO {
+	if m.logLevel < INFO {
+		return
+	}
+	if m.quietMode && m.logLevel < DEBUG {
 		return
 	}
 	m.print(nil, msg, args...)
@@ -138,7 +153,10 @@ func (m *Messenger) Info(msg string, args ...any) {
 
 // Success prints a success message
 func (m *Messenger) Success(msg string, args ...any) {
-	if m.quietMode || m.logLevel < INFO {
+	if m.logLevel < INFO {
+		return
+	}
+	if m.quietMode && m.logLevel < DEBUG {
 		return
 	}
 	m.print(pterm.Success.MessageStyle, msg, args...)
@@ -146,10 +164,9 @@ func (m *Messenger) Success(msg string, args ...any) {
 
 // Debug prints a debug message
 func (m *Messenger) Debug(msg string, args ...any) {
-	if m.quietMode || m.logLevel < DEBUG {
+	if m.logLevel < DEBUG {
 		return
 	}
-
 	m.print(pterm.Debug.MessageStyle, msg, args...)
 }
 

@@ -56,15 +56,23 @@ func (dm *DependencyManager) GetDependencyWithProgress(dep domain.Dependency, pr
 	}
 
 	if progress == nil || !progress.IsEnabled() {
-		msg.Info("Updating cache of dependency %s", dep.Name())
+		msg.Info("  🔄 Updating cache of dependency %s", dep.Name())
+	} else {
+		progress.SetUpdating(dep.Name(), "")
 	}
 	dm.cache.MarkUpdated(dep.HashName())
 
 	var repository *goGit.Repository
 	var err error
 	if dm.hasCache(dep) {
+		if progress == nil || !progress.IsEnabled() {
+			msg.Debug("  🔄 Updating existing cache for %s", dep.Name())
+		}
 		repository, err = dm.gitClient.UpdateCache(dep)
 	} else {
+		if progress == nil || !progress.IsEnabled() {
+			msg.Debug("  🧬 Cloning fresh cache for %s", dep.Name())
+		}
 		_ = os.RemoveAll(filepath.Join(dm.cacheDir, dep.HashName()))
 		repository, err = dm.gitClient.CloneCache(dep)
 	}

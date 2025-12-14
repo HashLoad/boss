@@ -8,6 +8,7 @@ import (
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/compiler/graphs"
 	"github.com/hashload/boss/internal/core/services/compiler_selector"
+	"github.com/hashload/boss/internal/core/services/tracker"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
@@ -67,13 +68,24 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 		packageNames = append(packageNames, node.Dep.Name())
 	}
 
-	tracker := NewBuildTracker(packageNames)
+	var trackerPtr *BuildTracker
+	if msg.IsDebugMode() {
+		trackerPtr = &BuildTracker{
+			Tracker: tracker.NewNull[BuildStatus](),
+		}
+	} else {
+		trackerPtr = NewBuildTracker(packageNames)
+	}
 	if len(packageNames) > 0 {
 		msg.Info("Compiling %d packages:\n", len(packageNames))
-		if err := tracker.Start(); err != nil {
-			msg.Warn("Could not start build tracker: %s", err)
+		if !msg.IsDebugMode() {
+			if err := trackerPtr.Start(); err != nil {
+				msg.Warn("Could not start build tracker: %s", err)
+			} else {
+				msg.SetQuietMode(true)
+			}
 		} else {
-			msg.SetQuietMode(true)
+			msg.Debug("Debug mode: progress tracker disabled\n")
 		}
 	} else {
 		msg.Info("No packages to compile.\n")
@@ -88,10 +100,10 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 
 		dependency := pkg.Lock.GetInstalled(node.Dep)
 
-		if tracker.IsEnabled() {
-			tracker.SetBuilding(node.Dep.Name(), "")
+		if trackerPtr.IsEnabled() {
+			trackerPtr.SetBuilding(node.Dep.Name(), "")
 		} else {
-			msg.Info("Building %s", node.Dep.Name())
+			msg.Info("  🔨 Building %s", node.Dep.Name())
 		}
 
 		dependency.Changed = false
@@ -101,10 +113,12 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 				hasFailed := false
 				for _, dproj := range dprojs {
 					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.Name(), dproj))
-					if tracker.IsEnabled() {
-						tracker.SetBuilding(node.Dep.Name(), filepath.Base(dproj))
+					if trackerPtr.IsEnabled() {
+						trackerPtr.SetBuilding(node.Dep.Name(), filepath.Base(dproj))
+					} else {
+						msg.Info("  📄 Compiling project: %s", filepath.Base(dproj))
 					}
-					if !compile(dprojPath, &node.Dep, pkg.Lock, tracker, selectedCompiler) {
+					if !compile(dprojPath, &node.Dep, pkg.Lock, trackerPtr, selectedCompiler) {
 						dependency.Failed = true
 						hasFailed = true
 					}
@@ -112,26 +126,36 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
 				moveArtifacts(node.Dep, env.GetModulesDir())
 
-				if tracker.IsEnabled() {
+				if trackerPtr.IsEnabled() {
 					if hasFailed {
-						tracker.SetFailed(node.Dep.Name(), consts.StatusMsgBuildError)
+						trackerPtr.SetFailed(node.Dep.Name(), consts.StatusMsgBuildError)
 					} else {
-						tracker.SetSuccess(node.Dep.Name())
+						trackerPtr.SetSuccess(node.Dep.Name())
+					}
+				} else {
+					if hasFailed {
+						msg.Err("  ❌ Build failed for %s", node.Dep.Name())
+					} else {
+						msg.Info("  ✅ %s built successfully", node.Dep.Name())
 					}
 				}
 			} else {
-				if tracker.IsEnabled() {
-					tracker.SetSkipped(node.Dep.Name(), consts.StatusMsgNoProjects)
+				if trackerPtr.IsEnabled() {
+					trackerPtr.SetSkipped(node.Dep.Name(), consts.StatusMsgNoProjects)
+				} else {
+					msg.Info("  ⏭️ %s has no projects to build", node.Dep.Name())
 				}
 			}
 		} else {
-			if tracker.IsEnabled() {
-				tracker.SetSkipped(node.Dep.Name(), consts.StatusMsgNoBossJSON)
+			if trackerPtr.IsEnabled() {
+				trackerPtr.SetSkipped(node.Dep.Name(), consts.StatusMsgNoBossJSON)
+			} else {
+				msg.Info("  ⏭️ %s has no boss.json", node.Dep.Name())
 			}
 		}
 		pkg.Lock.SetInstalled(node.Dep, dependency)
 	}
 
 	msg.SetQuietMode(false)
-	tracker.Stop()
+	trackerPtr.Stop()
 }
