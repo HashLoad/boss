@@ -21,7 +21,7 @@ import (
 
 // UpdateLibraryPath updates the library path for the project or globally
 func UpdateLibraryPath(pkg *domain.Package) {
-	msg.Info("🔁 Updating library path...")
+	msg.Info("♻️ Updating library path...")
 	if env.GetGlobal() {
 		updateGlobalLibraryPath()
 	} else {
