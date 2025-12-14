@@ -34,7 +34,7 @@ func updateGlobalLibraryPath() {
 
 	libraryInfo, err := library.Stat()
 	if err != nil {
-		msg.Err(err.Error())
+		msg.Err("❌ " + err.Error())
 		return
 	}
 	platforms, err := library.ReadSubKeyNames(int(libraryInfo.SubKeyCount))
@@ -81,7 +81,7 @@ func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 
 	libraryInfo, err := library.Stat()
 	if err != nil {
-		msg.Err(err.Error())
+		msg.Err("❌ " + err.Error())
 		return
 	}
 	platforms, err := library.ReadSubKeyNames(int(libraryInfo.SubKeyCount))
