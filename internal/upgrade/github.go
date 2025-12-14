@@ -12,6 +12,7 @@ import (
 
 	"errors"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-github/v69/github"
 	"github.com/snakeice/gogress"
 )
@@ -51,17 +52,25 @@ func getBossReleases() ([]*github.RepositoryRelease, error) {
 	return releases, nil
 }
 
-// findLatestRelease finds the latest release
+// findLatestRelease finds the latest release using semantic versioning.
 func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*github.RepositoryRelease, error) {
 	var bestRelease *github.RepositoryRelease
+	var bestVersion *semver.Version
 
 	for _, release := range releases {
 		if release.GetPrerelease() && !preRelease {
 			continue
 		}
 
-		if bestRelease == nil || release.GetTagName() > bestRelease.GetTagName() {
+		tagName := release.GetTagName()
+		version, err := semver.NewVersion(tagName)
+		if err != nil {
+			continue
+		}
+
+		if bestRelease == nil || version.GreaterThan(bestVersion) {
 			bestRelease = release
+			bestVersion = version
 		}
 	}
 
