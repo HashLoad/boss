@@ -40,12 +40,21 @@ type installContext struct {
 	options          InstallOptions
 	warnings         []string
 	depManager       *DependencyManager
+	requestedDeps    map[string]bool // Track which dependencies were explicitly requested
 }
 
 func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
 	fs := filesystem.NewOSFileSystem()
 	lockRepo := repository.NewFileLockRepository(fs)
 	lockSvc := lockService.NewLockService(lockRepo, fs)
+
+	requestedDeps := make(map[string]bool)
+	if len(options.Args) > 0 {
+		for _, arg := range options.Args {
+			normalized := ParseDependency(arg)
+			requestedDeps[normalized] = true
+		}
+	}
 
 	return &installContext{
 		config:           config,
@@ -60,6 +69,7 @@ func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options I
 		options:          options,
 		warnings:         make([]string, 0),
 		depManager:       NewDefaultDependencyManager(config),
+		requestedDeps:    requestedDeps,
 	}
 }
 
@@ -67,7 +77,7 @@ func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options I
 func DoInstall(config env.ConfigProvider, options InstallOptions, pkg *domain.Package) error {
 	msg.Info("🔍 Analyzing dependencies...\n")
 
-	deps := collectAllDependencies(pkg)
+	deps := collectDependenciesToInstall(pkg, options.Args)
 
 	if len(deps) == 0 {
 		msg.Info("📄 No dependencies to install")
@@ -138,29 +148,70 @@ func (ic *installContext) addWarning(warning string) {
 	ic.warnings = append(ic.warnings, warning)
 }
 
-// collectAllDependencies makes a dry-run to collect all dependencies without installing.
-func collectAllDependencies(pkg *domain.Package) []domain.Dependency {
+// collectDependenciesToInstall collects dependencies to install based on args filter.
+// If args is empty, returns all dependencies. Otherwise, returns only specified ones.
+func collectDependenciesToInstall(pkg *domain.Package, args []string) []domain.Dependency {
 	if pkg.Dependencies == nil {
 		return []domain.Dependency{}
 	}
 
-	return pkg.GetParsedDependencies()
+	allDeps := pkg.GetParsedDependencies()
+
+	if len(args) == 0 {
+		return allDeps
+	}
+
+	var filtered []domain.Dependency
+	for _, arg := range args {
+		normalized := ParseDependency(arg)
+		for _, dep := range allDeps {
+			if dep.Repository == normalized {
+				filtered = append(filtered, dep)
+				break
+			}
+		}
+	}
+
+	return filtered
+}
+
+// collectAllDependencies makes a dry-run to collect all dependencies without installing.
+// Deprecated: Use collectDependenciesToInstall instead.
+func collectAllDependencies(pkg *domain.Package) []domain.Dependency {
+	return collectDependenciesToInstall(pkg, []string{})
 }
 
 func (ic *installContext) ensureDependencies(pkg *domain.Package) ([]domain.Dependency, error) {
 	if pkg.Dependencies == nil {
 		return []domain.Dependency{}, nil
 	}
-	deps := pkg.GetParsedDependencies()
+
+	allDeps := pkg.GetParsedDependencies()
+
+	var deps []domain.Dependency
+	if pkg == ic.root && len(ic.requestedDeps) > 0 {
+		for _, dep := range allDeps {
+			if ic.requestedDeps[dep.Repository] {
+				deps = append(deps, dep)
+			}
+		}
+	} else {
+		deps = allDeps
+	}
 
 	if err := ic.ensureModules(pkg, deps); err != nil {
 		return nil, err
 	}
 
-	otherDeps, err := ic.processOthers()
-	if err != nil {
-		return nil, err
+	var otherDeps []domain.Dependency
+	if len(ic.requestedDeps) == 0 {
+		var err error
+		otherDeps, err = ic.processOthers()
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	deps = append(deps, otherDeps...)
 
 	return deps, nil
