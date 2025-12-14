@@ -111,10 +111,10 @@ func (m *MockLockRepository) SetLoadError(err error) {
 	m.loadErr = err
 }
 
-func TestService_NeedUpdate_ReturnsTrueWhenNotInstalled(t *testing.T) {
+func TestLockService_NeedUpdate_ReturnsTrueWhenNotInstalled(t *testing.T) {
 	repo := NewMockLockRepository()
 	fs := NewMockFileSystem()
-	service := NewService(repo, fs)
+	service := NewLockService(repo, fs)
 
 	lock := &domain.PackageLock{
 		Installed: make(map[string]domain.LockedDependency),
@@ -129,10 +129,10 @@ func TestService_NeedUpdate_ReturnsTrueWhenNotInstalled(t *testing.T) {
 	}
 }
 
-func TestService_NeedUpdate_ReturnsTrueWhenDirNotExists(t *testing.T) {
+func TestLockService_NeedUpdate_ReturnsTrueWhenDirNotExists(t *testing.T) {
 	repo := NewMockLockRepository()
 	fs := NewMockFileSystem()
-	service := NewService(repo, fs)
+	service := NewLockService(repo, fs)
 
 	lock := &domain.PackageLock{
 		Installed: map[string]domain.LockedDependency{
@@ -153,10 +153,10 @@ func TestService_NeedUpdate_ReturnsTrueWhenDirNotExists(t *testing.T) {
 	}
 }
 
-func TestService_AddDependency_CreatesNewEntry(t *testing.T) {
+func TestLockService_AddDependency_CreatesNewEntry(t *testing.T) {
 	repo := NewMockLockRepository()
 	fs := NewMockFileSystem()
-	service := NewService(repo, fs)
+	service := NewLockService(repo, fs)
 
 	lock := &domain.PackageLock{
 		Installed: make(map[string]domain.LockedDependency),
@@ -171,10 +171,10 @@ func TestService_AddDependency_CreatesNewEntry(t *testing.T) {
 	}
 }
 
-func TestService_AddDependency_UpdatesExistingEntry(t *testing.T) {
+func TestLockService_AddDependency_UpdatesExistingEntry(t *testing.T) {
 	repo := NewMockLockRepository()
 	fs := NewMockFileSystem()
-	service := NewService(repo, fs)
+	service := NewLockService(repo, fs)
 
 	lock := &domain.PackageLock{
 		Installed: map[string]domain.LockedDependency{
@@ -196,11 +196,11 @@ func TestService_AddDependency_UpdatesExistingEntry(t *testing.T) {
 	}
 }
 
-func TestService_Save(t *testing.T) {
+func TestLockService_Save(t *testing.T) {
 	repo := NewMockLockRepository()
 	fs := NewMockFileSystem()
 
-	service := NewService(repo, fs)
+	service := NewLockService(repo, fs)
 
 	lock := &domain.PackageLock{
 		Hash:      "testhash",

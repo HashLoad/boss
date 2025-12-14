@@ -12,29 +12,29 @@ import (
 	"github.com/hashload/boss/utils"
 )
 
-// Service provides lock file management operations.
+// LockService provides lock file management operations.
 // It orchestrates domain entities, repositories, and filesystem operations.
-type Service struct {
+type LockService struct {
 	repo ports.LockRepository
 	fs   infra.FileSystem
 }
 
-// NewService creates a new lock service.
-func NewService(repo ports.LockRepository, fs infra.FileSystem) *Service {
-	return &Service{
+// NewLockService creates a new lock service.
+func NewLockService(repo ports.LockRepository, fs infra.FileSystem) *LockService {
+	return &LockService{
 		repo: repo,
 		fs:   fs,
 	}
 }
 
 // Save persists the lock file.
-func (s *Service) Save(lock *domain.PackageLock, packageDir string) error {
+func (s *LockService) Save(lock *domain.PackageLock, packageDir string) error {
 	lockPath := filepath.Join(packageDir, consts.FilePackageLock)
 	return s.repo.Save(lock, lockPath)
 }
 
 // NeedUpdate checks if a dependency needs to be updated.
-func (s *Service) NeedUpdate(lock *domain.PackageLock, dep domain.Dependency, version, modulesDir string) bool {
+func (s *LockService) NeedUpdate(lock *domain.PackageLock, dep domain.Dependency, version, modulesDir string) bool {
 	key := dep.GetKey()
 	locked, ok := lock.Installed[key]
 	if !ok {
@@ -67,7 +67,7 @@ func (s *Service) NeedUpdate(lock *domain.PackageLock, dep domain.Dependency, ve
 }
 
 // AddDependency adds a dependency to the lock with computed hash.
-func (s *Service) AddDependency(lock *domain.PackageLock, dep domain.Dependency, version, modulesDir string) {
+func (s *LockService) AddDependency(lock *domain.PackageLock, dep domain.Dependency, version, modulesDir string) {
 	depDir := filepath.Join(modulesDir, dep.Name())
 	hash := utils.HashDir(depDir)
 
@@ -93,7 +93,7 @@ func (s *Service) AddDependency(lock *domain.PackageLock, dep domain.Dependency,
 }
 
 // checkArtifacts verifies that all artifacts exist on disk.
-func (s *Service) checkArtifacts(locked domain.LockedDependency, modulesDir string) bool {
+func (s *LockService) checkArtifacts(locked domain.LockedDependency, modulesDir string) bool {
 	checks := []struct {
 		folder    string
 		artifacts []string

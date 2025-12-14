@@ -8,11 +8,11 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	git "github.com/hashload/boss/internal/adapters/secondary/git"
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/core/ports"
 	"github.com/hashload/boss/pkg/env"
 )
 
-// Ensure DefaultGitClient implements GitClientV2.
-var _ GitClientV2 = (*DefaultGitClient)(nil)
+var _ ports.GitClientV2 = (*DefaultGitClient)(nil)
 
 // DefaultGitClient is the production implementation of GitClient.
 type DefaultGitClient struct {
@@ -50,7 +50,7 @@ func (c *DefaultGitClient) GetByTag(repository *goGit.Repository, tag string) *p
 }
 
 // GetMain returns the main branch reference.
-func (c *DefaultGitClient) GetMain(repository *goGit.Repository) (Branch, error) {
+func (c *DefaultGitClient) GetMain(repository *goGit.Repository) (ports.Branch, error) {
 	branch, err := git.GetMain(repository)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (c *DefaultGitClient) GetTagsShortName(repository *goGit.Repository) []stri
 	return git.GetTagsShortName(repository)
 }
 
-// configBranch wraps config.Branch to implement Branch interface.
+// configBranch wraps config.Branch to implement ports.Branch interface.
 type configBranch struct {
 	*config.Branch
 }
@@ -71,6 +71,11 @@ type configBranch struct {
 // Name returns the branch name.
 func (b *configBranch) Name() string {
 	return b.Branch.Name
+}
+
+// Remote returns the remote name.
+func (b *configBranch) Remote() string {
+	return b.Branch.Remote
 }
 
 // CloneCacheWithContext clones with context support for cancellation.

@@ -9,6 +9,7 @@ import (
 	goGit "github.com/go-git/go-git/v5"
 	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/internal/core/ports"
 	"github.com/hashload/boss/internal/core/services/cache"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
@@ -20,14 +21,14 @@ var ErrRepositoryNil = errors.New("failed to clone or update repository")
 // DependencyManager manages dependency fetching with proper dependency injection.
 type DependencyManager struct {
 	config       env.ConfigProvider
-	gitClient    GitClient
+	gitClient    ports.GitClient
 	cache        *DependencyCache
 	cacheDir     string
-	cacheService *cache.Service
+	cacheService *cache.CacheService
 }
 
 // NewDependencyManager creates a new DependencyManager with the given dependencies.
-func NewDependencyManager(config env.ConfigProvider, gitClient GitClient, depCache *DependencyCache, cacheService *cache.Service) *DependencyManager {
+func NewDependencyManager(config env.ConfigProvider, gitClient ports.GitClient, depCache *DependencyCache, cacheService *cache.CacheService) *DependencyManager {
 	return &DependencyManager{
 		config:       config,
 		gitClient:    gitClient,
@@ -43,7 +44,7 @@ func NewDefaultDependencyManager(config env.ConfigProvider) *DependencyManager {
 		config,
 		NewDefaultGitClient(config),
 		NewDependencyCache(),
-		cache.NewService(filesystem.NewOSFileSystem()),
+		cache.NewCacheService(filesystem.NewOSFileSystem()),
 	)
 }
 

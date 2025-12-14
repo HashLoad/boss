@@ -132,7 +132,7 @@ func isOutdated(dependency domain.Dependency, version string) (dependencyStatus,
 	if err := installer.GetDependency(dependency); err != nil {
 		return updated, ""
 	}
-	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
 	info, err := cacheService.LoadRepositoryData(dependency.HashName())
 	if err != nil {
 		return updated, ""

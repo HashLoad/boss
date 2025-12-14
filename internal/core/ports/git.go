@@ -43,3 +43,40 @@ type Branch interface {
 	Name() string
 	Remote() string
 }
+
+// GitClient is a simplified interface for git operations without mandatory context.
+// Deprecated: New code should use GitRepository which supports context.
+type GitClient interface {
+	// CloneCache clones a dependency repository to cache.
+	CloneCache(dep domain.Dependency) (*git.Repository, error)
+
+	// UpdateCache updates an existing cached repository.
+	UpdateCache(dep domain.Dependency) (*git.Repository, error)
+
+	// GetRepository returns the repository for a dependency.
+	GetRepository(dep domain.Dependency) *git.Repository
+
+	// GetVersions returns all version tags for a repository.
+	GetVersions(repository *git.Repository, dep domain.Dependency) []*plumbing.Reference
+
+	// GetByTag returns a reference by tag name.
+	GetByTag(repository *git.Repository, tag string) *plumbing.Reference
+
+	// GetMain returns the main branch reference.
+	GetMain(repository *git.Repository) (Branch, error)
+
+	// GetTagsShortName returns short names of all tags.
+	GetTagsShortName(repository *git.Repository) []string
+}
+
+// GitClientV2 extends GitClient with context support for cancellation and timeouts.
+// This bridges GitClient and GitRepository interfaces.
+type GitClientV2 interface {
+	GitClient
+
+	// CloneCacheWithContext clones with context support for cancellation.
+	CloneCacheWithContext(ctx context.Context, dep domain.Dependency) (*git.Repository, error)
+
+	// UpdateCacheWithContext updates with context support for cancellation.
+	UpdateCacheWithContext(ctx context.Context, dep domain.Dependency) (*git.Repository, error)
+}

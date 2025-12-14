@@ -98,7 +98,7 @@ func NewPackage(filePath string) *Package {
 
 // Save persists the package to disk and returns the marshaled bytes.
 // Note: This method only saves the package file, not the lock file.
-// Use lock.Service.Save() to persist the lock file separately.
+// Use lock.LockService.Save() to persist the lock file separately.
 func (p *Package) Save() []byte {
 	marshal, _ := parser.JSONMarshal(p, true)
 	_ = p.getFS().WriteFile(p.fileName, marshal, 0600)

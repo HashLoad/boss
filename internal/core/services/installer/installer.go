@@ -25,11 +25,10 @@ type InstallOptions struct {
 }
 
 // createLockService creates a new lock service instance.
-// createLockService creates a new lock service instance.
-func createLockService() *lockService.Service {
+func createLockService() *lockService.LockService {
 	fs := filesystem.NewOSFileSystem()
 	lockRepo := repository.NewFileLockRepository(fs)
-	return lockService.NewService(lockRepo, fs)
+	return lockService.NewLockService(lockRepo, fs)
 }
 
 // InstallModules installs the modules based on the provided options.

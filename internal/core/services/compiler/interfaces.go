@@ -34,21 +34,6 @@ type ArtifactManager interface {
 	MoveArtifacts(dep domain.Dependency, rootPath string)
 }
 
-// FileSystem abstracts file system operations for testability.
-type FileSystem interface {
-	WriteFile(name string, data []byte, perm int) error
-	ReadDir(name string) ([]FileInfo, error)
-	Rename(oldpath, newpath string) error
-	RemoveAll(path string) error
-	ReadFile(name string) ([]byte, error)
-}
-
-// FileInfo abstracts file information.
-type FileInfo interface {
-	Name() string
-	IsDir() bool
-}
-
 // DefaultGraphBuilder implements GraphBuilder using the real graph functions.
 type DefaultGraphBuilder struct{}
 

@@ -86,7 +86,7 @@ func TestService_SaveAndLoadRepositoryDetails(t *testing.T) {
 
 	// Create the boss home folder structure
 	fs := NewMockFileSystem()
-	service := NewService(fs)
+	service := NewCacheService(fs)
 
 	dep := domain.ParseDependency("github.com/hashload/horse", "^1.0.0")
 	versions := []string{"1.0.0", "1.1.0", "1.2.0"}
@@ -123,7 +123,7 @@ func TestService_LoadRepositoryData_NotFound(t *testing.T) {
 	t.Setenv("BOSS_HOME", tempDir)
 
 	fs := NewMockFileSystem()
-	service := NewService(fs)
+	service := NewCacheService(fs)
 
 	_, err := service.LoadRepositoryData("nonexistent")
 	if err == nil {

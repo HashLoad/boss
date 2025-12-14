@@ -33,7 +33,7 @@ type installContext struct {
 	visited          map[string]bool
 	useLockedVersion bool
 	progress         *ProgressTracker
-	lockSvc          *lockService.Service
+	lockSvc          *lockService.LockService
 	modulesDir       string
 	options          InstallOptions
 	warnings         []string
@@ -42,7 +42,7 @@ type installContext struct {
 func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
 	fs := filesystem.NewOSFileSystem()
 	lockRepo := repository.NewFileLockRepository(fs)
-	lockSvc := lockService.NewService(lockRepo, fs)
+	lockSvc := lockService.NewLockService(lockRepo, fs)
 
 	return &installContext{
 		config:           config,

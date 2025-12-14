@@ -14,7 +14,7 @@ import (
 
 // TestRemoveCacheFunc_NilInfo tests that the walk function handles nil info gracefully.
 func TestRemoveCacheFunc_NilInfo(t *testing.T) {
-	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
 	fn := removeCache(false, cacheService)
 
 	// Should not panic with nil info
@@ -28,7 +28,7 @@ func TestRemoveCacheFunc_NilInfo(t *testing.T) {
 func TestRemoveCacheFunc_Directory(t *testing.T) {
 	tempDir := t.TempDir()
 
-	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
 	fn := removeCache(false, cacheService)
 
 	info, err := os.Stat(tempDir)
@@ -54,7 +54,7 @@ func TestRemoveCacheFunc_InvalidInfoFile(t *testing.T) {
 		t.Fatalf("Failed to create invalid file: %v", err)
 	}
 
-	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
 	fn := removeCache(false, cacheService)
 
 	info, err := os.Stat(invalidFile)
@@ -110,7 +110,7 @@ func TestRemoveCacheFunc_ExpiredCache(t *testing.T) {
 	}
 
 	t.Run("ignoreLastUpdate forces removal", func(t *testing.T) {
-		cacheService := cache.NewService(filesystem.NewOSFileSystem())
+		cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
 		fn := removeCache(true, cacheService)
 
 		fileInfo, err := os.Stat(infoFile)
@@ -155,7 +155,7 @@ func TestRemoveCacheFunc_RecentCache(t *testing.T) {
 		t.Fatalf("Failed to write info file: %v", err)
 	}
 
-	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
 	fn := removeCache(false, cacheService)
 
 	fileInfo, err := os.Stat(infoFile)

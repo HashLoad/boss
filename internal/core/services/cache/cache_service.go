@@ -12,18 +12,18 @@ import (
 	"github.com/hashload/boss/pkg/env"
 )
 
-// Service provides cache management operations.
-type Service struct {
+// CacheService provides cache management operations.
+type CacheService struct {
 	fs infra.FileSystem
 }
 
-// NewService creates a new cache service.
-func NewService(fs infra.FileSystem) *Service {
-	return &Service{fs: fs}
+// NewCacheService creates a new cache service.
+func NewCacheService(fs infra.FileSystem) *CacheService {
+	return &CacheService{fs: fs}
 }
 
 // SaveRepositoryDetails saves repository details to cache.
-func (s *Service) SaveRepositoryDetails(dep domain.Dependency, versions []string) error {
+func (s *CacheService) SaveRepositoryDetails(dep domain.Dependency, versions []string) error {
 	location := env.GetCacheDir()
 	data := &domain.RepoInfo{
 		Key:        dep.HashName(),
@@ -47,7 +47,7 @@ func (s *Service) SaveRepositoryDetails(dep domain.Dependency, versions []string
 }
 
 // LoadRepositoryData loads repository data from cache.
-func (s *Service) LoadRepositoryData(key string) (*domain.RepoInfo, error) {
+func (s *CacheService) LoadRepositoryData(key string) (*domain.RepoInfo, error) {
 	location := env.GetCacheDir()
 	cacheInfoPath := filepath.Join(location, "info", key+".json")
 

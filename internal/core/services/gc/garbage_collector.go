@@ -23,11 +23,11 @@ func RunGC(ignoreLastUpdate bool) error {
 	}()
 
 	path := filepath.Join(env.GetCacheDir(), "info")
-	cacheService := cache.NewService(filesystem.NewOSFileSystem())
+	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
 	return filepath.Walk(path, removeCache(ignoreLastUpdate, cacheService))
 }
 
-func removeCache(ignoreLastUpdate bool, cacheService *cache.Service) filepath.WalkFunc {
+func removeCache(ignoreLastUpdate bool, cacheService *cache.CacheService) filepath.WalkFunc {
 	return func(_ string, info os.FileInfo, _ error) error {
 		if info == nil || info.IsDir() {
 			return nil
