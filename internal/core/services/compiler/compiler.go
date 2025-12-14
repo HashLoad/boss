@@ -25,7 +25,11 @@ func Build(pkg *domain.Package, compilerVersion, platform string) {
 	if err != nil {
 		msg.Warn("\nCompiler selection failed: %s. Falling back to default.", err)
 	} else {
-		msg.Info("\nUsing compiler: %s (%s)", selected.Version, selected.Arch)
+		msg.Info("\nUsing compiler:")
+		msg.Info("  Version: %s", selected.Version)
+		msg.Info("  Platform: %s", selected.Arch)
+		msg.Info("  Binary: %s", selected.Path)
+		msg.Info("")
 	}
 
 	buildOrderedPackages(pkg, selected)

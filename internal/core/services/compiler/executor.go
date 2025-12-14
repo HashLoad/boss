@@ -68,12 +68,25 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 
 	dccDir := env.GetDcc32Dir()
 	platform := consts.PlatformWin32.String()
+	compilerBinary := "dcc32.exe"
 
 	if selectedCompiler != nil {
 		dccDir = selectedCompiler.BinDir
 		if selectedCompiler.Arch != "" {
 			platform = selectedCompiler.Arch
 		}
+		switch selectedCompiler.Arch {
+		case consts.PlatformWin64.String():
+			compilerBinary = "dcc64.exe"
+		case consts.PlatformOSX64.String():
+			compilerBinary = "dccosx.exe"
+		case consts.PlatformLinux64.String():
+			compilerBinary = "dcclinux64.exe"
+		}
+	}
+
+	if tracker == nil || !tracker.IsEnabled() {
+		msg.Debug("  Using: %s (Platform: %s)", filepath.Join(dccDir, compilerBinary), platform)
 	}
 
 	rsvars := filepath.Join(dccDir, "rsvars.bat")
