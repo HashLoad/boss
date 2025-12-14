@@ -303,14 +303,13 @@ Add a `toolchain` section to your `boss.json`:
   "name": "my-project",
   "version": "1.0.0",
   "toolchain": {
-    "delphi": "37.0",
+    "compiler": "37.0",
     "platform": "Win64"
   }
 }
 ```
 
 Supported fields in `toolchain`:
-- `delphi`: The Delphi version (e.g., "37.0").
 - `compiler`: The compiler version (e.g., "37.0").
 - `platform`: The target platform ("Win32" or "Win64").
 - `path`: Explicit path to the compiler (optional).
@@ -334,6 +333,232 @@ For example, to specify acceptable version ranges up to 1.0.4, use the following
 - Patch releases: 1.0 or 1.0.x or ~1.0.4
 - Minor releases: 1 or 1.x or ^1.0.4
 - Major releases: \* or x
+
+## boss.json File Format
+
+The `boss.json` file is the manifest for your Delphi/Lazarus project. It contains metadata, dependencies, build configuration, and custom scripts.
+
+### Complete Structure
+
+Here's a comprehensive example showing all available fields:
+
+```json
+{
+  "name": "my-project",
+  "description": "A sample Delphi project using Boss",
+  "version": "1.0.0",
+  "homepage": "https://github.com/myuser/my-project",
+  "mainsrc": "src/",
+  "browsingpath": "src/;libs/",
+  "projects": [
+    "MyProject.dproj",
+    "MyPackage.dproj"
+  ],
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0",
+    "github.com/HashLoad/jhonson": "~2.1.0",
+    "dataset-serialize": "*"
+  },
+  "scripts": {
+    "build": "msbuild MyProject.dproj /p:Config=Release",
+    "test": "MyProject.exe --test",
+    "clean": "del /s *.dcu"
+  },
+  "engines": {
+    "compiler": ">=35.0",
+    "platforms": ["Win32", "Win64"]
+  },
+  "toolchain": {
+    "compiler": "37.0",
+    "platform": "Win64",
+    "path": "C:\\Program Files\\Embarcadero\\Studio\\37.0",
+    "strict": false
+  }
+}
+```
+
+### Field Descriptions
+
+#### Core Fields
+
+- **`name`** (required): Package name. Must be unique if publishing.
+  ```json
+  "name": "my-awesome-library"
+  ```
+
+- **`description`** (optional): A brief description of your project.
+  ```json
+  "description": "REST API framework for Delphi"
+  ```
+
+- **`version`** (required): Package version following [semantic versioning](https://semver.org/).
+  ```json
+  "version": "1.2.3"
+  ```
+
+- **`homepage`** (optional): Project website or repository URL.
+  ```json
+  "homepage": "https://github.com/myuser/my-project"
+  ```
+
+#### Source Configuration
+
+- **`mainsrc`** (optional): Main source directory path.
+  ```json
+  "mainsrc": "src/"
+  ```
+
+- **`browsingpath`** (optional): Additional paths for IDE browsing (semicolon-separated).
+  ```json
+  "browsingpath": "src/;src/controllers/;src/models/"
+  ```
+
+#### Build Configuration
+
+- **`projects`** (optional): List of Delphi project files (`.dproj`) to compile.
+  ```json
+  "projects": [
+    "MyProject.dproj",
+    "MyLibrary.dproj"
+  ]
+  ```
+  
+  **Note:** If not specified, Boss won't compile the package but will still manage dependencies.
+
+#### Dependencies
+
+- **`dependencies`** (optional): Map of package dependencies with version constraints.
+  ```json
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0",
+    "dataset-serialize": "~2.1.0",
+    "jhonson": "*"
+  }
+  ```
+  
+  Supported version formats:
+  - Exact version: `"1.0.0"`
+  - Caret (minor updates): `"^1.0.0"` (allows 1.x.x, but not 2.x.x)
+  - Tilde (patch updates): `"~1.0.0"` (allows 1.0.x, but not 1.1.x)
+  - Wildcard (any): `"*"` or `"x"`
+  - Range: `">=1.0.0 <2.0.0"`
+
+#### Custom Scripts
+
+- **`scripts`** (optional): Custom commands you can run with `boss run <script-name>`.
+  ```json
+  "scripts": {
+    "build": "msbuild MyProject.dproj /p:Config=Release",
+    "test": "dunitx-console.exe MyProject.exe",
+    "clean": "del /s *.dcu *.exe",
+    "deploy": "xcopy /s /y bin\\*.exe deploy\\"
+  }
+  ```
+  
+  Execute with:
+  ```sh
+  boss run build
+  boss run test
+  ```
+
+#### Engine Requirements
+
+- **`engines`** (optional): Specify minimum compiler/platform requirements.
+  ```json
+  "engines": {
+    "compiler": ">=35.0",
+    "platforms": ["Win32", "Win64", "Linux64"]
+  }
+  ```
+  
+  - `compiler`: Minimum compiler version
+  - `platforms`: Supported target platforms
+
+#### Toolchain Configuration
+
+- **`toolchain`** (optional): Specify the exact toolchain to use for this project.
+  ```json
+  "toolchain": {
+    "compiler": "37.0",
+    "platform": "Win64",
+    "path": "C:\\Program Files\\Embarcadero\\Studio\\37.0",
+    "strict": true
+  }
+  ```
+  
+  - `compiler`: Required compiler version
+  - `platform`: Target platform ("Win32", "Win64", "Linux64", etc.)
+  - `path`: Explicit path to the compiler (optional)
+  - `strict`: If `true`, fails if the exact version is not found (default: `false`)
+
+### Minimal boss.json
+
+The minimal valid `boss.json` file:
+
+```json
+{
+  "name": "my-project",
+  "version": "1.0.0"
+}
+```
+
+### Creating a new boss.json
+
+Use `boss init` to create a new `boss.json` interactively:
+
+```sh
+boss init
+```
+
+Or use quiet mode for defaults:
+
+```sh
+boss init -q
+```
+
+### Example: Library Package
+
+```json
+{
+  "name": "my-delphi-library",
+  "description": "Utilities for Delphi applications",
+  "version": "2.1.0",
+  "homepage": "https://github.com/myuser/my-library",
+  "mainsrc": "src/",
+  "projects": [
+    "MyLibrary.dproj"
+  ],
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0"
+  }
+}
+```
+
+### Example: Application Package
+
+```json
+{
+  "name": "my-app",
+  "description": "My awesome Delphi application",
+  "version": "1.0.0",
+  "projects": [
+    "MyApp.dproj"
+  ],
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0"
+  },
+  "scripts": {
+    "build": "msbuild MyApp.dproj /p:Config=Release",
+    "run": "bin\\MyApp.exe",
+    "test": "dunitx-console.exe bin\\MyAppTests.exe"
+  },
+  "toolchain": {
+    "compiler": "37.0",
+    "platform": "Win32"
+  }
+}
+```
+
 
 ## 💻 Code Contributors
 
