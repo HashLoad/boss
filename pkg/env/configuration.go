@@ -32,6 +32,7 @@ type Configuration struct {
 	DelphiPath          string           `json:"delphi_path,omitempty"`
 	ConfigVersion       int64            `json:"config_version"`
 	GitEmbedded         bool             `json:"git_embedded"`
+	GitShallow          bool             `json:"git_shallow,omitempty"`
 
 	Advices struct {
 		SetupPath bool `json:"setup_path,omitempty"`
@@ -172,6 +173,7 @@ func makeDefault(configPath string) *Configuration {
 		Auth:                make(map[string]*Auth),
 		Key:                 crypto.Md5MachineID(),
 		GitEmbedded:         true,
+		GitShallow:          false, // Default to full clone for compatibility
 	}
 }
 

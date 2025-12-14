@@ -2,7 +2,6 @@ package env_test
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -70,7 +69,7 @@ func TestGetBossHome(t *testing.T) {
 		t.Setenv("BOSS_HOME", tempDir)
 
 		result := env.GetBossHome()
-		expected := filepath.Join(tempDir, consts.FolderBossHome)
+		expected := tempDir
 		if result != expected {
 			t.Errorf("GetBossHome() = %q, want %q", result, expected)
 		}

@@ -28,11 +28,19 @@ func CloneCacheEmbedded(config env.ConfigProvider, dep domain.Dependency) (*git.
 	url := dep.GetURL()
 	auth := config.GetAuth(dep.GetURLPrefix())
 
-	repository, err := git.Clone(storageCache, worktreeFileSystem, &git.CloneOptions{
+	cloneOpts := &git.CloneOptions{
 		URL:  url,
 		Tags: git.AllTags,
 		Auth: auth,
-	})
+	}
+
+	if env.GetGitShallow() {
+		msg.Debug("Using shallow clone for %s", dep.Repository)
+		cloneOpts.Depth = 1
+		cloneOpts.SingleBranch = true
+	}
+
+	repository, err := git.Clone(storageCache, worktreeFileSystem, cloneOpts)
 	if err != nil {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.HashName()))
 		return nil, err

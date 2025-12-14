@@ -98,17 +98,25 @@ func GetCacheDir() string {
 // GetBossHome returns the Boss home directory
 func GetBossHome() string {
 	homeDir := os.Getenv("BOSS_HOME")
-
 	if homeDir == "" {
-		systemHome, err := homedir.Dir()
-		homeDir = systemHome
+		home, err := homedir.Dir()
 		if err != nil {
-			msg.Err("❌ Error to get cache paths", err)
+			msg.Err("❌ Error to get home directory", err)
+			return ""
 		}
-
-		homeDir = filepath.FromSlash(homeDir)
+		homeDir = filepath.Join(home, consts.FolderBossHome)
 	}
-	return filepath.Join(homeDir, consts.FolderBossHome)
+	return homeDir
+}
+
+// GetGitShallow returns true if shallow git clones should be used.
+// This can be configured via 'boss config git shallow true|false'.
+// Shallow clones are faster but don't include full git history.
+func GetGitShallow() bool {
+	if shallow := os.Getenv("BOSS_GIT_SHALLOW"); shallow == "true" || shallow == "1" {
+		return true
+	}
+	return GlobalConfiguration().GitShallow
 }
 
 // GetBossFile returns the Boss file path

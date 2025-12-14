@@ -56,7 +56,16 @@ func doClone(dep domain.Dependency) error {
 		msg.Debug("Failed to remove module file: %v", err)
 	}
 
-	cmd := exec.Command("git", "clone", dir, dep.GetURL(), dirModule)
+	args := []string{"clone", dir}
+
+	if env.GetGitShallow() {
+		msg.Debug("Using shallow clone for %s", dep.Repository)
+		args = append(args, "--depth", "1", "--single-branch")
+	}
+
+	args = append(args, dep.GetURL(), dirModule)
+
+	cmd := exec.Command("git", args...)
 
 	if err = runCommand(cmd); err != nil {
 		return err

@@ -267,6 +267,31 @@ boss config git mode native
 boss config git mode embedded
 ```
 
+#### Shallow Clone
+
+You can enable shallow cloning to significantly speed up dependency downloads. Shallow clones only fetch the latest commit without the full git history, reducing download size dramatically (e.g., from 127 MB to <1 MB for large repositories).
+
+```sh
+# Enable shallow clone (faster, recommended for CI/CD)
+boss config git shallow true
+
+# Disable shallow clone (full history)
+boss config git shallow false
+```
+
+**Note:** Shallow clone is disabled by default to maintain compatibility. When enabled, you won't have access to the full git history of dependencies.
+
+You can also temporarily enable shallow clone using an environment variable:
+
+```sh
+# Windows
+set BOSS_GIT_SHALLOW=1
+boss install
+
+# Linux/macOS
+BOSS_GIT_SHALLOW=1 boss install
+```
+
 ### > Project Toolchain
 
 You can also specify the required compiler version and platform in your project's `boss.json` file. This ensures that everyone working on the project uses the correct toolchain.
