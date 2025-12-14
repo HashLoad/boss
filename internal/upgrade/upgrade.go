@@ -70,7 +70,7 @@ func BossUpgrade(preRelease bool) error {
 func apply(buff []byte) error {
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to get executable path: %w", err)
 	}
 	exePath, _ := filepath.Abs(ex)
 

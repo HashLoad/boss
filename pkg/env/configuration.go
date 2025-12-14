@@ -46,7 +46,7 @@ type Auth struct {
 func (a *Auth) GetUser() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.User)
 	if err != nil {
-		msg.Err("Fail to decrypt user.")
+		msg.Err("❌ Failed to decrypt user.")
 		return ""
 	}
 	return ret
@@ -56,7 +56,7 @@ func (a *Auth) GetUser() string {
 func (a *Auth) GetPassword() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.Pass)
 	if err != nil {
-		msg.Die("Fail to decrypt pass: %s", err)
+		msg.Die("❌ Failed to decrypt pass: %s", err)
 		return ""
 	}
 
@@ -67,7 +67,7 @@ func (a *Auth) GetPassword() string {
 func (a *Auth) GetPassPhrase() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.PassPhrase)
 	if err != nil {
-		msg.Die("Fail to decrypt PassPhrase: %s", err)
+		msg.Die("❌ Failed to decrypt PassPhrase: %s", err)
 		return ""
 	}
 	return ret
@@ -76,7 +76,7 @@ func (a *Auth) GetPassPhrase() string {
 // SetUser encrypts and sets the username
 func (a *Auth) SetUser(user string) {
 	if encryptedUser, err := crypto.Encrypt(crypto.MachineKey(), user); err != nil {
-		msg.Die("Fail to crypt user: %s", err)
+		msg.Die("❌ Failed to crypt user: %s", err)
 	} else {
 		a.User = encryptedUser
 	}
@@ -85,7 +85,7 @@ func (a *Auth) SetUser(user string) {
 // SetPass encrypts and sets the password
 func (a *Auth) SetPass(pass string) {
 	if cPass, err := crypto.Encrypt(crypto.MachineKey(), pass); err != nil {
-		msg.Die("Fail to crypt pass: %s", err)
+		msg.Die("❌ Failed to crypt pass: %s", err)
 	} else {
 		a.Pass = cPass
 	}
@@ -94,7 +94,7 @@ func (a *Auth) SetPass(pass string) {
 // SetPassPhrase encrypts and sets the passphrase
 func (a *Auth) SetPassPhrase(passphrase string) {
 	if cPassPhrase, err := crypto.Encrypt(crypto.MachineKey(), passphrase); err != nil {
-		msg.Die("Fail to crypt PassPhrase: %s", err)
+		msg.Die("❌ Failed to crypt PassPhrase: %s", err)
 	} else {
 		a.PassPhrase = cPassPhrase
 	}
@@ -110,7 +110,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	case auth.UseSSH:
 		pem, err := os.ReadFile(auth.Path)
 		if err != nil {
-			msg.Die("Fail to open ssh key %s", err)
+			msg.Die("❌ Failed to open ssh key %s", err)
 		}
 		var signer ssh.Signer
 
@@ -121,7 +121,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		}
 
 		if err != nil {
-			panic(err)
+			msg.Die("❌ Failed to parse SSH private key: %v", err)
 		}
 		return &sshGit.PublicKeys{User: "git", Signer: signer}
 
@@ -134,18 +134,18 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 func (c *Configuration) SaveConfiguration() {
 	jsonString, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
-		msg.Die("Error on parse config file", err.Error())
+		msg.Die("❌ Failed to parse config file", err.Error())
 	}
 
 	err = os.MkdirAll(c.path, 0755)
 	if err != nil {
-		msg.Die("Failed on create path", c.path, err.Error())
+		msg.Die("❌ Failed to create path", c.path, err.Error())
 	}
 
 	configPath := filepath.Join(c.path, consts.BossConfigFile)
 	f, err := os.Create(configPath)
 	if err != nil {
-		msg.Die("Failed on create file ", configPath, err.Error())
+		msg.Die("❌ Failed to create file ", configPath, err.Error())
 		return
 	}
 
@@ -153,7 +153,7 @@ func (c *Configuration) SaveConfiguration() {
 
 	_, err = f.Write(jsonString)
 	if err != nil {
-		msg.Die("Failed on write cache file", err.Error())
+		msg.Die("❌ Failed to write cache file", err.Error())
 	}
 }
 
@@ -183,11 +183,11 @@ func LoadConfiguration(cachePath string) (*Configuration, error) {
 	}
 	err = json.Unmarshal(buffer, configuration)
 	if err != nil {
-		msg.Err("Fail to load cfg %s", err)
+		msg.Err("❌ Failed to load cfg %s", err)
 		return makeDefault(cachePath), err
 	}
 	if configuration.Key != crypto.Md5MachineID() {
-		msg.Err("Failed to load auth... recreate login accounts")
+		msg.Err("❌ Failed to load auth... recreate login accounts")
 		configuration.Key = crypto.Md5MachineID()
 		configuration.Auth = make(map[string]*Auth)
 	}

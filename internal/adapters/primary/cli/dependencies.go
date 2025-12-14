@@ -12,7 +12,6 @@ import (
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 	"github.com/spf13/cobra"
 	"github.com/xlab/treeprint"
 )
@@ -133,19 +132,19 @@ func isOutdated(dependency domain.Dependency, version string) (dependencyStatus,
 	cacheService := cache.NewService(filesystem.NewOSFileSystem())
 	info, err := cacheService.LoadRepositoryData(dependency.HashName())
 	if err != nil {
-		utils.HandleError(err)
-	} else {
-		//TODO: Check if the branch is outdated by comparing the hash
-		locked, err := semver.NewVersion(version)
-		if err != nil {
-			return usingBranch, ""
-		}
-		constraint, _ := semver.NewConstraint(dependency.GetVersion())
-		for _, value := range info.Versions {
-			version, err := semver.NewVersion(value)
-			if err == nil && version.GreaterThan(locked) && constraint.Check(version) {
-				return outdated, version.String()
-			}
+		// Cannot determine if outdated without cache data
+		return updated, ""
+	}
+	//TODO: Check if the branch is outdated by comparing the hash
+	locked, err := semver.NewVersion(version)
+	if err != nil {
+		return usingBranch, ""
+	}
+	constraint, _ := semver.NewConstraint(dependency.GetVersion())
+	for _, value := range info.Versions {
+		version, err := semver.NewVersion(value)
+		if err == nil && version.GreaterThan(locked) && constraint.Check(version) {
+			return outdated, version.String()
 		}
 	}
 	return updated, ""

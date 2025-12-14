@@ -17,7 +17,9 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 	cacheDirInfo, err := os.Stat(cacheDir)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(cacheDir, os.ModeDir|0755)
-		utils.HandleError(err)
+		if err != nil {
+			msg.Die("❌ Failed to create modules directory: %v", err)
+		}
 	}
 
 	if cacheDirInfo != nil && !cacheDirInfo.IsDir() {
@@ -25,12 +27,16 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 	}
 
 	fileInfos, err := os.ReadDir(cacheDir)
-	utils.HandleError(err)
+	if err != nil {
+		msg.Die("❌ Failed to read modules directory: %v", err)
+	}
 	dependenciesNames := domain.GetDependenciesNames(dependencies)
 	for _, info := range fileInfos {
 		if !info.IsDir() {
 			err = os.Remove(info.Name())
-			utils.HandleError(err)
+			if err != nil {
+				msg.Debug("Failed to remove file %s: %v", info.Name(), err)
+			}
 		}
 		if utils.Contains(consts.DefaultPaths(), info.Name()) {
 			cleanArtifacts(filepath.Join(cacheDir, info.Name()), lock)
@@ -40,7 +46,7 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 		if !utils.Contains(dependenciesNames, info.Name()) {
 		remove:
 			if err = os.RemoveAll(filepath.Join(cacheDir, info.Name())); err != nil {
-				msg.Warn("Failed to remove old cache: %s", err.Error())
+				msg.Warn("⚠️ Failed to remove old cache: %s", err.Error())
 				goto remove
 			}
 		}
@@ -71,24 +77,26 @@ func EnsureCacheDir(dep domain.Dependency) {
 }
 
 func createPath(path string) {
-	utils.HandleError(os.MkdirAll(path, os.ModeDir|0755))
+	if err := os.MkdirAll(path, os.ModeDir|0755); err != nil {
+		msg.Die("❌ Failed to create path %s: %v", path, err)
+	}
 }
 
 func cleanArtifacts(dir string, lock domain.PackageLock) {
 	fileInfos, err := os.ReadDir(dir)
-	utils.HandleError(err)
+	if err != nil {
+		msg.Warn("⚠️ Failed to read artifacts directory: %v", err)
+		return
+	}
 	artifactList := lock.GetArtifactList()
 	for _, infoArtifact := range fileInfos {
 		if infoArtifact.IsDir() {
 			continue
 		}
 		if !utils.Contains(artifactList, infoArtifact.Name()) {
-			for {
-				err = os.Remove(filepath.Join(dir, infoArtifact.Name()))
-				utils.HandleError(err)
-				if err == nil {
-					break
-				}
+			err = os.Remove(filepath.Join(dir, infoArtifact.Name()))
+			if err != nil {
+				msg.Debug("Failed to remove artifact %s: %v", infoArtifact.Name(), err)
 			}
 		}
 	}

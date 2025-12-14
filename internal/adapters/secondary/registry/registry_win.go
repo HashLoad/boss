@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/hashload/boss/pkg/consts"
-	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -26,17 +25,23 @@ func getDelphiVersionFromRegistry() map[string]string {
 	}
 
 	names, err := delphiVersions.ReadSubKeyNames(int(keyInfo.SubKeyCount))
-	utils.HandleError(err)
+	if err != nil {
+		return result
+	}
 
 	for _, value := range names {
 		delphiInfo, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+value, registry.QUERY_VALUE)
-		utils.HandleError(err)
+		if err != nil {
+			continue
+		}
 
 		appPath, _, err := delphiInfo.GetStringValue("App")
 		if os.IsNotExist(err) {
 			continue
 		}
-		utils.HandleError(err)
+		if err != nil {
+			continue
+		}
 		result[value] = appPath
 
 	}
@@ -59,7 +64,9 @@ func getDetectedDelphisFromRegistry() []DelphiInstallation {
 	}
 
 	names, err := delphiVersions.ReadSubKeyNames(int(keyInfo.SubKeyCount))
-	utils.HandleError(err)
+	if err != nil {
+		return result
+	}
 
 	for _, version := range names {
 		delphiInfo, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+version, registry.QUERY_VALUE)

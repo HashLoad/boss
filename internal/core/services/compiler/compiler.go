@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 )
 
 // Build compiles the package and its dependencies.
@@ -34,10 +34,12 @@ func Build(pkg *domain.Package, compilerVersion, platform string) {
 
 	buildOrderedPackages(pkg, selected)
 	graph := LoadOrderGraphAll(pkg)
-	saveLoadOrder(graph)
+	if err := saveLoadOrder(graph); err != nil {
+		msg.Warn("⚠️ Failed to save build order: %v", err)
+	}
 }
 
-func saveLoadOrder(queue *graphs.NodeQueue) {
+func saveLoadOrder(queue *graphs.NodeQueue) error {
 	var projects = ""
 	for {
 		if queue.IsEmpty() {
@@ -53,7 +55,10 @@ func saveLoadOrder(queue *graphs.NodeQueue) {
 	}
 	outDir := filepath.Join(env.GetModulesDir(), consts.BplFolder, consts.FileBplOrder)
 
-	utils.HandleError(os.WriteFile(outDir, []byte(projects), 0600))
+	if err := os.WriteFile(outDir, []byte(projects), 0600); err != nil {
+		return fmt.Errorf("failed to save build load order to %s: %w", outDir, err)
+	}
+	return nil
 }
 
 func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_selector.SelectedCompiler) {

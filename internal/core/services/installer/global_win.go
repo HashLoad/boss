@@ -36,11 +36,14 @@ func addPathBpl(ideVersion string) {
 	idePath, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Environment Variables`,
 		registry.ALL_ACCESS)
 	if err != nil {
-		msg.Err("Cannot add automatic bpl path dir")
+		msg.Err("❌ Cannot add automatic bpl path dir")
 		return
 	}
 	value, _, err := idePath.GetStringValue("PATH")
-	utils.HandleError(err)
+	if err != nil {
+		msg.Warn("⚠️ Failed to get PATH environment variable: %v", err)
+		return
+	}
 
 	currentPath := filepath.Join(env.GetCurrentDir(), consts.FolderDependencies, consts.BplFolder)
 
@@ -51,7 +54,9 @@ func addPathBpl(ideVersion string) {
 
 	paths = append(paths, currentPath)
 	err = idePath.SetStringValue("PATH", strings.Join(paths, ";"))
-	utils.HandleError(err)
+	if err != nil {
+		msg.Warn("⚠️ Failed to update PATH environment variable: %v", err)
+	}
 }
 
 func doInstallPackages() {
@@ -69,10 +74,16 @@ func doInstallPackages() {
 	}
 
 	keyStat, err := knowPackages.Stat()
-	utils.HandleError(err)
+	if err != nil {
+		msg.Warn("⚠️ Failed to stat Known Packages registry key: %v", err)
+		return
+	}
 
 	keys, err := knowPackages.ReadValueNames(int(keyStat.ValueCount))
-	utils.HandleError(err)
+	if err != nil {
+		msg.Warn("⚠️ Failed to read Known Packages values: %v", err)
+		return
+	}
 
 	var existingBpls []string
 
@@ -90,7 +101,9 @@ func doInstallPackages() {
 		}
 
 		if !slices.Contains(keys, path) {
-			utils.HandleError(knowPackages.SetStringValue(path, path))
+			if err := knowPackages.SetStringValue(path, path); err != nil {
+				msg.Debug("Failed to register BPL %s: %v", path, err)
+			}
 		}
 		existingBpls = append(existingBpls, path)
 
@@ -104,7 +117,9 @@ func doInstallPackages() {
 
 		if strings.HasPrefix(key, env.GetModulesDir()) {
 			err := knowPackages.DeleteValue(key)
-			utils.HandleError(err)
+			if err != nil {
+				msg.Debug("Failed to delete obsolete BPL registry entry %s: %v", key, err)
+			}
 		}
 	}
 }

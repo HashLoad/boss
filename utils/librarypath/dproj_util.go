@@ -37,12 +37,12 @@ func updateOtherUnitFilesProject(lpiName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(lpiName)
 	if os.IsNotExist(err) || info.IsDir() {
-		msg.Err(".lpi not found.")
+		msg.Err("❌ .lpi not found.")
 		return
 	}
 	err = doc.ReadFromFile(lpiName)
 	if err != nil {
-		msg.Err("Error on read lpi: %s", err)
+		msg.Err("❌ Error on read lpi: %s", err)
 		return
 	}
 
@@ -58,7 +58,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 		attribute := item.SelectAttr(consts.XMLNameAttribute)
 		compilerOptions = item.SelectElement(consts.XMLTagNameCompilerOptions)
 		if compilerOptions != nil {
-			msg.Info("  Updating %s mode", attribute.Value)
+			msg.Info("  🔄 Updating %s mode", attribute.Value)
 			processCompilerOptions(compilerOptions)
 		}
 	}
@@ -68,7 +68,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 	doc.WriteSettings.CanonicalText = true
 
 	if err = doc.WriteToFile(lpiName); err != nil {
-		panic(err)
+		msg.Err("❌ Failed to write .lpi file: %v", err)
 	}
 }
 
@@ -111,12 +111,12 @@ func updateLibraryPathProject(dprojName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(dprojName)
 	if os.IsNotExist(err) || info.IsDir() {
-		msg.Err(".dproj not found.")
+		msg.Err("❌ .dproj not found.")
 		return
 	}
 	err = doc.ReadFromFile(dprojName)
 	if err != nil {
-		msg.Err("Error on read dproj: %s", err)
+		msg.Err("❌ Error on read dproj: %s", err)
 		return
 	}
 	root := doc.Root()
@@ -142,7 +142,7 @@ func updateLibraryPathProject(dprojName string) {
 	doc.WriteSettings.CanonicalText = true
 
 	if err = doc.WriteToFile(dprojName); err != nil {
-		panic(err)
+		msg.Err("❌ Failed to write .dproj file: %v", err)
 	}
 }
 
@@ -161,7 +161,8 @@ func GetProjectNames(pkg *domain.Package) []string {
 	} else {
 		files, err := os.ReadDir(env.GetCurrentDir())
 		if err != nil {
-			panic(err)
+			msg.Err("❌ Failed to read directory: %v", err)
+			return result
 		}
 
 		for _, file := range files {
@@ -178,7 +179,8 @@ func GetProjectNames(pkg *domain.Package) []string {
 func isLazarus() bool {
 	files, err := os.ReadDir(env.GetCurrentDir())
 	if err != nil {
-		panic(err)
+		msg.Debug("⚠️ Failed to check for Lazarus project: %v", err)
+		return false
 	}
 
 	for _, file := range files {

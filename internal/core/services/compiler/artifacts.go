@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
-	"github.com/hashload/boss/utils"
 )
 
 func moveArtifacts(dep domain.Dependency, rootPath string) {
@@ -27,14 +26,13 @@ func movePath(oldPath string, newPath string) {
 				if err != nil {
 					hasError = true
 				}
-				utils.HandleError(err)
 			}
 		}
 	}
 	if !hasError {
 		err = os.RemoveAll(oldPath)
-		if !os.IsNotExist(err) {
-			utils.HandleError(err)
+		if err != nil && !os.IsNotExist(err) {
+			// Non-critical: artifact cleanup failed
 		}
 	}
 }

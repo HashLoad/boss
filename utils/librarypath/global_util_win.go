@@ -11,7 +11,6 @@ import (
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 	"golang.org/x/sys/windows/registry"
 
 	bossRegistry "github.com/hashload/boss/internal/adapters/secondary/registry"
@@ -46,7 +45,10 @@ func updateGlobalLibraryPath() {
 
 	for _, platform := range platforms {
 		delphiPlatform, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library\`+platform, registry.ALL_ACCESS)
-		utils.HandleError(err)
+		if err != nil {
+			msg.Debug("⚠️ Failed to open platform %s registry key: %v", platform, err)
+			continue
+		}
 		paths, _, err := delphiPlatform.GetStringValue(SearchPathRegistry)
 		if err != nil {
 			msg.Debug("⚠️ Failed to update library path from platform %s with delphi %s", platform, ideVersion)
@@ -57,7 +59,9 @@ func updateGlobalLibraryPath() {
 		newSplitPaths := GetNewPaths(splitPaths, true, env.GetCurrentDir())
 		newPaths := strings.Join(newSplitPaths, ";")
 		err = delphiPlatform.SetStringValue(SearchPathRegistry, newPaths)
-		utils.HandleError(err)
+		if err != nil {
+			msg.Debug("⚠️ Failed to set search path for platform %s: %v", platform, err)
+		}
 	}
 
 }
@@ -87,7 +91,10 @@ func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 	}
 	for _, platform := range platforms {
 		delphiPlatform, err := registry.OpenKey(registry.CURRENT_USER, consts.RegistryBasePath+ideVersion+`\Library\`+platform, registry.ALL_ACCESS)
-		utils.HandleError(err)
+		if err != nil {
+			msg.Debug("⚠️ Failed to open platform %s registry key: %v", platform, err)
+			continue
+		}
 		paths, _, err := delphiPlatform.GetStringValue(BrowsingPathRegistry)
 		if err != nil {
 			msg.Debug("⚠️ Failed to update library path from platform %s with delphi %s", platform, ideVersion)
@@ -99,6 +106,8 @@ func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 		newSplitPaths := GetNewBrowsingPaths(splitPaths, false, rootPath, setReadOnly)
 		newPaths := strings.Join(newSplitPaths, ";")
 		err = delphiPlatform.SetStringValue(BrowsingPathRegistry, newPaths)
-		utils.HandleError(err)
+		if err != nil {
+			msg.Debug("⚠️ Failed to set browsing path for platform %s: %v", platform, err)
+		}
 	}
 }

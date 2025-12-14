@@ -17,7 +17,6 @@ import (
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 )
 
 // one sets the internal refresh rate to 5
@@ -29,9 +28,8 @@ func one() {
 func two() {
 	oldPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDirOld+env.HashDelphiPath())
 	newPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDir+env.HashDelphiPath())
-	err := os.Rename(oldPath, newPath)
-	if !os.IsNotExist(err) {
-		utils.HandleError(err)
+	if err := os.Rename(oldPath, newPath); err != nil && !os.IsNotExist(err) {
+		msg.Warn("⚠️ Migration 2: could not rename internal directory: %v", err)
 	}
 }
 
@@ -43,8 +41,9 @@ func three() {
 
 // six removes the internal global directory
 func six() {
-	err := os.RemoveAll(env.GetInternalGlobalDir())
-	utils.HandleError(err)
+	if err := os.RemoveAll(env.GetInternalGlobalDir()); err != nil {
+		msg.Warn("⚠️ Migration 6: could not remove internal global directory: %v", err)
+	}
 }
 
 // seven migrates the auth configuration
@@ -54,12 +53,18 @@ func seven() {
 		return
 	}
 	file, err := os.Open(bossCfg)
-	utils.HandleError(err)
+	if err != nil {
+		msg.Warn("⚠️ Migration 7: could not open config file: %v", err)
+		return
+	}
+	defer file.Close()
 
 	data := map[string]any{}
 
-	err = json.NewDecoder(file).Decode(&data)
-	utils.HandleError(err)
+	if err := json.NewDecoder(file).Decode(&data); err != nil {
+		msg.Warn("⚠️ Migration 7: could not decode config: %v", err)
+		return
+	}
 
 	auth, found := data["auth"].(map[string]any)
 	if !found {
@@ -74,19 +79,25 @@ func seven() {
 
 		if user, found := authMap["x"]; found {
 			us, err := oldDecrypt(user)
-			utils.HandleErrorFatal(err)
+			if err != nil {
+				msg.Die("❌ Migration 7: critical - failed to decrypt user for %s: %v", key, err)
+			}
 			env.GlobalConfiguration().Auth[key].SetUser(us)
 		}
 
 		if pass, found := authMap["y"]; found {
 			ps, err := oldDecrypt(pass)
-			utils.HandleErrorFatal(err)
+			if err != nil {
+				msg.Die("❌ Migration 7: critical - failed to decrypt password for %s: %v", key, err)
+			}
 			env.GlobalConfiguration().Auth[key].SetPass(ps)
 		}
 
 		if passPhrase, found := authMap["z"]; found {
 			pp, err := oldDecrypt(passPhrase)
-			utils.HandleErrorFatal(err)
+			if err != nil {
+				msg.Die("❌ Migration 7: critical - failed to decrypt passphrase for %s: %v", key, err)
+			}
 			env.GlobalConfiguration().Auth[key].SetPassPhrase(pp)
 		}
 	}
@@ -101,8 +112,9 @@ func cleanup() {
 		return
 	}
 
-	err := os.Remove(filepath.Join(modulesDir, consts.FilePackageLock))
-	utils.HandleError(err)
+	if err := os.Remove(filepath.Join(modulesDir, consts.FilePackageLock)); err != nil && !os.IsNotExist(err) {
+		msg.Debug("Cleanup: could not remove lock file: %v", err)
+	}
 	modules, err := domain.LoadPackage(false)
 	if err != nil {
 		return

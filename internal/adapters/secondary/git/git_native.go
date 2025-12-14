@@ -13,7 +13,6 @@ import (
 	"github.com/hashload/boss/internal/core/services/paths"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 )
 
 func checkHasGitClient() {
@@ -50,12 +49,12 @@ func doClone(dep domain.Dependency) error {
 	dir := "--separate-git-dir=" + filepath.Join(env.GetCacheDir(), dep.HashName())
 
 	err := os.RemoveAll(dirModule)
-	if !os.IsNotExist(err) {
-		utils.HandleError(err)
+	if err != nil && !os.IsNotExist(err) {
+		msg.Debug("Failed to remove module directory: %v", err)
 	}
 	err = os.Remove(dirModule)
-	if !os.IsNotExist(err) {
-		utils.HandleError(err)
+	if err != nil && !os.IsNotExist(err) {
+		msg.Debug("Failed to remove module file: %v", err)
 	}
 
 	cmd := exec.Command("git", "clone", dir, dep.GetURL(), dirModule)
@@ -84,7 +83,9 @@ func getWrapperFetch(dep domain.Dependency) error {
 
 	if _, err := os.Stat(dirModule); os.IsNotExist(err) {
 		err = os.MkdirAll(dirModule, 0600)
-		utils.HandleError(err)
+		if err != nil {
+			return fmt.Errorf("failed to create module directory: %w", err)
+		}
 	}
 
 	writeDotGitFile(dep)

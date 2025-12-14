@@ -25,7 +25,7 @@ func HashDir(dir string) string {
 	var finalHash = "b:"
 	err = filepath.Walk(dir, func(path string, _ os.FileInfo, err error) error {
 		if err != nil && !os.IsNotExist(err) {
-			msg.Warn("Failed to read file %s", path)
+			msg.Warn("⚠️ Failed to read file %s", path)
 			return nil
 		}
 
@@ -39,7 +39,7 @@ func HashDir(dir string) string {
 		return nil
 	})
 	if err != nil {
-		os.Exit(1)
+		msg.Die("❌ Failed to hash directory: %v", err)
 	}
 	c := []byte(finalHash)
 	m := hashByte(&c)

@@ -58,7 +58,9 @@ func removeOldWithFS(parentPackage *Package, filesystem infra.FileSystem) {
 	newFileName := filepath.Join(filepath.Dir(parentPackage.fileName), consts.FilePackageLock)
 	if filesystem.Exists(oldFileName) {
 		err := filesystem.Rename(oldFileName, newFileName)
-		utils.HandleError(err)
+		if err != nil {
+			msg.Warn("⚠️ Failed to rename old lock file: %v", err)
+		}
 	}
 }
 

@@ -11,7 +11,6 @@ import (
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/dcp"
 )
 
@@ -135,10 +134,13 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	if tracker == nil || !tracker.IsEnabled() {
 		msg.Info("  - Success!")
 	}
-	err = os.Remove(buildLog)
-	utils.HandleError(err)
-	err = os.Remove(buildBat)
-	utils.HandleError(err)
+
+	if err := os.Remove(buildLog); err != nil {
+		msg.Debug("Could not remove build log %s: %v", buildLog, err)
+	}
+	if err := os.Remove(buildBat); err != nil {
+		msg.Debug("Could not remove build script %s: %v", buildBat, err)
+	}
 
 	return true
 }
