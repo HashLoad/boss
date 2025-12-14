@@ -1,3 +1,4 @@
+// Package ports defines port interfaces for hexagonal architecture.
 package ports
 
 // Registry defines the contract for system registry operations.

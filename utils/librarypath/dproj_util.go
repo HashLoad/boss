@@ -1,3 +1,5 @@
+// Package librarypath provides utilities for manipulating Delphi .dproj files.
+// This file contains XML manipulation functions for updating library paths.
 package librarypath
 
 import (

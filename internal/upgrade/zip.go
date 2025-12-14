@@ -1,3 +1,5 @@
+// Package upgrade handles ZIP and TAR.GZ archive extraction for Boss updates.
+// This file provides utilities for reading files from compressed archives.
 package upgrade
 
 import (

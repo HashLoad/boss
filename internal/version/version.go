@@ -1,3 +1,5 @@
+// Package version provides version information for the Boss CLI.
+// Version information is embedded at build time via ldflags.
 package version
 
 import (

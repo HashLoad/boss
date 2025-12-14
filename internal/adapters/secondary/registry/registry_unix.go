@@ -1,6 +1,7 @@
 //go:build !windows
 // +build !windows
 
+// Package registryadapter provides Unix/Linux stub implementations for registry operations.
 package registryadapter
 
 import "github.com/hashload/boss/pkg/msg"

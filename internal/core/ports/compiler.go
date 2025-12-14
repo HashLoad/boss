@@ -1,3 +1,5 @@
+// Package ports defines interfaces (ports) for the hexagonal architecture.
+// These ports are implemented by adapters in the infrastructure layer.
 package ports
 
 import "github.com/hashload/boss/internal/core/domain"

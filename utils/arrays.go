@@ -1,3 +1,5 @@
+// Package utils provides general utility functions used throughout Boss.
+// It includes array manipulation, string operations, and helper functions.
 package utils
 
 import "strings"

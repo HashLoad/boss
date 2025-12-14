@@ -1,3 +1,5 @@
+// Package registryadapter provides Windows registry integration for detecting Delphi installations.
+// It queries the Windows registry to find installed Delphi versions and their paths.
 package registryadapter
 
 import (

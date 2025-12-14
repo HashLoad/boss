@@ -1,5 +1,5 @@
-// Package lock provides services for managing package lock files.
-// It contains business logic that was previously mixed with domain entities.
+// Package lock provides functionality for managing package lock files (boss.lock.json).
+// It tracks installed dependencies and their versions to ensure consistent installations.
 package lock
 
 import (

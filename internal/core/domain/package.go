@@ -1,3 +1,5 @@
+// Package domain contains the core business entities for Boss dependency manager.
+// It defines Package, Dependency, Lock file structures and their associated operations.
 package domain
 
 import (

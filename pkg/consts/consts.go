@@ -111,10 +111,12 @@ func (p Platform) IsValid() bool {
 	return false
 }
 
+// DefaultPlatform returns the default compilation platform (Win32).
 func DefaultPlatform() Platform {
 	return PlatformWin32
 }
 
+// DefaultPaths returns the default library paths used by Boss.
 func DefaultPaths() []string {
 	return []string{BplFolder, DcuFolder, DcpFolder, BinFolder}
 }

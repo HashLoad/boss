@@ -1,3 +1,4 @@
+// Package installer provides utility functions for dependency management.
 package installer
 
 import (

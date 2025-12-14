@@ -1,3 +1,4 @@
+// Package ports defines port interfaces for dependency management.
 package ports
 
 import "github.com/hashload/boss/internal/core/domain"

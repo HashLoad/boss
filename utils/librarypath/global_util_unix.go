@@ -1,6 +1,7 @@
 //go:build !windows
 // +build !windows
 
+// Package librarypath provides Unix/Linux stub implementations for library path management.
 package librarypath
 
 import (

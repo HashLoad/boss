@@ -1,3 +1,5 @@
+// Package crypto provides encryption and decryption utilities using AES.
+// It uses machine ID as a key for encrypting sensitive configuration data.
 package crypto
 
 import (

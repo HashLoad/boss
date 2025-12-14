@@ -1,4 +1,5 @@
-// Package cache provides services for managing repository cache information.
+// Package cache provides caching functionality for repository information.
+// It stores and retrieves repository metadata to avoid repeated network requests.
 package cache
 
 import (

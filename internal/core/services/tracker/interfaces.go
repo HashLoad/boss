@@ -1,3 +1,4 @@
+// Package tracker provides progress tracking interfaces.
 package tracker
 
 // Tracker defines the interface for progress tracking.

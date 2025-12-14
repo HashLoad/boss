@@ -1,3 +1,4 @@
+// Package installer provides progress tracking for installations.
 package installer
 
 import (

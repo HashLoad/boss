@@ -1,6 +1,7 @@
 //go:build windows
 // +build windows
 
+// Package registryadapter provides Windows registry access for Delphi detection.
 package registryadapter
 
 import (

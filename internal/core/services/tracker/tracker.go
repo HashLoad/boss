@@ -1,5 +1,5 @@
-// Package tracker provides a generic progress tracking system for terminal UI.
-// It follows the DRY principle by providing a reusable base implementation.
+// Package tracker provides progress tracking functionality for long-running operations.
+// It displays real-time status updates for dependency installations and builds.
 package tracker
 
 import (
@@ -209,12 +209,6 @@ func (bt *BaseTracker[S]) formatStatus(progress *ItemProgress[S]) string {
 	}
 
 	name := pterm.Bold.Sprint(progress.Name)
-
-	// Use fmt.Sprintf with width specifier instead of manual padding
-	padding := NamePadding - len(progress.Name)
-	if padding < 1 {
-		padding = 1
-	}
 
 	if progress.Message != "" {
 		return fmt.Sprintf("%s %-*s%s %s",

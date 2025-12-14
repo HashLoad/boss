@@ -1,6 +1,7 @@
 //go:build windows
 // +build windows
 
+// Package librarypath provides Windows-specific library path management.
 package librarypath
 
 import (

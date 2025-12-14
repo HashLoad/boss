@@ -1,3 +1,4 @@
+// Package utils provides hashing utilities for directory and file comparison.
 package utils
 
 import (

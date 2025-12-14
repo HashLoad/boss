@@ -1,3 +1,5 @@
+// Package dcc32 provides utilities for locating the Delphi command-line compiler (dcc32.exe).
+// It searches the system PATH for installed Delphi compilers.
 package dcc32
 
 import (

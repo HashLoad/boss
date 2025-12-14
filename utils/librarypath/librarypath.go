@@ -1,3 +1,5 @@
+// Package librarypath provides utilities for managing Delphi library paths.
+// It updates .dproj files with dependency paths and manages global browsing paths.
 package librarypath
 
 import (

@@ -1,3 +1,5 @@
+// Package upgrade provides functionality for self-updating the Boss CLI.
+// It downloads the latest release from GitHub and replaces the running executable.
 package upgrade
 
 import (

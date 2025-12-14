@@ -1,3 +1,5 @@
+// Package dcp provides mapping utilities for DCP require clauses.
+// This file handles the formatting of requires statements in Delphi package files.
 package dcp
 
 import (

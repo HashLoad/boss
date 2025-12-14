@@ -1,3 +1,5 @@
+// Package upgrade provides GitHub API integration for fetching Boss releases.
+// This file handles release discovery, asset filtering, and download.
 package upgrade
 
 import (
