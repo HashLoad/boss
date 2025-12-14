@@ -1,3 +1,4 @@
+// Package config provides Git configuration commands.
 package config
 
 import (

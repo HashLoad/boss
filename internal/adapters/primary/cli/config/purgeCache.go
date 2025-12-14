@@ -1,3 +1,4 @@
+// Package config provides cache management commands.
 package config
 
 import (

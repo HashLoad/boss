@@ -1,3 +1,4 @@
+// Package cli provides command-line interface implementation for Boss.
 package cli
 
 import (
@@ -128,11 +129,12 @@ func printSingleDependency(
 
 // isOutdated checks if the dependency is outdated
 func isOutdated(dependency domain.Dependency, version string) (dependencyStatus, string) {
-	installer.GetDependency(dependency)
+	if err := installer.GetDependency(dependency); err != nil {
+		return updated, ""
+	}
 	cacheService := cache.NewService(filesystem.NewOSFileSystem())
 	info, err := cacheService.LoadRepositoryData(dependency.HashName())
 	if err != nil {
-		// Cannot determine if outdated without cache data
 		return updated, ""
 	}
 	//TODO: Check if the branch is outdated by comparing the hash

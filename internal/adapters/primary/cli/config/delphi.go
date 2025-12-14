@@ -1,3 +1,4 @@
+// Package config provides configuration commands for Boss.
 package config
 
 import (

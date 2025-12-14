@@ -1,3 +1,5 @@
+// Package main is the entry point for the Boss dependency manager CLI.
+// Boss is a dependency manager for Delphi projects, similar to npm for JavaScript.
 package main
 
 import (

@@ -1,3 +1,4 @@
+// Package cli provides Boss command-line interface.
 package cli
 
 import (

@@ -1,3 +1,5 @@
+// Package cli provides the command-line interface for Boss package manager.
+// It implements commands for dependency management, build operations, and configuration.
 package cli
 
 import (
