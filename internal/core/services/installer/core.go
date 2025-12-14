@@ -263,7 +263,11 @@ func (ic *installContext) ensureSingleModule(pkg *domain.Package, dep domain.Dep
 }
 
 func (ic *installContext) cloneDependency(dep domain.Dependency, depName string) error {
-	ic.reportStatus(depName, "cloning", "🧬 Cloning")
+	if !ic.progress.IsEnabled() {
+		msg.Info("🧬 Cloning %s", depName)
+	} else {
+		ic.reportStatus(depName, "cloning", "🧬 Cloning")
+	}
 
 	err := GetDependencyWithProgress(dep, ic.progress)
 	if err != nil {
