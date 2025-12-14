@@ -60,7 +60,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 		attribute := item.SelectAttr(consts.XMLNameAttribute)
 		compilerOptions = item.SelectElement(consts.XMLTagNameCompilerOptions)
 		if compilerOptions != nil {
-			msg.Info("  🔄 Updating %s mode", attribute.Value)
+			msg.Info("  🔁 Updating %s mode", attribute.Value)
 			processCompilerOptions(compilerOptions)
 		}
 	}

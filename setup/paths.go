@@ -65,7 +65,7 @@ func InitializePath() {
 	var needAdd = false
 	currentPath, err := os.Getwd()
 	if err != nil {
-		msg.Die("Failed to load current working directory \n %s", err.Error())
+		msg.Die("❌ Failed to load current working directory \n %s", err.Error())
 		return
 	}
 
@@ -75,7 +75,7 @@ func InitializePath() {
 		if !utils.Contains(splitPath, path) {
 			splitPath = append(splitPath, path)
 			needAdd = true
-			msg.Info("Adding path %s", path)
+			msg.Info("📄 Adding path %s", path)
 		}
 	}
 
@@ -84,11 +84,11 @@ func InitializePath() {
 		currentPathEnv := os.Getenv(PATH)
 		err := os.Setenv(PATH, currentPathEnv+";"+newPath)
 		if err != nil {
-			msg.Die("Failed to update PATH \n %s", err.Error())
+			msg.Die("❌ Failed to update PATH \n %s", err.Error())
 			return
 		}
 
-		msg.Warn("Please restart your console after complete.")
+		msg.Warn("⚠️ Please restart your console after complete.")
 
 		if isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd()) {
 			msg.Info(BuildMessage(paths))

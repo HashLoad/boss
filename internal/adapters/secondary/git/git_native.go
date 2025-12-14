@@ -1,3 +1,5 @@
+// Package gitadapter provides native Git command execution.
+// This file implements Git clone/update operations using system Git commands.
 package gitadapter
 
 import (
@@ -10,7 +12,6 @@ import (
 	git2 "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashload/boss/internal/core/domain"
-	"github.com/hashload/boss/internal/core/services/paths"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 )
@@ -19,13 +20,13 @@ func checkHasGitClient() {
 	command := exec.Command("where", "git")
 	_, err := command.Output()
 	if err != nil {
-		msg.Die("Git.exe not found in path")
+		msg.Die("❌ 'git.exe' not found in path")
 	}
 }
 
 // CloneCacheNative clones the dependency repository to the cache using the native git client.
 func CloneCacheNative(dep domain.Dependency) (*git2.Repository, error) {
-	msg.Info("Downloading dependency %s", dep.Repository)
+	msg.Info("📥 Downloading dependency %s", dep.Repository)
 	if err := doClone(dep); err != nil {
 		return nil, err
 	}
@@ -42,8 +43,6 @@ func UpdateCacheNative(dep domain.Dependency) (*git2.Repository, error) {
 
 func doClone(dep domain.Dependency) error {
 	checkHasGitClient()
-
-	paths.EnsureCacheDir(dep)
 
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
 	dir := "--separate-git-dir=" + filepath.Join(env.GetCacheDir(), dep.HashName())

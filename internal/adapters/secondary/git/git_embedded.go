@@ -1,3 +1,5 @@
+// Package gitadapter provides embedded Git operations using go-git library.
+// This file implements Git clone/update operations without requiring native Git installation.
 package gitadapter
 
 import (
@@ -19,12 +21,12 @@ import (
 )
 
 // CloneCacheEmbedded clones the dependency repository to the cache using the embedded git implementation.
-func CloneCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
-	msg.Info("Downloading dependency %s", dep.Repository)
-	storageCache := makeStorageCache(dep)
-	worktreeFileSystem := createWorktreeFs(dep)
+func CloneCacheEmbedded(config env.ConfigProvider, dep domain.Dependency) (*git.Repository, error) {
+	msg.Info("📥 Downloading dependency %s", dep.Repository)
+	storageCache := makeStorageCache(config, dep)
+	worktreeFileSystem := createWorktreeFs(config, dep)
 	url := dep.GetURL()
-	auth := env.GlobalConfiguration().GetAuth(dep.GetURLPrefix())
+	auth := config.GetAuth(dep.GetURLPrefix())
 
 	repository, err := git.Clone(storageCache, worktreeFileSystem, &git.CloneOptions{
 		URL:  url,
@@ -35,22 +37,22 @@ func CloneCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
 		_ = os.RemoveAll(filepath.Join(env.GetCacheDir(), dep.HashName()))
 		return nil, err
 	}
-	if err := initSubmodules(dep, repository); err != nil {
+	if err := initSubmodules(config, dep, repository); err != nil {
 		return nil, err
 	}
 	return repository, nil
 }
 
 // UpdateCacheEmbedded updates the dependency repository in the cache using the embedded git implementation.
-func UpdateCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
-	storageCache := makeStorageCache(dep)
-	wtFs := createWorktreeFs(dep)
+func UpdateCacheEmbedded(config env.ConfigProvider, dep domain.Dependency) (*git.Repository, error) {
+	storageCache := makeStorageCache(config, dep)
+	wtFs := createWorktreeFs(config, dep)
 
 	repository, err := git.Open(storageCache, wtFs)
 	if err != nil {
-		msg.Warn("Error to open cache of %s: %s", dep.Repository, err)
+		msg.Warn("⚠️ Error to open cache of %s: %s", dep.Repository, err)
 		var errRefresh error
-		repository, errRefresh = refreshCopy(dep)
+		repository, errRefresh = refreshCopy(config, dep)
 		if errRefresh != nil {
 			return nil, errRefresh
 		}
@@ -63,30 +65,30 @@ func UpdateCacheEmbedded(dep domain.Dependency) (*git.Repository, error) {
 
 	err = repository.Fetch(&git.FetchOptions{
 		Force: true,
-		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix())})
+		Auth:  config.GetAuth(dep.GetURLPrefix())})
 	if err != nil && err.Error() != "already up-to-date" {
 		msg.Debug("Error to fetch repository of %s: %s", dep.Repository, err)
 	}
-	if err := initSubmodules(dep, repository); err != nil {
+	if err := initSubmodules(config, dep, repository); err != nil {
 		return nil, err
 	}
 	return repository, nil
 }
 
-func refreshCopy(dep domain.Dependency) (*git.Repository, error) {
+func refreshCopy(config env.ConfigProvider, dep domain.Dependency) (*git.Repository, error) {
 	dir := filepath.Join(env.GetCacheDir(), dep.HashName())
 	err := os.RemoveAll(dir)
 	if err == nil {
-		return CloneCacheEmbedded(dep)
+		return CloneCacheEmbedded(config, dep)
 	}
 
-	msg.Err("Error on retry get refresh copy: %s", err)
+	msg.Err("❌ Error on retry get refresh copy: %s", err)
 
 	return nil, err
 }
 
-func makeStorageCache(dep domain.Dependency) storage.Storer {
-	paths.EnsureCacheDir(dep)
+func makeStorageCache(config env.ConfigProvider, dep domain.Dependency) storage.Storer {
+	paths.EnsureCacheDir(config, dep)
 	dir := filepath.Join(env.GetCacheDir(), dep.HashName())
 	fs := osfs.New(dir)
 
@@ -94,14 +96,14 @@ func makeStorageCache(dep domain.Dependency) storage.Storer {
 	return newStorage
 }
 
-func createWorktreeFs(dep domain.Dependency) billy.Filesystem {
-	paths.EnsureCacheDir(dep)
+func createWorktreeFs(config env.ConfigProvider, dep domain.Dependency) billy.Filesystem {
+	paths.EnsureCacheDir(config, dep)
 	fs := memfs.New()
 
 	return fs
 }
 
-func CheckoutEmbedded(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
+func CheckoutEmbedded(_ env.ConfigProvider, dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	repository := GetRepository(dep)
 	worktree, err := repository.Worktree()
 	if err != nil {
@@ -113,7 +115,7 @@ func CheckoutEmbedded(dep domain.Dependency, referenceName plumbing.ReferenceNam
 	})
 }
 
-func PullEmbedded(dep domain.Dependency) error {
+func PullEmbedded(config env.ConfigProvider, dep domain.Dependency) error {
 	repository := GetRepository(dep)
 	worktree, err := repository.Worktree()
 	if err != nil {
@@ -121,6 +123,6 @@ func PullEmbedded(dep domain.Dependency) error {
 	}
 	return worktree.Pull(&git.PullOptions{
 		Force: true,
-		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
+		Auth:  config.GetAuth(dep.GetURLPrefix()),
 	})
 }

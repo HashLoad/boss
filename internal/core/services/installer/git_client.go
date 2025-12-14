@@ -8,27 +8,30 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	git "github.com/hashload/boss/internal/adapters/secondary/git"
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/pkg/env"
 )
 
 // Ensure DefaultGitClient implements GitClientV2.
 var _ GitClientV2 = (*DefaultGitClient)(nil)
 
 // DefaultGitClient is the production implementation of GitClient.
-type DefaultGitClient struct{}
+type DefaultGitClient struct {
+	config env.ConfigProvider
+}
 
 // NewDefaultGitClient creates a new DefaultGitClient.
-func NewDefaultGitClient() *DefaultGitClient {
-	return &DefaultGitClient{}
+func NewDefaultGitClient(config env.ConfigProvider) *DefaultGitClient {
+	return &DefaultGitClient{config: config}
 }
 
 // CloneCache clones a dependency repository to cache.
 func (c *DefaultGitClient) CloneCache(dep domain.Dependency) (*goGit.Repository, error) {
-	return git.CloneCache(dep)
+	return git.CloneCache(c.config, dep)
 }
 
 // UpdateCache updates an existing cached repository.
 func (c *DefaultGitClient) UpdateCache(dep domain.Dependency) (*goGit.Repository, error) {
-	return git.UpdateCache(dep)
+	return git.UpdateCache(c.config, dep)
 }
 
 // GetRepository returns the repository for a dependency.
@@ -38,7 +41,7 @@ func (c *DefaultGitClient) GetRepository(dep domain.Dependency) *goGit.Repositor
 
 // GetVersions returns all version tags for a repository.
 func (c *DefaultGitClient) GetVersions(repository *goGit.Repository, dep domain.Dependency) []*plumbing.Reference {
-	return git.GetVersions(repository, dep)
+	return git.GetVersions(c.config, repository, dep)
 }
 
 // GetByTag returns a reference by tag name.

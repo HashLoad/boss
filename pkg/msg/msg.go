@@ -1,3 +1,5 @@
+// Package msg provides logging and messaging functionality with support for different log levels.
+// It handles informational messages, warnings, errors, and debug output.
 package msg
 
 import (
@@ -25,7 +27,13 @@ type Stoppable interface {
 	Stop()
 }
 
-// Messenger handles CLI output and logging
+// Messenger handles CLI output and logging.
+// For testable code, create instances with NewMessenger() and inject as dependency.
+// Package-level functions (Info, Err, Die, etc.) use the global defaultMsg instance.
+//
+// Usage patterns:
+//   - Production: Use package functions (Info, Err, etc.)
+//   - Testing: Create Messenger instance and inject to functions under test
 type Messenger struct {
 	sync.Mutex
 	Stdout          io.Writer
@@ -52,7 +60,12 @@ func NewMessenger() *Messenger {
 	return m
 }
 
-//nolint:gochecknoglobals // This is a global variable
+// ARCHITECTURAL DEBT: Global messenger singleton
+// This global variable creates hidden dependencies and makes testing difficult.
+// However, logging is often acceptable as global state in CLI applications.
+// For testable code, consider using Messenger instances passed as dependencies.
+//
+//nolint:gochecknoglobals // Global logger is acceptable for CLI apps
 var defaultMsg = NewMessenger()
 
 // Die prints an error message and exits the program

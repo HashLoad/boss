@@ -69,7 +69,7 @@ func Decrypt(key []byte, securemess string) (string, error) {
 func GetMachineID() string {
 	id, err := machineid.ID()
 	if err != nil {
-		msg.Err("Error on get machine ID")
+		msg.Err("❌ Error on get machine ID")
 		id = "12345678901234567890123456789012"
 	}
 	return id
@@ -89,7 +89,7 @@ func Md5MachineID() string {
 	//nolint:gosec // MD5 is used for hash comparison
 	hash := md5.New()
 	if _, err := io.WriteString(hash, GetMachineID()); err != nil {
-		msg.Warn("Failed on  write machine id to hash")
+		msg.Warn("⚠️ Failed on write machine id to hash")
 	}
 	return hex.EncodeToString(hash.Sum(nil))
 }

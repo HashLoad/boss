@@ -16,7 +16,7 @@ const (
 
 var testStatusConfig = StatusConfig[TestStatus]{
 	StatusPending: {Icon: "⏳", StatusText: "Pending"},
-	StatusRunning: {Icon: "🔄", StatusText: "Running"},
+	StatusRunning: {Icon: "🔁", StatusText: "Running"},
 	StatusDone:    {Icon: "✓", StatusText: "Done"},
 	StatusError:   {Icon: "✗", StatusText: "Error"},
 }

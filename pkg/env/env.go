@@ -1,3 +1,5 @@
+// Package env provides environment configuration and path management for Boss.
+// It handles global/local mode switching, directory paths, and configuration access.
 package env
 
 import (
@@ -14,7 +16,11 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-//nolint:gochecknoglobals //TODO: Refactor this
+// Global configuration management
+// These variables are initialized once at application startup and passed
+// through dependency injection to all components via ConfigProvider interface.
+//
+//nolint:gochecknoglobals // Application-level config, initialized once
 var (
 	global                 bool
 	internal               = false
@@ -41,7 +47,9 @@ func GetGlobal() bool {
 	return global
 }
 
-// GlobalConfiguration returns the global configuration
+// GlobalConfiguration returns the global configuration.
+// This is now properly injected as ConfigProvider throughout the application.
+// Direct calls to this function are only at the application entry points.
 func GlobalConfiguration() *Configuration {
 	return globalConfiguration
 }
@@ -75,7 +83,7 @@ func getwd() string {
 
 	dir, err := os.Getwd()
 	if err != nil {
-		msg.Err("Error to get paths", err)
+		msg.Err("❌ Error to get paths", err)
 		return ""
 	}
 
@@ -95,7 +103,7 @@ func GetBossHome() string {
 		systemHome, err := homedir.Dir()
 		homeDir = systemHome
 		if err != nil {
-			msg.Err("Error to get cache paths", err)
+			msg.Err("❌ Error to get cache paths", err)
 		}
 
 		homeDir = filepath.FromSlash(homeDir)

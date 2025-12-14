@@ -38,7 +38,7 @@ var dependencyStatusConfig = tracker.StatusConfig[DependencyStatus]{
 		StatusText: pterm.LightCyan("Downloading..."),
 	},
 	StatusUpdating: {
-		Icon:       pterm.LightCyan("🔄"),
+		Icon:       pterm.LightCyan("🔁"),
 		StatusText: pterm.LightCyan("Updating..."),
 	},
 	StatusChecking: {

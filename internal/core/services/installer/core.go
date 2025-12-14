@@ -26,6 +26,7 @@ import (
 )
 
 type installContext struct {
+	config           env.ConfigProvider
 	rootLocked       *domain.PackageLock
 	root             *domain.Package
 	processed        []string
@@ -38,12 +39,13 @@ type installContext struct {
 	warnings         []string
 }
 
-func newInstallContext(pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
+func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
 	fs := filesystem.NewOSFileSystem()
 	lockRepo := repository.NewFileLockRepository(fs)
 	lockSvc := lockService.NewService(lockRepo, fs)
 
 	return &installContext{
+		config:           config,
 		rootLocked:       &pkg.Lock,
 		root:             pkg,
 		useLockedVersion: options.LockedVersion,
@@ -58,13 +60,13 @@ func newInstallContext(pkg *domain.Package, options InstallOptions, progress *Pr
 }
 
 // DoInstall performs the installation of dependencies.
-func DoInstall(options InstallOptions, pkg *domain.Package) error {
+func DoInstall(config env.ConfigProvider, options InstallOptions, pkg *domain.Package) error {
 	msg.Info("🔍 Analyzing dependencies...\n")
 
 	deps := collectAllDependencies(pkg)
 
 	if len(deps) == 0 {
-		msg.Info("No dependencies to install")
+		msg.Info("📄 No dependencies to install")
 		return nil
 	}
 
@@ -76,13 +78,13 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 	} else {
 		progress = NewProgressTracker(deps)
 	}
-	installContext := newInstallContext(pkg, options, progress)
+	installContext := newInstallContext(config, pkg, options, progress)
 
-	msg.Info("📦 Installing %d dependencies:\n", len(deps))
+	msg.Info("✨ Installing %d dependencies:\n", len(deps))
 
 	if !msg.IsDebugMode() {
 		if err := progress.Start(); err != nil {
-			msg.Warn("Could not start progress tracker: %s", err)
+			msg.Warn("⚠️ Could not start progress tracker: %s", err)
 		} else {
 			msg.SetQuietMode(true)
 			msg.SetProgressTracker(progress)
@@ -105,13 +107,17 @@ func DoInstall(options InstallOptions, pkg *domain.Package) error {
 
 	pkg.Lock.CleanRemoved(dependencies)
 	pkg.Save()
-	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
+	if err := installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir()); err != nil {
+		msg.Warn("⚠️ Failed to save lock file: %v", err)
+	}
 
 	librarypath.UpdateLibraryPath(pkg)
 
 	compiler.Build(pkg, options.Compiler, options.Platform)
 	pkg.Save()
-	installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
+	if err := installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir()); err != nil {
+		msg.Warn("⚠️ Failed to save lock file: %v", err)
+	}
 
 	if len(installContext.warnings) > 0 {
 		msg.Warn("⚠️ Installation Warnings:")
@@ -219,108 +225,152 @@ func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 
 func (ic *installContext) ensureModules(pkg *domain.Package, deps []domain.Dependency) error {
 	for _, dep := range deps {
-		depName := dep.Name()
-
-		if ic.visited[depName] {
-			continue
-		}
-		ic.visited[depName] = true
-
-		ic.progress.AddDependency(depName)
-
-		if ic.shouldSkipDependency(dep) {
-			if ic.progress.IsEnabled() {
-				ic.progress.SetSkipped(depName, consts.StatusMsgAlreadyInstalled)
-			} else {
-				msg.Info("  ✅️ %s already installed", depName)
-			}
-			continue
-		}
-
-		if ic.progress.IsEnabled() {
-			ic.progress.SetCloning(depName)
-		} else {
-			msg.Info("🧬 Cloning %s...", depName)
-		}
-
-		err := GetDependencyWithProgress(dep, ic.progress)
-		if err != nil {
-			ic.progress.SetFailed(depName, err)
+		if err := ic.ensureSingleModule(pkg, dep); err != nil {
 			return err
-		}
-		repository := git.GetRepository(dep)
-
-		if ic.progress.IsEnabled() {
-			ic.progress.SetChecking(depName, consts.StatusMsgResolvingVer)
-		} else {
-			msg.Info("  🔍 Checking version for %s...", depName)
-		}
-
-		referenceName := ic.getReferenceName(pkg, dep, repository)
-
-		wt, err := repository.Worktree()
-		if err != nil {
-			ic.progress.SetFailed(depName, err)
-			return err
-		}
-
-		status, err := wt.Status()
-		if err != nil {
-			ic.progress.SetFailed(depName, err)
-			return err
-		}
-
-		head, er := repository.Head()
-		if er != nil {
-			ic.progress.SetFailed(depName, er)
-			return er
-		}
-
-		currentRef := head.Name()
-
-		needsUpdate := ic.lockSvc.NeedUpdate(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
-		if !needsUpdate && status.IsClean() && referenceName == currentRef {
-			if ic.progress.IsEnabled() {
-				ic.progress.SetSkipped(depName, consts.StatusMsgUpToDate)
-			} else {
-				msg.Info("  ✅️ %s already updated", depName)
-			}
-			continue
-		}
-
-		if ic.progress.IsEnabled() {
-			ic.progress.SetInstalling(depName)
-		} else {
-			msg.Info("  🔥 Installing %s...", depName)
-		}
-
-		if err := ic.checkoutAndUpdate(dep, repository, referenceName); err != nil {
-			ic.progress.SetFailed(depName, err)
-			return err
-		}
-
-		warning, err := ic.verifyDependencyCompatibility(dep)
-		if err != nil {
-			ic.progress.SetFailed(depName, err)
-			return err
-		}
-
-		if warning != "" {
-			if ic.progress.IsEnabled() {
-				ic.progress.SetWarning(depName, warning)
-			} else {
-				msg.Warn("  ⚠️  %s: %s", depName, warning)
-			}
-			ic.addWarning(fmt.Sprintf("%s: %s", depName, warning))
-		} else {
-			if ic.progress.IsEnabled() {
-				ic.progress.SetCompleted(depName)
-			} else {
-				msg.Info("  ✅️ %s installed successfully", depName)
-			}
 		}
 	}
 	return nil
+}
+
+func (ic *installContext) ensureSingleModule(pkg *domain.Package, dep domain.Dependency) error {
+	depName := dep.Name()
+
+	if ic.visited[depName] {
+		return nil
+	}
+	ic.visited[depName] = true
+	ic.progress.AddDependency(depName)
+
+	if ic.shouldSkipDependency(dep) {
+		ic.reportSkipped(depName, consts.StatusMsgAlreadyInstalled)
+		return nil
+	}
+
+	if err := ic.cloneDependency(dep, depName); err != nil {
+		return err
+	}
+
+	repository := git.GetRepository(dep)
+	referenceName := ic.getReferenceName(pkg, dep, repository)
+
+	if skip, err := ic.checkIfUpToDate(dep, depName, repository, referenceName); err != nil {
+		return err
+	} else if skip {
+		return nil
+	}
+
+	return ic.installDependency(dep, depName, repository, referenceName)
+}
+
+func (ic *installContext) cloneDependency(dep domain.Dependency, depName string) error {
+	ic.reportStatus(depName, "cloning", "🧬 Cloning")
+
+	err := GetDependencyWithProgress(dep, ic.progress)
+	if err != nil {
+		ic.progress.SetFailed(depName, err)
+		return err
+	}
+	return nil
+}
+
+func (ic *installContext) checkIfUpToDate(
+	dep domain.Dependency,
+	depName string,
+	repository *goGit.Repository,
+	referenceName plumbing.ReferenceName,
+) (bool, error) {
+	ic.reportStatus(depName, "checking", "🔍 Checking version for")
+
+	wt, err := repository.Worktree()
+	if err != nil {
+		ic.progress.SetFailed(depName, err)
+		return false, err
+	}
+
+	status, err := wt.Status()
+	if err != nil {
+		ic.progress.SetFailed(depName, err)
+		return false, err
+	}
+
+	head, err := repository.Head()
+	if err != nil {
+		ic.progress.SetFailed(depName, err)
+		return false, err
+	}
+
+	currentRef := head.Name()
+	needsUpdate := ic.lockSvc.NeedUpdate(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
+
+	if !needsUpdate && status.IsClean() && referenceName == currentRef {
+		ic.reportSkipped(depName, consts.StatusMsgUpToDate)
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (ic *installContext) installDependency(
+	dep domain.Dependency,
+	depName string,
+	repository *goGit.Repository,
+	referenceName plumbing.ReferenceName,
+) error {
+	ic.reportStatus(depName, "installing", "🔥 Installing")
+
+	if err := ic.checkoutAndUpdate(dep, repository, referenceName); err != nil {
+		ic.progress.SetFailed(depName, err)
+		return err
+	}
+
+	warning, err := ic.verifyDependencyCompatibility(dep)
+	if err != nil {
+		ic.progress.SetFailed(depName, err)
+		return err
+	}
+
+	ic.reportInstallResult(depName, warning)
+	return nil
+}
+
+func (ic *installContext) reportStatus(depName, progressStatus, infoPrefix string) {
+	if ic.progress.IsEnabled() {
+		switch progressStatus {
+		case "cloning":
+			ic.progress.SetCloning(depName)
+		case "checking":
+			ic.progress.SetChecking(depName, consts.StatusMsgResolvingVer)
+		case "installing":
+			ic.progress.SetInstalling(depName)
+		}
+	} else {
+		msg.Info("  %s %s...", infoPrefix, depName)
+	}
+}
+
+func (ic *installContext) reportSkipped(depName, reason string) {
+	if ic.progress.IsEnabled() {
+		ic.progress.SetSkipped(depName, reason)
+	} else {
+		msg.Info("  ✅️ %s already installed", depName)
+	}
+}
+
+func (ic *installContext) reportInstallResult(depName, warning string) {
+	if warning != "" {
+		if ic.progress.IsEnabled() {
+			ic.progress.SetWarning(depName, warning)
+		} else {
+			msg.Warn("  ⚠️ %s: %s", depName, warning)
+		}
+		ic.addWarning(fmt.Sprintf("%s: %s", depName, warning))
+	} else {
+		if ic.progress.IsEnabled() {
+			ic.progress.SetCompleted(depName)
+		} else {
+			msg.Info("  ✅️ %s installed successfully", depName)
+		}
+	}
 }
 
 func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
@@ -383,7 +433,7 @@ func (ic *installContext) getReferenceName(
 			}
 			return plumbing.NewBranchReferenceName(mainBranchReference.Name)
 		}
-		msg.Die("Could not find any suitable version or branch for dependency '%s'", dep.Repository)
+		msg.Die("❌ Could not find any suitable version or branch for dependency '%s'", dep.Repository)
 	}
 
 	referenceName = bestMatch.Name()
@@ -402,8 +452,7 @@ func (ic *installContext) checkoutAndUpdate(
 	if !ic.progress.IsEnabled() {
 		msg.Debug("  🔍 Checking out %s to %s", dep.Name(), referenceName.Short())
 	}
-
-	err := git.Checkout(dep, referenceName)
+	err := git.Checkout(ic.config, dep, referenceName)
 
 	ic.lockSvc.AddDependency(ic.rootLocked, dep, referenceName.Short(), ic.modulesDir)
 
@@ -414,8 +463,7 @@ func (ic *installContext) checkoutAndUpdate(
 	if !ic.progress.IsEnabled() {
 		msg.Debug("  📥 Pulling latest changes for %s", dep.Name())
 	}
-
-	err = git.Pull(dep)
+	err = git.Pull(ic.config, dep)
 
 	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
 		warnMsg := fmt.Sprintf("Error on pull from dependency %s\n%s", dep.Repository, err)
@@ -440,7 +488,7 @@ func (ic *installContext) getVersion(
 		}
 	}
 
-	versions := git.GetVersions(repository, dep)
+	versions := git.GetVersions(ic.config, repository, dep)
 	constraints, err := ParseConstraint(dep.GetVersion())
 	if err != nil {
 		warnMsg := fmt.Sprintf("Version constraint '%s' not supported: %s", dep.GetVersion(), err)

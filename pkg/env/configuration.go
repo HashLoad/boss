@@ -15,7 +15,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// Configuration represents the global configuration for Boss
+// Configuration represents the global configuration for Boss.
+// This struct implements the ConfigProvider interface for dependency injection.
+// See pkg/env/interfaces.go for interface details.
+//
+// The configuration is loaded once at startup and injected throughout
+// the application via the ConfigProvider interface.
 type Configuration struct {
 	path                string           `json:"-"`
 	Key                 string           `json:"id"`

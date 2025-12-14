@@ -18,7 +18,7 @@ func RunCmd(name string, args ...string) {
 	cmdReader, err := cmd.StdoutPipe()
 	cmdErr, _ := cmd.StderrPipe()
 	if err != nil {
-		msg.Err("Error creating StdoutPipe for Cmd", err)
+		msg.Err("❌ Error creating StdoutPipe for Cmd", err)
 		return
 	}
 	merged := io.MultiReader(cmdReader, cmdErr)
@@ -32,13 +32,13 @@ func RunCmd(name string, args ...string) {
 
 	err = cmd.Start()
 	if err != nil {
-		msg.Err("Error starting Cmd", err)
+		msg.Err("❌ Error starting Cmd", err)
 		return
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		msg.Err("Error waiting for Cmd", err)
+		msg.Err("❌ Error waiting for Cmd", err)
 		return
 	}
 }
@@ -46,14 +46,14 @@ func RunCmd(name string, args ...string) {
 // Run executes a script defined in the package.
 func Run(args []string) {
 	if packageData, err := domain.LoadPackage(true); err != nil {
-		msg.Err(err.Error())
+		msg.Err("❌ %s", err.Error())
 	} else {
 		if packageData.Scripts == nil {
 			msg.Die(errors.New("script not exists").Error())
 		}
 
 		if command, ok := packageData.Scripts[args[0]]; !ok {
-			msg.Err(errors.New("script not exists").Error())
+			msg.Err("❌ %s", errors.New("script not exists").Error())
 		} else {
 			RunCmd(command, args[1:]...)
 		}

@@ -1,3 +1,4 @@
+// Package installer provides dependency manager implementation.
 package installer
 
 import (
@@ -18,6 +19,7 @@ var ErrRepositoryNil = errors.New("failed to clone or update repository")
 
 // DependencyManager manages dependency fetching with proper dependency injection.
 type DependencyManager struct {
+	config       env.ConfigProvider
 	gitClient    GitClient
 	cache        *DependencyCache
 	cacheDir     string
@@ -25,8 +27,9 @@ type DependencyManager struct {
 }
 
 // NewDependencyManager creates a new DependencyManager with the given dependencies.
-func NewDependencyManager(gitClient GitClient, depCache *DependencyCache, cacheService *cache.Service) *DependencyManager {
+func NewDependencyManager(config env.ConfigProvider, gitClient GitClient, depCache *DependencyCache, cacheService *cache.Service) *DependencyManager {
 	return &DependencyManager{
+		config:       config,
 		gitClient:    gitClient,
 		cache:        depCache,
 		cacheDir:     env.GetCacheDir(),
@@ -35,9 +38,10 @@ func NewDependencyManager(gitClient GitClient, depCache *DependencyCache, cacheS
 }
 
 // NewDefaultDependencyManager creates a DependencyManager with default implementations.
-func NewDefaultDependencyManager() *DependencyManager {
+func NewDefaultDependencyManager(config env.ConfigProvider) *DependencyManager {
 	return NewDependencyManager(
-		NewDefaultGitClient(),
+		config,
+		NewDefaultGitClient(config),
 		NewDependencyCache(),
 		cache.NewService(filesystem.NewOSFileSystem()),
 	)
@@ -51,22 +55,23 @@ func (dm *DependencyManager) GetDependency(dep domain.Dependency) error {
 // GetDependencyWithProgress fetches or updates a dependency with optional progress tracking.
 func (dm *DependencyManager) GetDependencyWithProgress(dep domain.Dependency, progress *ProgressTracker) error {
 	if dm.cache.IsUpdated(dep.HashName()) {
-		msg.Debug("  🍪 Using cached of %s", dep.Name())
+		msg.Debug("  🛢️ Using cached of %s", dep.Name())
 		return nil
 	}
 
 	if progress == nil || !progress.IsEnabled() {
-		msg.Info("  🔄 Updating cache of dependency %s", dep.Name())
+		msg.Info("  🔁 Updating cache of dependency %s", dep.Name())
 	} else {
 		progress.SetUpdating(dep.Name(), "")
 	}
+
 	dm.cache.MarkUpdated(dep.HashName())
 
 	var repository *goGit.Repository
 	var err error
 	if dm.hasCache(dep) {
 		if progress == nil || !progress.IsEnabled() {
-			msg.Debug("  🍪 Updating existing cache for %s", dep.Name())
+			msg.Debug("  🔁 Updating existing cache for %s", dep.Name())
 		}
 		repository, err = dm.gitClient.UpdateCache(dep)
 	} else {
@@ -87,7 +92,7 @@ func (dm *DependencyManager) GetDependencyWithProgress(dep domain.Dependency, pr
 
 	tagsShortNames := dm.gitClient.GetTagsShortName(repository)
 	if err := dm.cacheService.SaveRepositoryDetails(dep, tagsShortNames); err != nil {
-		msg.Warn("Failed to cache repository details: %v", err)
+		msg.Warn("  ⚠️ Failed to cache repository details: %v", err)
 	}
 	return nil
 }

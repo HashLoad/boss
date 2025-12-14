@@ -64,7 +64,7 @@ func BossUpgrade(preRelease bool) error {
 		return fmt.Errorf("failed to apply update: %w", err)
 	}
 
-	msg.Info("Update applied successfully to %s", *release.TagName)
+	msg.Success("✅ Update applied successfully to %s", *release.TagName)
 	return nil
 }
 

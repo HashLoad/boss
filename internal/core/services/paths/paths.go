@@ -1,3 +1,5 @@
+// Package paths provides utilities for managing file system paths used by Boss.
+// It handles cache directory creation, module directory cleaning, and artifact management.
 package paths
 
 import (
@@ -23,7 +25,7 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 	}
 
 	if cacheDirInfo != nil && !cacheDirInfo.IsDir() {
-		msg.Die("modules is not a directory")
+		msg.Die("❌ 'modules' is not a directory")
 	}
 
 	fileInfos, err := os.ReadDir(cacheDir)
@@ -58,8 +60,8 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 }
 
 // EnsureCacheDir ensures that the cache directory exists for the dependency.
-func EnsureCacheDir(dep domain.Dependency) {
-	if !env.GlobalConfiguration().GitEmbedded {
+func EnsureCacheDir(config env.ConfigProvider, dep domain.Dependency) {
+	if !config.GetGitEmbedded() {
 		return
 	}
 	cacheDir := filepath.Join(env.GetCacheDir(), dep.HashName())
@@ -69,10 +71,10 @@ func EnsureCacheDir(dep domain.Dependency) {
 		msg.Debug("Creating %s", cacheDir)
 		err = os.MkdirAll(cacheDir, os.ModeDir|0755)
 		if err != nil {
-			msg.Die("Could not create %s: %s", cacheDir, err)
+			msg.Die("❌ Could not create %s: %s", cacheDir, err)
 		}
 	} else if !fi.IsDir() {
-		msg.Die("cache is not a directory")
+		msg.Die("❌ 'cache' is not a directory")
 	}
 }
 

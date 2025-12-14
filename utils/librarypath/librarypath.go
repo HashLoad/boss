@@ -21,7 +21,7 @@ import (
 
 // UpdateLibraryPath updates the library path for the project or globally
 func UpdateLibraryPath(pkg *domain.Package) {
-	msg.Info("🔄 Updating library path...")
+	msg.Info("🔁 Updating library path...")
 	if env.GetGlobal() {
 		updateGlobalLibraryPath()
 	} else {
@@ -91,14 +91,14 @@ func setReadOnlyProperty(dir string) {
 	readFileStr := fmt.Sprintf(`attrib +r "%s" /s /d`, filepath.Join(dir, "*"))
 	err := os.WriteFile(readonlybat, []byte(readFileStr), 0600)
 	if err != nil {
-		msg.Warn("  - error on create build file")
+		msg.Warn("  ⚠️ Error on create build file")
 	}
 
 	cmd := exec.Command(readonlybat)
 
 	_, err = cmd.Output()
 	if err != nil {
-		msg.Err("  - Failed to set readonly property to folder", dir, " - ", err)
+		msg.Err("  ❌ Failed to set readonly property to folder", dir, " - ", err)
 	} else {
 		os.Remove(readonlybat)
 	}

@@ -78,27 +78,27 @@ func seven() {
 		}
 
 		if user, found := authMap["x"]; found {
-			us, err := oldDecrypt(user)
+			decryptedUser, err := oldDecrypt(user)
 			if err != nil {
 				msg.Die("❌ Migration 7: critical - failed to decrypt user for %s: %v", key, err)
 			}
-			env.GlobalConfiguration().Auth[key].SetUser(us)
+			env.GlobalConfiguration().Auth[key].SetUser(decryptedUser)
 		}
 
 		if pass, found := authMap["y"]; found {
-			ps, err := oldDecrypt(pass)
+			decryptedPassword, err := oldDecrypt(pass)
 			if err != nil {
 				msg.Die("❌ Migration 7: critical - failed to decrypt password for %s: %v", key, err)
 			}
-			env.GlobalConfiguration().Auth[key].SetPass(ps)
+			env.GlobalConfiguration().Auth[key].SetPass(decryptedPassword)
 		}
 
 		if passPhrase, found := authMap["z"]; found {
-			pp, err := oldDecrypt(passPhrase)
+			decryptedPassPhrase, err := oldDecrypt(passPhrase)
 			if err != nil {
 				msg.Die("❌ Migration 7: critical - failed to decrypt passphrase for %s: %v", key, err)
 			}
-			env.GlobalConfiguration().Auth[key].SetPassPhrase(pp)
+			env.GlobalConfiguration().Auth[key].SetPassPhrase(decryptedPassPhrase)
 		}
 	}
 }
@@ -120,13 +120,14 @@ func cleanup() {
 		return
 	}
 
-	installer.GlobalInstall([]string{}, modules, false, false)
+	installer.GlobalInstall(env.GlobalConfiguration(), []string{}, modules, false, false)
 	env.SetInternal(true)
 }
 
-// oldDecrypt decrypts the data using the old method
-func oldDecrypt(securemess any) (string, error) {
-	data, ok := securemess.(string)
+// oldDecrypt decrypts the data using the old method for migration purposes.
+// This is only used during migration 7 to convert old encrypted credentials.
+func oldDecrypt(secureMessage any) (string, error) {
+	data, ok := secureMessage.(string)
 	if !ok {
 		return "", errors.New("error on convert data to string")
 	}
@@ -138,7 +139,7 @@ func oldDecrypt(securemess any) (string, error) {
 
 	id, err := machineid.ID()
 	if err != nil {
-		msg.Err("Error on get machine ID")
+		msg.Err("❌ Error on get machine ID")
 		id = "AAAA"
 	}
 

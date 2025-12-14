@@ -1,3 +1,5 @@
+// Package setup handles application initialization, migrations, and environment configuration.
+// It creates necessary directories, runs database migrations, and initializes the Delphi environment.
 package setup
 
 import (
@@ -89,7 +91,7 @@ func installModules(modules []string) {
 	env.GlobalConfiguration().LastInternalUpdate = time.Now()
 	env.GlobalConfiguration().SaveConfiguration()
 
-	installer.GlobalInstall(modules, pkg, false, false)
+	installer.GlobalInstall(env.GlobalConfiguration(), modules, pkg, false, false)
 	moveBptIdentifier()
 }
 
@@ -103,12 +105,12 @@ func moveBptIdentifier() {
 	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
 	err := os.MkdirAll(filepath.Dir(exePath), 0600)
 	if err != nil {
-		msg.Err(err.Error())
+		msg.Err("❌ %s", err.Error())
 	}
 
 	err = os.Rename(outExeCompilation, exePath)
 	if err != nil {
-		msg.Err(err.Error())
+		msg.Err("❌ %s", err.Error())
 	}
 }
 

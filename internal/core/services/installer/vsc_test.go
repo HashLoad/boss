@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/pkg/env"
 )
 
 // TestDependencyManager_HasCache_NotExists tests hasCache when directory doesn't exist.
@@ -14,7 +15,7 @@ func TestDependencyManager_HasCache_NotExists(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("BOSS_CACHE_DIR", tempDir)
 
-	dm := NewDefaultDependencyManager()
+	dm := NewDefaultDependencyManager(env.GlobalConfiguration())
 	dm.cacheDir = tempDir
 
 	dep := domain.Dependency{
@@ -33,7 +34,7 @@ func TestDependencyManager_HasCache_Exists(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("BOSS_CACHE_DIR", tempDir)
 
-	dm := NewDefaultDependencyManager()
+	dm := NewDefaultDependencyManager(env.GlobalConfiguration())
 	dm.cacheDir = tempDir
 
 	dep := domain.Dependency{
@@ -59,7 +60,7 @@ func TestDependencyManager_HasCache_FileInsteadOfDir(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("BOSS_CACHE_DIR", tempDir)
 
-	dm := NewDefaultDependencyManager()
+	dm := NewDefaultDependencyManager(env.GlobalConfiguration())
 	dm.cacheDir = tempDir
 
 	// Create a file where directory is expected

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashload/boss/internal/core/domain"
-	"github.com/hashload/boss/internal/core/services/compiler_selector"
+	"github.com/hashload/boss/internal/core/services/compilerselector"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
@@ -54,9 +54,9 @@ func buildSearchPath(dep *domain.Dependency) string {
 	return searchPath
 }
 
-func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker, selectedCompiler *compiler_selector.SelectedCompiler) bool {
+func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker, selectedCompiler *compilerselector.SelectedCompiler) bool {
 	if tracker == nil || !tracker.IsEnabled() {
-		msg.Info("  Building " + filepath.Base(dprojPath))
+		msg.Info("  🔨 Building " + filepath.Base(dprojPath))
 	}
 
 	bossPackagePath := filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage)
@@ -95,7 +95,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	buildBat := filepath.Join(abs, fileRes+".bat")
 	readFile, err := os.ReadFile(rsvars)
 	if err != nil {
-		msg.Err("    error on read rsvars.bat")
+		msg.Err("    ❌ Error on read rsvars.bat")
 	}
 	readFileStr := string(readFile)
 	project, _ := filepath.Abs(dprojPath)
@@ -118,7 +118,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	err = os.WriteFile(buildBat, []byte(readFileStr), 0600)
 	if err != nil {
 		if tracker == nil || !tracker.IsEnabled() {
-			msg.Warn("  - error on create build file")
+			msg.Warn("  ⚠️ Error on create build file")
 		}
 		return false
 	}
@@ -127,12 +127,12 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	command.Dir = abs
 	if _, err = command.Output(); err != nil {
 		if tracker == nil || !tracker.IsEnabled() {
-			msg.Err("  - Failed to compile, see " + buildLog + " for more information")
+			msg.Err("  ❌ Failed to compile, see " + buildLog + " for more information")
 		}
 		return false
 	}
 	if tracker == nil || !tracker.IsEnabled() {
-		msg.Info("  - Success!")
+		msg.Info("  ✅️ Success!")
 	}
 
 	if err := os.Remove(buildLog); err != nil {

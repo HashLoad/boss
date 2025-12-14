@@ -1,4 +1,6 @@
-package compiler_selector
+// Package compilerselector provides functionality for selecting the appropriate Delphi compiler
+// based on project configuration, CLI arguments, or system defaults.
+package compilerselector
 
 import (
 	"errors"

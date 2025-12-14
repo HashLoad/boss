@@ -1,3 +1,4 @@
+// Package installer provides Windows global installation support.
 //go:build windows
 
 package installer
@@ -19,15 +20,15 @@ import (
 )
 
 // GlobalInstall installs dependencies globally (Windows implementation).
-func GlobalInstall(args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
+func GlobalInstall(config env.ConfigProvider, args []string, pkg *domain.Package, lockedVersion bool, noSave bool) {
 	// TODO noSave
 	EnsureDependency(pkg, args)
-	if err := DoInstall(InstallOptions{
+	if err := DoInstall(config, InstallOptions{
 		Args:          args,
 		LockedVersion: lockedVersion,
 		NoSave:        noSave,
 	}, pkg); err != nil {
-		msg.Die("%s", err)
+		msg.Die("❌ %s", err)
 	}
 	doInstallPackages()
 }
@@ -69,7 +70,7 @@ func doInstallPackages() {
 		registry.ALL_ACCESS)
 
 	if err != nil {
-		msg.Err("Cannot open registry to add packages in IDE")
+		msg.Err("❌ Cannot open registry to add packages in IDE")
 		return
 	}
 

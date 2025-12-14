@@ -22,13 +22,13 @@ func ParseConstraint(constraintStr string) (*semver.Constraints, error) {
 		start := strings.TrimPrefix(matches[1], "v")
 		end := strings.TrimPrefix(matches[2], "v")
 		converted := ">=" + start + " <=" + end
-		msg.Info("Converting npm-style range '%s' to '%s'", constraintStr, converted)
+		msg.Info("♻️ Converting npm-style range '%s' to '%s'", constraintStr, converted)
 		return semver.NewConstraint(converted)
 	}
 
 	converted := convertNpmConstraint(constraintStr)
 	if converted != constraintStr {
-		msg.Info("Converting constraint '%s' to '%s'", constraintStr, converted)
+		msg.Info("♻️ Converting constraint '%s' to '%s'", constraintStr, converted)
 		return semver.NewConstraint(converted)
 	}
 

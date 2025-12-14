@@ -1,3 +1,5 @@
+// Package installer provides dependency installation and uninstallation functionality.
+// It manages both global and local dependency installations, handling version locking and updates.
 package installer
 
 import (
@@ -35,16 +37,16 @@ func InstallModules(options InstallOptions) {
 	pkg, err := domain.LoadPackage(env.GetGlobal())
 	if err != nil {
 		if os.IsNotExist(err) {
-			msg.Die("boss.json not exists in " + env.GetCurrentDir())
+			msg.Die("❌ 'boss.json' not exists in " + env.GetCurrentDir())
 		} else {
-			msg.Die("Fail on open dependencies file: %s", err)
+			msg.Die("❌ Fail on open dependencies file: %s", err)
 		}
 	}
 
 	if env.GetGlobal() {
-		GlobalInstall(options.Args, pkg, options.LockedVersion, options.NoSave)
+		GlobalInstall(env.GlobalConfiguration(), options.Args, pkg, options.LockedVersion, options.NoSave)
 	} else {
-		LocalInstall(options, pkg)
+		LocalInstall(env.GlobalConfiguration(), options, pkg)
 	}
 }
 
@@ -52,7 +54,7 @@ func InstallModules(options InstallOptions) {
 func UninstallModules(args []string, noSave bool) {
 	pkg, err := domain.LoadPackage(false)
 	if err != nil && !os.IsNotExist(err) {
-		msg.Die("Fail on open dependencies file: %s", err)
+		msg.Die("❌ Fail on open dependencies file: %s", err)
 	}
 
 	if pkg == nil {

@@ -1,3 +1,5 @@
+// Package gc provides garbage collection functionality for cleaning up old cached dependencies.
+// It removes unused dependency caches based on last update time.
 package gc
 
 import (
@@ -36,7 +38,7 @@ func removeCache(ignoreLastUpdate bool, cacheService *cache.Service) filepath.Wa
 		var name = strings.TrimRight(base, extension)
 		repoInfo, err := cacheService.LoadRepositoryData(name)
 		if err != nil {
-			msg.Warn("Fail to parse repo info in GC: ", err)
+			msg.Warn("⚠️ Fail to parse repo info in GC: ", err)
 			return nil
 		}
 

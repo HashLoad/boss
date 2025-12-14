@@ -73,7 +73,7 @@ func LoadPackageLockWithFS(parentPackage *Package, filesystem infra.FileSystem) 
 		//nolint:gosec // We are not using this for security purposes
 		hash := md5.New()
 		if _, err := io.WriteString(hash, parentPackage.Name); err != nil {
-			msg.Warn("Failed on write machine id to hash")
+			msg.Warn("⚠️ Failed on write machine id to hash")
 		}
 
 		return PackageLock{
@@ -93,7 +93,7 @@ func LoadPackageLockWithFS(parentPackage *Package, filesystem infra.FileSystem) 
 	}
 
 	if err := json.Unmarshal(fileBytes, &lockfile); err != nil {
-		msg.Die("Error parsing lock file %s: %s", packageLockPath, err.Error())
+		msg.Die("❌ Error parsing lock file %s: %s", packageLockPath, err.Error())
 	}
 	return lockfile
 }

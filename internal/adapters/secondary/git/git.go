@@ -1,3 +1,5 @@
+// Package gitadapter provides Git operations for cloning and updating dependency repositories.
+// It supports both embedded (go-git) and native Git implementations.
 package gitadapter
 
 import (
@@ -5,7 +7,7 @@ import (
 
 	"github.com/go-git/go-billy/v5/osfs"
 	goGit "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
+	gitConfig "github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
@@ -14,24 +16,24 @@ import (
 )
 
 // CloneCache clones the dependency repository to the cache.
-func CloneCache(dep domain.Dependency) (*goGit.Repository, error) {
-	if env.GlobalConfiguration().GitEmbedded {
-		return CloneCacheEmbedded(dep)
+func CloneCache(config env.ConfigProvider, dep domain.Dependency) (*goGit.Repository, error) {
+	if config.GetGitEmbedded() {
+		return CloneCacheEmbedded(config, dep)
 	}
 
 	return CloneCacheNative(dep)
 }
 
 // UpdateCache updates the dependency repository in the cache.
-func UpdateCache(dep domain.Dependency) (*goGit.Repository, error) {
-	if env.GlobalConfiguration().GitEmbedded {
-		return UpdateCacheEmbedded(dep)
+func UpdateCache(config env.ConfigProvider, dep domain.Dependency) (*goGit.Repository, error) {
+	if config.GetGitEmbedded() {
+		return UpdateCacheEmbedded(config, dep)
 	}
 
 	return UpdateCacheNative(dep)
 }
 
-func initSubmodules(dep domain.Dependency, repository *goGit.Repository) error {
+func initSubmodules(config env.ConfigProvider, dep domain.Dependency, repository *goGit.Repository) error {
 	worktree, err := repository.Worktree()
 	if err != nil {
 		return err
@@ -44,7 +46,7 @@ func initSubmodules(dep domain.Dependency, repository *goGit.Repository) error {
 	err = submodules.Update(&goGit.SubmoduleUpdateOptions{
 		Init:              true,
 		RecurseSubmodules: goGit.DefaultSubmoduleRecursionDepth,
-		Auth:              env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
+		Auth:              config.GetAuth(dep.GetURLPrefix()),
 	})
 	if err != nil {
 		return err
@@ -53,7 +55,7 @@ func initSubmodules(dep domain.Dependency, repository *goGit.Repository) error {
 }
 
 // GetMain returns the main branch of the repository.
-func GetMain(repository *goGit.Repository) (*config.Branch, error) {
+func GetMain(repository *goGit.Repository) (*gitConfig.Branch, error) {
 	branch, err := repository.Branch(consts.GitBranchMain)
 	if err != nil {
 		branch, err = repository.Branch(consts.GitBranchMaster)
@@ -62,46 +64,46 @@ func GetMain(repository *goGit.Repository) (*config.Branch, error) {
 }
 
 // GetVersions returns all versions (tags and branches) of the repository.
-func GetVersions(repository *goGit.Repository, dep domain.Dependency) []*plumbing.Reference {
+func GetVersions(config env.ConfigProvider, repository *goGit.Repository, dep domain.Dependency) []*plumbing.Reference {
 	var result = make([]*plumbing.Reference, 0)
 
 	err := repository.Fetch(&goGit.FetchOptions{
 		Force: true,
 		Prune: true,
-		Auth:  env.GlobalConfiguration().GetAuth(dep.GetURLPrefix()),
-		RefSpecs: []config.RefSpec{
+		Auth:  config.GetAuth(dep.GetURLPrefix()),
+		RefSpecs: []gitConfig.RefSpec{
 			"refs/*:refs/*",
 			"HEAD:refs/heads/HEAD",
 		},
 	})
 
 	if err != nil {
-		msg.Warn("Fail to fetch repository %s: %s", dep.Repository, err)
+		msg.Warn("⚠️ Fail to fetch repository %s: %s", dep.Repository, err)
 	}
 
 	tags, err := repository.Tags()
 	if err != nil {
-		msg.Err("Fail to retrieve versions: %v", err)
+		msg.Err("❌ Fail to retrieve versions: %v", err)
 	} else {
 		err = tags.ForEach(func(reference *plumbing.Reference) error {
 			result = append(result, reference)
 			return nil
 		})
 		if err != nil {
-			msg.Err("Fail to retrieve versions: %v", err)
+			msg.Err("❌ Fail to retrieve versions: %v", err)
 		}
 	}
 
 	branches, err := repository.Branches()
 	if err != nil {
-		msg.Err("Fail to retrieve branches: %v", err)
+		msg.Err("❌ Fail to retrieve branches: %v", err)
 	} else {
 		err = branches.ForEach(func(reference *plumbing.Reference) error {
 			result = append(result, reference)
 			return nil
 		})
 		if err != nil {
-			msg.Err("Fail to retrieve branches: %v", err)
+			msg.Err("❌ Fail to retrieve branches: %v", err)
 		}
 	}
 
@@ -133,26 +135,28 @@ func GetByTag(repository *goGit.Repository, shortName string) *plumbing.Referenc
 }
 
 func GetRepository(dep domain.Dependency) *goGit.Repository {
-	cache := makeStorageCache(dep)
+	// GetRepository is used in places where we already have a cloned repo
+	// So we don't need config for EnsureCacheDir check
+	cache := makeStorageCacheWithoutEnsure(dep)
 	dir := osfs.New(filepath.Join(env.GetModulesDir(), dep.Name()))
 	repository, err := goGit.Open(cache, dir)
 	if err != nil {
-		msg.Err("Error on open repository %s: %s", dep.Repository, err)
+		msg.Err("❌ Error on open repository %s: %s", dep.Repository, err)
 	}
 
 	return repository
 }
 
-func Checkout(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
-	if env.GlobalConfiguration().GitEmbedded {
-		return CheckoutEmbedded(dep, referenceName)
+func Checkout(config env.ConfigProvider, dep domain.Dependency, referenceName plumbing.ReferenceName) error {
+	if config.GetGitEmbedded() {
+		return CheckoutEmbedded(config, dep, referenceName)
 	}
 	return CheckoutNative(dep, referenceName)
 }
 
-func Pull(dep domain.Dependency) error {
-	if env.GlobalConfiguration().GitEmbedded {
-		return PullEmbedded(dep)
+func Pull(config env.ConfigProvider, dep domain.Dependency) error {
+	if config.GetGitEmbedded() {
+		return PullEmbedded(config, dep)
 	}
 	return PullNative(dep)
 }

@@ -35,7 +35,7 @@ func (p *Dependency) HashName() string {
 	//nolint:gosec // We are not using this for security purposes
 	hash := md5.New()
 	if _, err := io.WriteString(hash, strings.ToLower(p.Repository)); err != nil {
-		msg.Warn("Failed on write dependency hash")
+		msg.Warn("⚠️ Failed on write dependency hash")
 	}
 	return hex.EncodeToString(hash.Sum(nil))
 }

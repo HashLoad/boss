@@ -1,3 +1,5 @@
+// Package compiler provides functionality for building Delphi projects and their dependencies.
+// It handles dependency graph resolution, build order determination, and compilation execution.
 package compiler
 
 import (
@@ -8,7 +10,7 @@ import (
 
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/internal/core/services/compiler/graphs"
-	"github.com/hashload/boss/internal/core/services/compiler_selector"
+	"github.com/hashload/boss/internal/core/services/compilerselector"
 	"github.com/hashload/boss/internal/core/services/tracker"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
@@ -17,12 +19,12 @@ import (
 
 // Build compiles the package and its dependencies.
 func Build(pkg *domain.Package, compilerVersion, platform string) {
-	ctx := compiler_selector.SelectionContext{
+	ctx := compilerselector.SelectionContext{
 		Package:            pkg,
 		CliCompilerVersion: compilerVersion,
 		CliPlatform:        platform,
 	}
-	selected, err := compiler_selector.SelectCompiler(ctx)
+	selected, err := compilerselector.SelectCompiler(ctx)
 	if err != nil {
 		msg.Warn("Compiler selection failed: %s. Falling back to default.", err)
 	} else {
@@ -61,17 +63,34 @@ func saveLoadOrder(queue *graphs.NodeQueue) error {
 	return nil
 }
 
-func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_selector.SelectedCompiler) {
+func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compilerselector.SelectedCompiler) {
 	pkg.Save()
 	queue := loadOrderGraph(pkg)
+	packageNames := extractPackageNames(pkg)
 
+	trackerPtr := initializeBuildTracker(packageNames)
+	if len(packageNames) == 0 {
+		msg.Info("📄 No packages to compile.\n")
+		return
+	}
+
+	processPackageQueue(pkg, queue, trackerPtr, selectedCompiler)
+
+	msg.SetQuietMode(false)
+	trackerPtr.Stop()
+}
+
+func extractPackageNames(pkg *domain.Package) []string {
 	var packageNames []string
 	tempQueue := loadOrderGraph(pkg)
 	for !tempQueue.IsEmpty() {
 		node := tempQueue.Dequeue()
 		packageNames = append(packageNames, node.Dep.Name())
 	}
+	return packageNames
+}
 
+func initializeBuildTracker(packageNames []string) *BuildTracker {
 	var trackerPtr *BuildTracker
 	if msg.IsDebugMode() {
 		trackerPtr = &BuildTracker{
@@ -80,86 +99,138 @@ func buildOrderedPackages(pkg *domain.Package, selectedCompiler *compiler_select
 	} else {
 		trackerPtr = NewBuildTracker(packageNames)
 	}
+
 	if len(packageNames) > 0 {
 		msg.Info("📦 Compiling %d packages:\n", len(packageNames))
 		if !msg.IsDebugMode() {
 			if err := trackerPtr.Start(); err != nil {
-				msg.Warn("❌ Could not start build tracker: %s", err)
+				msg.Warn("⚠️ Could not start build tracker: %s", err)
 			} else {
 				msg.SetQuietMode(true)
 			}
 		} else {
 			msg.Debug("Debug mode: progress tracker disabled\n")
 		}
-	} else {
-		msg.Info("📄 No packages to compile.\n")
+	}
+	return trackerPtr
+}
+
+func processPackageQueue(
+	pkg *domain.Package,
+	queue *graphs.NodeQueue,
+	trackerPtr *BuildTracker,
+	selectedCompiler *compilerselector.SelectedCompiler,
+) {
+	for !queue.IsEmpty() {
+		node := queue.Dequeue()
+		processPackageNode(pkg, node, trackerPtr, selectedCompiler)
+	}
+}
+
+func processPackageNode(
+	pkg *domain.Package,
+	node *graphs.Node,
+	trackerPtr *BuildTracker,
+	selectedCompiler *compilerselector.SelectedCompiler,
+) {
+	dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name())
+	dependency := pkg.Lock.GetInstalled(node.Dep)
+
+	reportBuildStart(trackerPtr, node.Dep.Name())
+
+	dependency.Changed = false
+	dependencyPackage, err := domain.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage))
+
+	if err != nil {
+		reportNoBossJSON(trackerPtr, node.Dep.Name())
+		pkg.Lock.SetInstalled(node.Dep, dependency)
+		return
 	}
 
-	for {
-		if queue.IsEmpty() {
-			break
-		}
-		node := queue.Dequeue()
-		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name())
+	if len(dependencyPackage.Projects) == 0 {
+		reportNoProjects(trackerPtr, node.Dep.Name())
+		pkg.Lock.SetInstalled(node.Dep, dependency)
+		return
+	}
 
-		dependency := pkg.Lock.GetInstalled(node.Dep)
+	hasFailed := buildProjectsForDependency(
+		&dependency,
+		node.Dep,
+		dependencyPackage.Projects,
+		trackerPtr,
+		selectedCompiler,
+		pkg.Lock,
+	)
+
+	ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
+	moveArtifacts(node.Dep, env.GetModulesDir())
+
+	reportBuildResult(trackerPtr, node.Dep.Name(), hasFailed)
+	pkg.Lock.SetInstalled(node.Dep, dependency)
+}
+
+func buildProjectsForDependency(
+	dependency *domain.LockedDependency,
+	dep domain.Dependency,
+	projects []string,
+	trackerPtr *BuildTracker,
+	selectedCompiler *compilerselector.SelectedCompiler,
+	lock domain.PackageLock,
+) bool {
+	hasFailed := false
+	for _, dproj := range projects {
+		dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), dep.Name(), dproj))
 
 		if trackerPtr.IsEnabled() {
-			trackerPtr.SetBuilding(node.Dep.Name(), "")
+			trackerPtr.SetBuilding(dep.Name(), filepath.Base(dproj))
 		} else {
-			msg.Info("  🔨 Building %s", node.Dep.Name())
+			msg.Info("  🔥 Compiling project: %s", filepath.Base(dproj))
 		}
 
-		dependency.Changed = false
-		if dependencyPackage, err := domain.LoadPackageOther(filepath.Join(dependencyPath, consts.FilePackage)); err == nil {
-			dprojs := dependencyPackage.Projects
-			if len(dprojs) > 0 {
-				hasFailed := false
-				for _, dproj := range dprojs {
-					dprojPath, _ := filepath.Abs(filepath.Join(env.GetModulesDir(), node.Dep.Name(), dproj))
-					if trackerPtr.IsEnabled() {
-						trackerPtr.SetBuilding(node.Dep.Name(), filepath.Base(dproj))
-					} else {
-						msg.Info("  🔥 Compiling project: %s", filepath.Base(dproj))
-					}
-					if !compile(dprojPath, &node.Dep, pkg.Lock, trackerPtr, selectedCompiler) {
-						dependency.Failed = true
-						hasFailed = true
-					}
-				}
-				ensureArtifacts(&dependency, node.Dep, env.GetModulesDir())
-				moveArtifacts(node.Dep, env.GetModulesDir())
-
-				if trackerPtr.IsEnabled() {
-					if hasFailed {
-						trackerPtr.SetFailed(node.Dep.Name(), consts.StatusMsgBuildError)
-					} else {
-						trackerPtr.SetSuccess(node.Dep.Name())
-					}
-				} else {
-					if hasFailed {
-						msg.Err("  ❌ Build failed for %s", node.Dep.Name())
-					} else {
-						msg.Info("  ✅ %s built successfully", node.Dep.Name())
-					}
-				}
-			} else {
-				if trackerPtr.IsEnabled() {
-					trackerPtr.SetSkipped(node.Dep.Name(), consts.StatusMsgNoProjects)
-				} else {
-					msg.Info("  ⏭️ %s has no projects to build", node.Dep.Name())
-				}
-			}
-		} else {
-			if trackerPtr.IsEnabled() {
-				trackerPtr.SetSkipped(node.Dep.Name(), consts.StatusMsgNoBossJSON)
-			} else {
-				msg.Info("  ⏭️ %s has no boss.json", node.Dep.Name())
-			}
+		if !compile(dprojPath, &dep, lock, trackerPtr, selectedCompiler) {
+			dependency.Failed = true
+			hasFailed = true
 		}
-		pkg.Lock.SetInstalled(node.Dep, dependency)
 	}
+	return hasFailed
+}
 
-	msg.SetQuietMode(false)
-	trackerPtr.Stop()
+func reportBuildStart(trackerPtr *BuildTracker, depName string) {
+	if trackerPtr.IsEnabled() {
+		trackerPtr.SetBuilding(depName, "")
+	} else {
+		msg.Info("  🔨 Building %s", depName)
+	}
+}
+
+func reportBuildResult(trackerPtr *BuildTracker, depName string, hasFailed bool) {
+	if trackerPtr.IsEnabled() {
+		if hasFailed {
+			trackerPtr.SetFailed(depName, consts.StatusMsgBuildError)
+		} else {
+			trackerPtr.SetSuccess(depName)
+		}
+	} else {
+		if hasFailed {
+			msg.Err("  ❌ Build failed for %s", depName)
+		} else {
+			msg.Info("  ✅ %s built successfully", depName)
+		}
+	}
+}
+
+func reportNoProjects(trackerPtr *BuildTracker, depName string) {
+	if trackerPtr.IsEnabled() {
+		trackerPtr.SetSkipped(depName, consts.StatusMsgNoProjects)
+	} else {
+		msg.Info("  ⏭️ %s has no projects to build", depName)
+	}
+}
+
+func reportNoBossJSON(trackerPtr *BuildTracker, depName string) {
+	if trackerPtr.IsEnabled() {
+		trackerPtr.SetSkipped(depName, consts.StatusMsgNoBossJSON)
+	} else {
+		msg.Info("  ⏭️ %s has no boss.json", depName)
+	}
 }

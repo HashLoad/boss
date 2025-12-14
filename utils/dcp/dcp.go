@@ -1,3 +1,5 @@
+// Package dcp provides functionality for managing Delphi DCP (Delphi Compiled Package) files.
+// It handles injection of DCP dependencies into project files (.dpr, .dpk).
 package dcp
 
 import (
@@ -94,14 +96,14 @@ func getDprDpkFromDproj(dprojName string) (string, bool) {
 // CommentBoss is the marker for Boss injected dependencies
 const CommentBoss = "{BOSS}"
 
-// getDcpString returns the DCP requires string
+// getDcpString returns the DCP requires string formatted for injection.
 func getDcpString(dcps []string) string {
-	var dpsLine = "\n"
+	var dcpRequiresLine = "\n"
 
 	for _, dcp := range dcps {
-		dpsLine += "  " + filepath.Base(dcp) + CommentBoss + ",\n"
+		dcpRequiresLine += "  " + filepath.Base(dcp) + CommentBoss + ",\n"
 	}
-	return dpsLine[:len(dpsLine)-2]
+	return dcpRequiresLine[:len(dcpRequiresLine)-2]
 }
 
 // injectDcps injects DCP dependencies into the file content
@@ -130,7 +132,8 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 	return result, true
 }
 
-// processFile processes the file content to inject DCP dependencies
+// processFile processes the file content to inject DCP dependencies.
+// Returns the modified content and a boolean indicating if the file was changed.
 func processFile(content string, dcps []string) (string, bool) {
 	if len(dcps) == 0 {
 		return content, false
@@ -141,17 +144,17 @@ func processFile(content string, dcps []string) (string, bool) {
 
 	lines := strings.Split(content, "\n")
 
-	var dpcLine = getDcpString(dcps)
-	var containsindex = 1
+	var dcpRequiresLine = getDcpString(dcps)
+	var containsLineIndex = 1
 
 	for key, value := range lines {
 		if strings.TrimSpace(strings.ToLower(value)) == "contains" {
-			containsindex = key - 1
+			containsLineIndex = key - 1
 			break
 		}
 	}
 
-	content = strings.Join(lines[:containsindex], "\n\n") +
-		"requires" + dpcLine + ";\n\n" + strings.Join(lines[containsindex:], "\n")
+	content = strings.Join(lines[:containsLineIndex], "\n\n") +
+		"requires" + dcpRequiresLine + ";\n\n" + strings.Join(lines[containsLineIndex:], "\n")
 	return content, true
 }

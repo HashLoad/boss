@@ -1,9 +1,11 @@
+// Package installer provides version control system integration.
 package installer
 
 import (
 	"sync"
 
 	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/pkg/env"
 )
 
 //nolint:gochecknoglobals // Singleton for backward compatibility during refactor
@@ -15,7 +17,7 @@ var (
 // getDefaultDependencyManager returns the singleton DependencyManager instance.
 func getDefaultDependencyManager() *DependencyManager {
 	dependencyManagerOnce.Do(func() {
-		defaultDependencyManager = NewDefaultDependencyManager()
+		defaultDependencyManager = NewDefaultDependencyManager(env.GlobalConfiguration())
 	})
 	return defaultDependencyManager
 }
