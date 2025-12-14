@@ -430,11 +430,11 @@ func (ic *installContext) getReferenceName(
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 
 		if mainBranchReference, err := git.GetMain(repository); err == nil {
+			warnMsg := fmt.Sprintf("Falling back to main branch: %s", mainBranchReference.Name)
 			if !ic.progress.IsEnabled() {
-				warnMsg := fmt.Sprintf("Falling back to main branch: %s", mainBranchReference.Name)
 				msg.Warn("  ⚠️ %s: %s", dep.Name(), warnMsg)
-				ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 			}
+			ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 			return plumbing.NewBranchReferenceName(mainBranchReference.Name)
 		}
 		msg.Die("❌ Could not find any suitable version or branch for dependency '%s'", dep.Repository)
