@@ -203,7 +203,7 @@ func reportBuildStart(trackerPtr *BuildTracker, depName string) {
 	if trackerPtr.IsEnabled() {
 		trackerPtr.SetBuilding(depName, "")
 	} else {
-		msg.Info("  🔨 Building %s", depName)
+		msg.Info("🔨 Building %s", depName)
 	}
 }
 
