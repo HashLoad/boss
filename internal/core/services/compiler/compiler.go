@@ -110,8 +110,6 @@ func initializeBuildTracker(packageNames []string) *BuildTracker {
 			} else {
 				msg.SetQuietMode(true)
 			}
-		} else {
-			msg.Debug("Debug mode: progress tracker disabled\n")
 		}
 	}
 	return trackerPtr
