@@ -208,7 +208,7 @@ func LoadPackageOtherWithFS(path string, filesystem infra.FileSystem) (*Package,
 
 	err = json.Unmarshal(fileBytes, result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on unmarshal file %s: %w", path, err)
 	}
 
 	return result, nil

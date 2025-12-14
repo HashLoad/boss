@@ -91,7 +91,7 @@ func LoadPackageLockWithFS(parentPackage *Package, filesystem infra.FileSystem) 
 	}
 
 	if err := json.Unmarshal(fileBytes, &lockfile); err != nil {
-		utils.HandleError(err)
+		msg.Die("Error parsing lock file %s: %s", packageLockPath, err.Error())
 	}
 	return lockfile
 }
