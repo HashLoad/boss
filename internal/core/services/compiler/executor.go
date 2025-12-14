@@ -86,7 +86,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	}
 
 	if tracker == nil || !tracker.IsEnabled() {
-		msg.Debug("  Using: %s (Platform: %s)", filepath.Join(dccDir, compilerBinary), platform)
+		msg.Debug("  🛠️ Using: %s (Platform: %s)", filepath.Join(dccDir, compilerBinary), platform)
 	}
 
 	rsvars := filepath.Join(dccDir, "rsvars.bat")
