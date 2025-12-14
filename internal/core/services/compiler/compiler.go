@@ -103,7 +103,7 @@ func initializeBuildTracker(packageNames []string) *BuildTracker {
 	}
 
 	if len(packageNames) > 0 {
-		msg.Info("📦 Compiling %d packages:\n", len(packageNames))
+		msg.Info("⚙️ Compiling %d packages:\n", len(packageNames))
 		if !msg.IsDebugMode() {
 			if err := trackerPtr.Start(); err != nil {
 				msg.Warn("⚠️ Could not start build tracker: %s", err)
