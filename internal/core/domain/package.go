@@ -26,14 +26,12 @@ type Package struct {
 
 // PackageEngines represents the engines configuration in boss.json.
 type PackageEngines struct {
-	Delphi    string   `json:"delphi,omitempty"`
 	Compiler  string   `json:"compiler,omitempty"`
 	Platforms []string `json:"platforms,omitempty"`
 }
 
 // PackageToolchain represents the toolchain configuration in boss.json.
 type PackageToolchain struct {
-	Delphi   string `json:"delphi,omitempty"`
 	Compiler string `json:"compiler,omitempty"`
 	Platform string `json:"platform,omitempty"`
 	Path     string `json:"path,omitempty"`

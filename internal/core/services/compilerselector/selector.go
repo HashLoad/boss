@@ -82,10 +82,6 @@ func (s *Service) SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error
 		if tc.Compiler != "" {
 			return findCompiler(installations, tc.Compiler, platform)
 		}
-
-		if tc.Delphi != "" {
-			return findCompiler(installations, tc.Delphi, platform)
-		}
 	}
 
 	globalPath := s.config.GetDelphiPath()
