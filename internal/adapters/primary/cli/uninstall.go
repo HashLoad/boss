@@ -27,7 +27,7 @@ func uninstallCmdRegister(root *cobra.Command) {
 
   Uninstall a package without removing it from the boss.json file:
   boss uninstall <pkg> --no-save
-  
+
   Select multiple packages to uninstall:
   boss uninstall --select`,
 		Run: func(_ *cobra.Command, args []string) {

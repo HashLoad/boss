@@ -422,7 +422,7 @@ Here's a comprehensive example showing all available fields:
     "MyLibrary.dproj"
   ]
   ```
-  
+
   **Note:** If not specified, Boss won't compile the package but will still manage dependencies.
 
 #### Dependencies
@@ -435,7 +435,7 @@ Here's a comprehensive example showing all available fields:
     "jhonson": "*"
   }
   ```
-  
+
   Supported version formats:
   - Exact version: `"1.0.0"`
   - Caret (minor updates): `"^1.0.0"` (allows 1.x.x, but not 2.x.x)
@@ -454,7 +454,7 @@ Here's a comprehensive example showing all available fields:
     "deploy": "xcopy /s /y bin\\*.exe deploy\\"
   }
   ```
-  
+
   Execute with:
   ```sh
   boss run build
@@ -470,7 +470,7 @@ Here's a comprehensive example showing all available fields:
     "platforms": ["Win32", "Win64", "Linux64"]
   }
   ```
-  
+
   - `compiler`: Minimum compiler version
   - `platforms`: Supported target platforms
 
@@ -485,7 +485,7 @@ Here's a comprehensive example showing all available fields:
     "strict": true
   }
   ```
-  
+
   - `compiler`: Required compiler version
   - `platform`: Target platform ("Win32", "Win64", "Linux64", etc.)
   - `path`: Explicit path to the compiler (optional)
