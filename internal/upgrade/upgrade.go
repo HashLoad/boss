@@ -1,3 +1,5 @@
+// Package upgrade provides functionality for self-updating the Boss CLI.
+// It downloads the latest release from GitHub and replaces the running executable.
 package upgrade
 
 import (
@@ -9,6 +11,7 @@ import (
 	"runtime"
 
 	"github.com/hashload/boss/internal/version"
+	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/minio/selfupdate"
 )
@@ -18,6 +21,8 @@ const (
 	githubRepository   = "boss"
 )
 
+// BossUpgrade performs the self-update of the boss executable.
+// It checks for the latest release on GitHub, downloads it, and applies the update.
 func BossUpgrade(preRelease bool) error {
 	releases, err := getBossReleases()
 	if err != nil {
@@ -37,7 +42,7 @@ func BossUpgrade(preRelease bool) error {
 	}
 
 	if *asset.Name == version.Get().Version {
-		msg.Info("boss is already up to date")
+		msg.Info(consts.StatusMsgAlreadyUpToDate)
 		return nil
 	}
 
@@ -59,14 +64,15 @@ func BossUpgrade(preRelease bool) error {
 		return fmt.Errorf("failed to apply update: %w", err)
 	}
 
-	msg.Info("Update applied successfully to %s", *release.TagName)
+	msg.Success("✅ Update applied successfully to %s", *release.TagName)
 	return nil
 }
 
+// apply applies the update.
 func apply(buff []byte) error {
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to get executable path: %w", err)
 	}
 	exePath, _ := filepath.Abs(ex)
 
@@ -76,6 +82,7 @@ func apply(buff []byte) error {
 	})
 }
 
+// getAssetName returns the asset name.
 func getAssetName() string {
 	ext := "zip"
 	if runtime.GOOS != "windows" {

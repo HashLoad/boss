@@ -1,14 +1,17 @@
+// Package dcp provides mapping utilities for DCP require clauses.
+// This file handles the formatting of requires statements in Delphi package files.
 package dcp
 
 import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
-	"github.com/hashload/boss/pkg/models"
 )
 
-func getRequiresList(pkg *models.Package, rootLock models.PackageLock) []string {
+// getRequiresList returns a list of required DCP files for a package.
+func getRequiresList(pkg *domain.Package, rootLock domain.PackageLock) []string {
 	if pkg == nil {
 		return []string{}
 	}
@@ -32,7 +35,8 @@ func getRequiresList(pkg *models.Package, rootLock models.PackageLock) []string 
 	return dcpList
 }
 
-func getDcpListFromDep(dependency models.Dependency, lock models.PackageLock) []string {
+// getDcpListFromDep returns a list of DCP files for a dependency.
+func getDcpListFromDep(dependency domain.Dependency, lock domain.PackageLock) []string {
 	var dcpList []string
 	installedMetadata := lock.GetInstalled(dependency)
 	for _, dcp := range installedMetadata.Artifacts.Dcp {

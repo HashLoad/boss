@@ -1,3 +1,5 @@
+// Package setup handles application initialization, migrations, and environment configuration.
+// It creates necessary directories, runs database migrations, and initializes the Delphi environment.
 package setup
 
 import (
@@ -6,24 +8,32 @@ import (
 	"strings"
 	"time"
 
+	filesystem "github.com/hashload/boss/internal/adapters/secondary/filesystem"
+	registry "github.com/hashload/boss/internal/adapters/secondary/registry"
+	"github.com/hashload/boss/internal/adapters/secondary/repository"
+	"github.com/hashload/boss/internal/core/services/installer"
+	"github.com/hashload/boss/internal/core/services/packages"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
-	"github.com/hashload/boss/pkg/installer"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/pkg/registry"
+	"github.com/hashload/boss/pkg/pkgmanager"
 	"github.com/hashload/boss/utils/dcc32"
 )
 
+// PATH is the environment variable for the system path.
 const PATH string = "PATH"
 
-func defaultModules() []string {
+// DefaultModules returns the list of default internal modules.
+func DefaultModules() []string {
 	return []string{
 		"bpl-identifier",
 	}
 }
 
+// Initialize initializes the Boss environment.
 func Initialize() {
+	initializeInfrastructure()
+
 	var oldGlobal = env.GetGlobal()
 	env.SetInternal(true)
 	env.SetGlobal(true)
@@ -35,9 +45,9 @@ func Initialize() {
 	msg.Debug("\tExecuting migrations")
 	migration()
 	msg.Debug("\tInstalling internal modules")
-	installModules(defaultModules())
+	installModules(DefaultModules())
 	msg.Debug("\tCreating paths")
-	createPaths()
+	CreatePaths()
 
 	InitializePath()
 
@@ -46,15 +56,27 @@ func Initialize() {
 	msg.Debug("finish boss system initialization")
 }
 
-func createPaths() {
+// initializeInfrastructure sets up infrastructure dependencies.
+// This is the composition root where we wire up adapters to ports.
+func initializeInfrastructure() {
+	fs := filesystem.NewOSFileSystem()
+	packageRepo := repository.NewFilePackageRepository(fs)
+	lockRepo := repository.NewFileLockRepository(fs)
+	packageService := packages.NewPackageService(packageRepo, lockRepo)
+	pkgmanager.SetInstance(packageService)
+}
+
+// CreatePaths creates the necessary paths for boss.
+func CreatePaths() {
 	_, err := os.Stat(env.GetGlobalEnvBpl())
 	if os.IsNotExist(err) {
-		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0600)
+		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0755) // #nosec G301 -- Standard permissions for shared directory
 	}
 }
 
+// installModules installs the internal modules.
 func installModules(modules []string) {
-	pkg, _ := models.LoadPackage(true)
+	pkg, _ := pkgmanager.LoadPackage()
 	encountered := 0
 	for _, newPackage := range modules {
 		for installed := range pkg.Dependencies {
@@ -74,10 +96,11 @@ func installModules(modules []string) {
 	env.GlobalConfiguration().LastInternalUpdate = time.Now()
 	env.GlobalConfiguration().SaveConfiguration()
 
-	installer.GlobalInstall(modules, pkg, false, false)
+	installer.GlobalInstall(env.GlobalConfiguration(), modules, pkg, false, false)
 	moveBptIdentifier()
 }
 
+// moveBptIdentifier moves the bpl identifier.
 func moveBptIdentifier() {
 	var outExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
 	if _, err := os.Stat(outExeCompilation); os.IsNotExist(err) {
@@ -87,15 +110,16 @@ func moveBptIdentifier() {
 	var exePath = filepath.Join(env.GetModulesDir(), consts.BinFolder, consts.BplIdentifierName)
 	err := os.MkdirAll(filepath.Dir(exePath), 0600)
 	if err != nil {
-		msg.Err(err.Error())
+		msg.Err("❌ %s", err.Error())
 	}
 
 	err = os.Rename(outExeCompilation, exePath)
 	if err != nil {
-		msg.Err(err.Error())
+		msg.Err("❌ %s", err.Error())
 	}
 }
 
+// initializeDelphiVersion initializes the delphi version.
 func initializeDelphiVersion() {
 	if len(env.GlobalConfiguration().DelphiPath) != 0 {
 		return

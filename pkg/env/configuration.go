@@ -15,6 +15,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// Configuration represents the global configuration for Boss.
+// This struct implements the ConfigProvider interface for dependency injection.
+// See pkg/env/interfaces.go for interface details.
+//
+// The configuration is loaded once at startup and injected throughout
+// the application via the ConfigProvider interface.
 type Configuration struct {
 	path                string           `json:"-"`
 	Key                 string           `json:"id"`
@@ -26,12 +32,14 @@ type Configuration struct {
 	DelphiPath          string           `json:"delphi_path,omitempty"`
 	ConfigVersion       int64            `json:"config_version"`
 	GitEmbedded         bool             `json:"git_embedded"`
+	GitShallow          bool             `json:"git_shallow,omitempty"`
 
 	Advices struct {
 		SetupPath bool `json:"setup_path,omitempty"`
 	} `json:"advices"`
 }
 
+// Auth represents authentication credentials for a repository.
 type Auth struct {
 	UseSSH     bool   `json:"use,omitempty"`
 	Path       string `json:"path,omitempty"`
@@ -40,58 +48,65 @@ type Auth struct {
 	PassPhrase string `json:"keypass,omitempty"`
 }
 
+// GetUser returns the decrypted username.
 func (a *Auth) GetUser() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.User)
 	if err != nil {
-		msg.Err("Fail to decrypt user.")
+		msg.Err("❌ Failed to decrypt user.")
 		return ""
 	}
 	return ret
 }
 
+// GetPassword returns the decrypted password.
 func (a *Auth) GetPassword() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.Pass)
 	if err != nil {
-		msg.Err("Fail to decrypt pass.", err)
+		msg.Die("❌ Failed to decrypt pass: %s", err)
 		return ""
 	}
 
 	return ret
 }
 
+// GetPassPhrase returns the decrypted passphrase.
 func (a *Auth) GetPassPhrase() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.PassPhrase)
 	if err != nil {
-		msg.Err("Fail to decrypt PassPhrase.", err)
+		msg.Die("❌ Failed to decrypt PassPhrase: %s", err)
 		return ""
 	}
 	return ret
 }
 
+// SetUser encrypts and sets the username.
 func (a *Auth) SetUser(user string) {
 	if encryptedUser, err := crypto.Encrypt(crypto.MachineKey(), user); err != nil {
-		msg.Err("Fail to crypt user.", err)
+		msg.Die("❌ Failed to crypt user: %s", err)
 	} else {
 		a.User = encryptedUser
 	}
 }
 
+// SetPass encrypts and sets the password.
 func (a *Auth) SetPass(pass string) {
 	if cPass, err := crypto.Encrypt(crypto.MachineKey(), pass); err != nil {
-		msg.Err("Fail to crypt pass.")
+		msg.Die("❌ Failed to crypt pass: %s", err)
 	} else {
 		a.Pass = cPass
 	}
 }
 
+// SetPassPhrase encrypts and sets the passphrase.
 func (a *Auth) SetPassPhrase(passphrase string) {
 	if cPassPhrase, err := crypto.Encrypt(crypto.MachineKey(), passphrase); err != nil {
-		msg.Err("Fail to crypt PassPhrase.")
+		msg.Die("❌ Failed to crypt PassPhrase: %s", err)
 	} else {
 		a.PassPhrase = cPassPhrase
 	}
 }
 
+// GetAuth returns the authentication method for a repository.
 func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	auth := c.Auth[repo]
 
@@ -101,7 +116,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	case auth.UseSSH:
 		pem, err := os.ReadFile(auth.Path)
 		if err != nil {
-			msg.Die("Fail to open ssh key %s", err)
+			msg.Die("❌ Failed to open ssh key %s", err)
 		}
 		var signer ssh.Signer
 
@@ -112,7 +127,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		}
 
 		if err != nil {
-			panic(err)
+			msg.Die("❌ Failed to parse SSH private key: %v", err)
 		}
 		return &sshGit.PublicKeys{User: "git", Signer: signer}
 
@@ -121,21 +136,22 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	}
 }
 
+// SaveConfiguration saves the configuration to disk.
 func (c *Configuration) SaveConfiguration() {
 	jsonString, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
-		msg.Die("Error on parse config file", err.Error())
+		msg.Die("❌ Failed to parse config file", err.Error())
 	}
 
-	err = os.MkdirAll(c.path, 0755)
+	err = os.MkdirAll(c.path, 0755) // #nosec G301 -- Standard permissions for Boss cache directory
 	if err != nil {
-		msg.Die("Failed on create path", c.path, err.Error())
+		msg.Die("❌ Failed to create path", c.path, err.Error())
 	}
 
 	configPath := filepath.Join(c.path, consts.BossConfigFile)
-	f, err := os.Create(configPath)
+	f, err := os.Create(configPath) // #nosec G304 -- Creating Boss configuration file in known location
 	if err != nil {
-		msg.Die("Failed on create file ", configPath, err.Error())
+		msg.Die("❌ Failed to create file ", configPath, err.Error())
 		return
 	}
 
@@ -143,10 +159,11 @@ func (c *Configuration) SaveConfiguration() {
 
 	_, err = f.Write(jsonString)
 	if err != nil {
-		msg.Die("Failed on write cache file", err.Error())
+		msg.Die("❌ Failed to write cache file", err.Error())
 	}
 }
 
+// makeDefault creates a default configuration.
 func makeDefault(configPath string) *Configuration {
 	return &Configuration{
 		path:                configPath,
@@ -156,26 +173,28 @@ func makeDefault(configPath string) *Configuration {
 		Auth:                make(map[string]*Auth),
 		Key:                 crypto.Md5MachineID(),
 		GitEmbedded:         true,
+		GitShallow:          false, // Default to full clone for compatibility
 	}
 }
 
+// LoadConfiguration loads the configuration from disk.
 func LoadConfiguration(cachePath string) (*Configuration, error) {
 	configuration := &Configuration{
 		PurgeTime: 3,
 	}
 
 	configFileName := filepath.Join(cachePath, consts.BossConfigFile)
-	buffer, err := os.ReadFile(configFileName)
+	buffer, err := os.ReadFile(configFileName) // #nosec G304 -- Reading Boss configuration file from cache directory
 	if err != nil {
 		return makeDefault(cachePath), err
 	}
 	err = json.Unmarshal(buffer, configuration)
 	if err != nil {
-		msg.Err("Fail to load cfg %s", err)
+		msg.Err("❌ Failed to load cfg %s", err)
 		return makeDefault(cachePath), err
 	}
 	if configuration.Key != crypto.Md5MachineID() {
-		msg.Err("Failed to load auth... recreate login accounts")
+		msg.Err("❌ Failed to load auth... recreate login accounts")
 		configuration.Key = crypto.Md5MachineID()
 		configuration.Auth = make(map[string]*Auth)
 	}

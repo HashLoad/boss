@@ -1,3 +1,5 @@
+// Package dcc32 provides utilities for locating the Delphi command-line compiler (dcc32.exe).
+// It searches the system PATH for installed Delphi compilers.
 package dcc32
 
 import (
@@ -6,6 +8,7 @@ import (
 	"strings"
 )
 
+// GetDcc32DirByCmd returns the directory of the dcc32 executable found in the system path.
 func GetDcc32DirByCmd() []string {
 	command := exec.Command("where", "dcc32")
 	output, err := command.Output()
@@ -22,7 +25,7 @@ func GetDcc32DirByCmd() []string {
 	}
 
 	installations := []string{}
-	for _, value := range strings.Split(outputStr, "\n") {
+	for value := range strings.SplitSeq(outputStr, "\n") {
 		if len(strings.TrimSpace(value)) > 0 {
 			installations = append(installations, filepath.Dir(value))
 		}

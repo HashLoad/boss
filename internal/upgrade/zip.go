@@ -1,3 +1,5 @@
+// Package upgrade handles ZIP and TAR.GZ archive extraction for Boss updates.
+// This file provides utilities for reading files from compressed archives.
 package upgrade
 
 import (
@@ -12,6 +14,7 @@ import (
 	"strings"
 )
 
+// getAssetFromFile returns the asset from the file.
 func getAssetFromFile(file *os.File, assetName string) ([]byte, error) {
 	stat, err := file.Stat()
 	if err != nil {
@@ -25,6 +28,7 @@ func getAssetFromFile(file *os.File, assetName string) ([]byte, error) {
 	return readFileFromTargz(file, assetName)
 }
 
+// readFileFromZip reads the file from the zip.
 func readFileFromZip(file *os.File, assetName string, stat os.FileInfo) ([]byte, error) {
 	reader, err := zip.NewReader(file, stat.Size())
 	if err != nil {
@@ -48,6 +52,7 @@ func readFileFromZip(file *os.File, assetName string, stat os.FileInfo) ([]byte,
 	return nil, fmt.Errorf("failed to find asset %s in zip", assetName)
 }
 
+// readFileFromTargz reads the file from the tar.gz.
 func readFileFromTargz(file *os.File, assetName string) ([]byte, error) {
 	gzipReader, err := gzip.NewReader(file)
 	if err != nil {

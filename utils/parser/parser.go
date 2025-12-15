@@ -1,3 +1,5 @@
+// Package parser provides JSON marshaling utilities with safe encoding support.
+// It handles JSON encoding with proper character escaping for boss.json files.
 package parser
 
 import (
@@ -5,6 +7,7 @@ import (
 	"encoding/json"
 )
 
+// JSONMarshal marshals a value to JSON with optional safe encoding.
 func JSONMarshal(v any, safeEncoding bool) ([]byte, error) {
 	b, err := json.MarshalIndent(v, "", "\t")
 

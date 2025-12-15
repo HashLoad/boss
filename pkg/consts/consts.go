@@ -2,13 +2,17 @@ package consts
 
 import "path/filepath"
 
+// File constants define standard file names and extensions used by Boss.
 const (
-	FilePackage      = "boss.json"
-	FilePackageLock  = "boss-lock.json"
-	FileBplOrder     = "bpl_order.txt"
-	FileExtensionBpl = ".bpl"
-	FileExtensionDcp = ".dcp"
-	FileExtensionDpk = ".dpk"
+	FilePackage        = "boss.json"
+	FilePackageLock    = "boss-lock.json"
+	FileBplOrder       = "bpl_order.txt"
+	FileExtensionBpl   = ".bpl"
+	FileExtensionDcp   = ".dcp"
+	FileExtensionDpk   = ".dpk"
+	FileExtensionDpr   = ".dpr"
+	FileExtensionDproj = ".dproj"
+	FileExtensionLpi   = ".lpi"
 
 	FilePackageLockOld = "boss.lock"
 	FolderDependencies = "modules"
@@ -32,6 +36,7 @@ const (
 
 	EnvBossBin = "." + string(filepath.Separator) + FolderDependencies + string(filepath.Separator) + BinFolder
 
+	// XML constants for parsing project files.
 	XMLTagNameProperty               string = "PropertyGroup"
 	XMLValueAttribute                       = "value"
 	XMLTagNamePropertyAttribute      string = "Condition"
@@ -55,8 +60,63 @@ const (
 	RegexArtifacts = "(.*.inc$|.*.pas$|.*.dfm$|.*.fmx$|.*.dcu$|.*.bpl$|.*.dcp$|.*.res$)"
 
 	RegistryBasePath = `Software\Embarcadero\BDS\`
+
+	// Status messages for CLI output.
+	StatusMsgUpToDate         = "up to date"
+	StatusMsgAlreadyInstalled = "already installed"
+	StatusMsgResolvingVer     = "resolving version"
+	StatusMsgNoProjects       = "no projects"
+	StatusMsgNoBossJSON       = "no boss.json"
+	StatusMsgBuildError       = "build error"
+	StatusMsgAlreadyUpToDate  = "boss is already up to date"
+
+	GitBranchMain   = "main"
+	GitBranchMaster = "master"
+
+	GitProtocolSSH = "ssh"
 )
 
+// Platform represents a target compilation platform.
+type Platform string
+
+// Supported platforms.
+const (
+	PlatformWin32        Platform = "Win32"
+	PlatformWin64        Platform = "Win64"
+	PlatformOSX32        Platform = "OSX32"
+	PlatformOSX64        Platform = "OSX64"
+	PlatformOSXArm64     Platform = "OSXARM64"
+	PlatformLinux64      Platform = "Linux64"
+	PlatformAndroid      Platform = "Android"
+	PlatformAndroid64    Platform = "Android64"
+	PlatformiOSDevice32  Platform = "iOSDevice32"
+	PlatformiOSDevice64  Platform = "iOSDevice64"
+	PlatformiOSSimulator Platform = "iOSSimulator"
+	PlatformiOSSimARM64  Platform = "iOSSimARM64"
+)
+
+// String returns the string representation of the platform.
+func (p Platform) String() string {
+	return string(p)
+}
+
+// IsValid checks if the platform is supported.
+func (p Platform) IsValid() bool {
+	switch p {
+	case PlatformWin32, PlatformWin64, PlatformOSX32, PlatformOSX64, PlatformOSXArm64,
+		PlatformLinux64, PlatformAndroid, PlatformAndroid64,
+		PlatformiOSDevice32, PlatformiOSDevice64, PlatformiOSSimulator, PlatformiOSSimARM64:
+		return true
+	}
+	return false
+}
+
+// DefaultPlatform returns the default compilation platform (Win32).
+func DefaultPlatform() Platform {
+	return PlatformWin32
+}
+
+// DefaultPaths returns the default library paths used by Boss.
 func DefaultPaths() []string {
 	return []string{BplFolder, DcuFolder, DcpFolder, BinFolder}
 }

@@ -2,6 +2,7 @@
 
 ![Boss][bossLogo]
 
+[![Go Report Card][goReportBadge]][goReportLink]
 [![GitHub release (latest by date)][latestReleaseBadge]](https://github.com/HashLoad/boss/releases/latest)
 [![GitHub Release Date][releaseDateBadge]](https://github.com/HashLoad/boss/releases)
 [![GitHub repo size][repoSizeBadge]](https://github.com/HashLoad/boss/archive/refs/heads/main.zip)
@@ -40,7 +41,7 @@ Or you can use the following the steps below:
 
 ### > Init
 
-This command initialize a new project. Add `-q` or `--quiet` to initialize the boss with default values.
+Initialize a new project and create a `boss.json` file. Add `-q` or `--quiet` to skip interactive prompts and use default values.
 
 ```shell
 boss init
@@ -50,26 +51,42 @@ boss init --quiet
 
 ### > Install
 
-This command install a new dependency
+Install one or more dependencies with real-time progress tracking:
 
 ```shell
 boss install <dependency>
 ```
 
-The dependency is case insensitive. For example, `boss install horse` is the same as the `boss install HORSE` command.
+**Progress Tracking:** Boss displays progress for each dependency being installed:
 
-```pascal
-boss install horse // By default, look for the Horse project within the GitHub Hashload organization.
-boss install fake/horse // By default, look for the Horse project within the Fake GitHub organization.
-boss install gitlab.com/fake/horse // By default, searches for the Horse project within the Fake GitLab organization.
-boss install https://gitlab.com/fake/horse // You can also pass the full URL for installation
+```
+⏳ horse                          Waiting...
+🧬 dataset-serialize              Cloning...
+🔍 jhonson                        Checking...
+🔥 redis-client                   Installing...
+📦 boss-core                      Installed
+```
+
+The dependency name is case insensitive. For example, `boss install horse` is the same as `boss install HORSE`.
+
+```shell
+boss install horse                        # HashLoad organization on GitHub
+boss install fake/horse                   # Fake organization on GitHub
+boss install gitlab.com/fake/horse        # Fake organization on GitLab
+boss install https://gitlab.com/fake/horse # Full URL
+```
+
+You can also specify the compiler version and platform:
+
+```sh
+boss install --compiler=37.0 --platform=Win64
 ```
 
 > Aliases: i, add
 
 ### > Uninstall
 
-This command uninstall a dependency
+Remove a dependency from the project:
 
 ```sh
 boss uninstall <dependency>
@@ -77,43 +94,9 @@ boss uninstall <dependency>
 
 > Aliases: remove, rm, r, un, unlink
 
-### > Cache
-
-This command removes the cache
-
-```sh
- boss config cache rm
-```
-
-> Aliases: remove, rm, r
-
-### > Dependencies
-
-This command print all dependencies and your versions. To see versions, add aliases `-v`
-
-```shell
-boss dependencies
-boss dependencies -v
-```
-
-> Aliases: dep, ls, list, ll, la
-
-### > Version
-
-This command show the client version
-
-```shell
-boss v
-boss version
-boss -v
-boss --version
-```
-
-> Aliases: v
-
 ### > Update
 
-This command update installed dependencies
+Update all installed dependencies to their latest compatible versions:
 
 ```sh
 boss update
@@ -123,57 +106,214 @@ boss update
 
 ### > Upgrade
 
-This command upgrade the client latest version. Add `--dev` to upgrade to the latest pre-release.
+Upgrade the Boss CLI to the latest version. Add `--dev` to upgrade to the latest pre-release:
 
 ```sh
 boss upgrade
 boss upgrade --dev
 ```
 
-### > login
+### > Dependencies
 
-This command Register login to repo
+List all project dependencies in a tree format. Add `-v` to show version information:
+
+```shell
+boss dependencies
+boss dependencies -v
+boss dependencies <package>
+boss dependencies <package> -v
+```
+
+> Aliases: dep, ls, list, ll, la, dependency
+
+### > Run
+
+Execute a custom script defined in your `boss.json` file. Scripts are defined in the `scripts` section:
+
+```json
+{
+  "name": "my-project",
+  "scripts": {
+    "build": "msbuild MyProject.dproj",
+    "test": "MyProject.exe --test",
+    "clean": "del /s *.dcu"
+  }
+}
+```
+
+```sh
+boss run build
+boss run test
+boss run clean
+```
+
+### > Login
+
+Register credentials for a repository. Useful for private repositories:
 
 ```sh
 boss login <repo>
-boss adduser <repo>
-boss add-user <repo>
 boss login <repo> -u UserName -p Password
-boss login <repo> -k PrivateKey -p PassPhrase
+boss login <repo> -s -k PrivateKey -p PassPhrase  # SSH authentication
 ```
 
 > Aliases: adduser, add-user
 
-## Flags
+### > Logout
 
-### > Global
-
-This flag defines a global environment
+Remove saved credentials for a repository:
 
 ```sh
-boss --global
+boss logout <repo>
 ```
 
-> Aliases: -g
+### > Version
 
-### > Help
+Show the Boss CLI version:
 
-This is a helper for boss. Use `boss <command> --help` for more information about a command.
+```shell
+boss version
+boss v
+boss -v
+boss --version
+```
+
+> Aliases: v
+
+## Global Flags
+
+### > Global (-g)
+
+Use global environment for installation. Packages installed globally are available system-wide:
+
+```sh
+boss install -g <dependency>
+boss --global install <dependency>
+```
+
+### > Debug (-d)
+
+Enable debug mode to see detailed output:
+
+```sh
+boss install --debug
+boss -d install
+```
+
+### > Help (-h)
+
+Show help for any command:
 
 ```sh
 boss --help
+boss <command> --help
 ```
 
-> Aliases: -h
+## Configuration
 
-## Another commands
+### > Cache
+
+Manage the Boss cache. Remove all cached modules to free up disk space:
 
 ```sh
-delphi           Configure Delphi version
-gc               Garbage collector
-publish          Publish package to registry
-run              Run cmd script
+boss config cache rm
 ```
+
+> Aliases: purge, clean
+
+### > Delphi Version
+
+You can configure which Delphi version BOSS should use for compilation. This is useful when you have multiple Delphi versions installed.
+
+#### List available versions
+
+Lists all detected Delphi installations (32-bit and 64-bit) with their indexes.
+
+```sh
+boss config delphi list
+```
+
+#### Select a version
+
+Selects a specific Delphi version to use globally. You can use the index from the list command, the version number, or the version with architecture.
+
+```sh
+boss config delphi use <index>
+# or
+boss config delphi use <version>
+# or
+boss config delphi use <version>-<arch>
+```
+
+Example:
+```sh
+boss config delphi use 0
+boss config delphi use 37.0
+boss config delphi use 37.0-Win64
+```
+
+### > Git Client
+
+You can configure which Git client BOSS should use.
+
+- `embedded`: Uses the built-in go-git client (default).
+- `native`: Uses the system's installed git client (git.exe).
+
+Using `native` is recommended on Windows if you need support for `core.autocrlf` (automatic line ending conversion).
+
+```sh
+boss config git mode native
+# or
+boss config git mode embedded
+```
+
+#### Shallow Clone
+
+You can enable shallow cloning to significantly speed up dependency downloads. Shallow clones only fetch the latest commit without the full git history, reducing download size dramatically (e.g., from 127 MB to <1 MB for large repositories).
+
+```sh
+# Enable shallow clone (faster, recommended for CI/CD)
+boss config git shallow true
+
+# Disable shallow clone (full history)
+boss config git shallow false
+```
+
+**Note:** Shallow clone is disabled by default to maintain compatibility. When enabled, you won't have access to the full git history of dependencies.
+
+You can also temporarily enable shallow clone using an environment variable:
+
+```sh
+# Windows
+set BOSS_GIT_SHALLOW=1
+boss install
+
+# Linux/macOS
+BOSS_GIT_SHALLOW=1 boss install
+```
+
+### > Project Toolchain
+
+You can also specify the required compiler version and platform in your project's `boss.json` file. This ensures that everyone working on the project uses the correct toolchain.
+
+Add a `toolchain` section to your `boss.json`:
+
+```json
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "toolchain": {
+    "compiler": "37.0",
+    "platform": "Win64"
+  }
+}
+```
+
+Supported fields in `toolchain`:
+- `compiler`: The compiler version (e.g., "37.0").
+- `platform`: The target platform ("Win32" or "Win64").
+- `path`: Explicit path to the compiler (optional).
+- `strict`: If true, fails if the exact version is not found (optional).
 
 ## Samples
 
@@ -194,11 +334,243 @@ For example, to specify acceptable version ranges up to 1.0.4, use the following
 - Minor releases: 1 or 1.x or ^1.0.4
 - Major releases: \* or x
 
+## boss.json File Format
+
+The `boss.json` file is the manifest for your Delphi/Lazarus project. It contains metadata, dependencies, build configuration, and custom scripts.
+
+### Complete Structure
+
+Here's a comprehensive example showing all available fields:
+
+```json
+{
+  "name": "my-project",
+  "description": "A sample Delphi project using Boss",
+  "version": "1.0.0",
+  "homepage": "https://github.com/myuser/my-project",
+  "mainsrc": "src/",
+  "browsingpath": "src/;libs/",
+  "projects": [
+    "MyProject.dproj",
+    "MyPackage.dproj"
+  ],
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0",
+    "github.com/HashLoad/jhonson": "~2.1.0",
+    "dataset-serialize": "*"
+  },
+  "scripts": {
+    "build": "msbuild MyProject.dproj /p:Config=Release",
+    "test": "MyProject.exe --test",
+    "clean": "del /s *.dcu"
+  },
+  "engines": {
+    "compiler": ">=35.0",
+    "platforms": ["Win32", "Win64"]
+  },
+  "toolchain": {
+    "compiler": "37.0",
+    "platform": "Win64",
+    "path": "C:\\Program Files\\Embarcadero\\Studio\\37.0",
+    "strict": false
+  }
+}
+```
+
+### Field Descriptions
+
+#### Core Fields
+
+- **`name`** (required): Package name. Must be unique if publishing.
+  ```json
+  "name": "my-awesome-library"
+  ```
+
+- **`description`** (optional): A brief description of your project.
+  ```json
+  "description": "REST API framework for Delphi"
+  ```
+
+- **`version`** (required): Package version following [semantic versioning](https://semver.org/).
+  ```json
+  "version": "1.2.3"
+  ```
+
+- **`homepage`** (optional): Project website or repository URL.
+  ```json
+  "homepage": "https://github.com/myuser/my-project"
+  ```
+
+#### Source Configuration
+
+- **`mainsrc`** (optional): Main source directory path.
+  ```json
+  "mainsrc": "src/"
+  ```
+
+- **`browsingpath`** (optional): Additional paths for IDE browsing (semicolon-separated).
+  ```json
+  "browsingpath": "src/;src/controllers/;src/models/"
+  ```
+
+#### Build Configuration
+
+- **`projects`** (optional): List of Delphi project files (`.dproj`) to compile.
+  ```json
+  "projects": [
+    "MyProject.dproj",
+    "MyLibrary.dproj"
+  ]
+  ```
+
+  **Note:** If not specified, Boss won't compile the package but will still manage dependencies.
+
+#### Dependencies
+
+- **`dependencies`** (optional): Map of package dependencies with version constraints.
+  ```json
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0",
+    "dataset-serialize": "~2.1.0",
+    "jhonson": "*"
+  }
+  ```
+
+  Supported version formats:
+  - Exact version: `"1.0.0"`
+  - Caret (minor updates): `"^1.0.0"` (allows 1.x.x, but not 2.x.x)
+  - Tilde (patch updates): `"~1.0.0"` (allows 1.0.x, but not 1.1.x)
+  - Wildcard (any): `"*"` or `"x"`
+  - Range: `">=1.0.0 <2.0.0"`
+
+#### Custom Scripts
+
+- **`scripts`** (optional): Custom commands you can run with `boss run <script-name>`.
+  ```json
+  "scripts": {
+    "build": "msbuild MyProject.dproj /p:Config=Release",
+    "test": "dunitx-console.exe MyProject.exe",
+    "clean": "del /s *.dcu *.exe",
+    "deploy": "xcopy /s /y bin\\*.exe deploy\\"
+  }
+  ```
+
+  Execute with:
+  ```sh
+  boss run build
+  boss run test
+  ```
+
+#### Engine Requirements
+
+- **`engines`** (optional): Specify minimum compiler/platform requirements.
+  ```json
+  "engines": {
+    "compiler": ">=35.0",
+    "platforms": ["Win32", "Win64", "Linux64"]
+  }
+  ```
+
+  - `compiler`: Minimum compiler version
+  - `platforms`: Supported target platforms
+
+#### Toolchain Configuration
+
+- **`toolchain`** (optional): Specify the exact toolchain to use for this project.
+  ```json
+  "toolchain": {
+    "compiler": "37.0",
+    "platform": "Win64",
+    "path": "C:\\Program Files\\Embarcadero\\Studio\\37.0",
+    "strict": true
+  }
+  ```
+
+  - `compiler`: Required compiler version
+  - `platform`: Target platform ("Win32", "Win64", "Linux64", etc.)
+  - `path`: Explicit path to the compiler (optional)
+  - `strict`: If `true`, fails if the exact version is not found (default: `false`)
+
+### Minimal boss.json
+
+The minimal valid `boss.json` file:
+
+```json
+{
+  "name": "my-project",
+  "version": "1.0.0"
+}
+```
+
+### Creating a new boss.json
+
+Use `boss init` to create a new `boss.json` interactively:
+
+```sh
+boss init
+```
+
+Or use quiet mode for defaults:
+
+```sh
+boss init -q
+```
+
+### Example: Library Package
+
+```json
+{
+  "name": "my-delphi-library",
+  "description": "Utilities for Delphi applications",
+  "version": "2.1.0",
+  "homepage": "https://github.com/myuser/my-library",
+  "mainsrc": "src/",
+  "projects": [
+    "MyLibrary.dproj"
+  ],
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0"
+  }
+}
+```
+
+### Example: Application Package
+
+```json
+{
+  "name": "my-app",
+  "description": "My awesome Delphi application",
+  "version": "1.0.0",
+  "projects": [
+    "MyApp.dproj"
+  ],
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0"
+  },
+  "scripts": {
+    "build": "msbuild MyApp.dproj /p:Config=Release",
+    "run": "bin\\MyApp.exe",
+    "test": "dunitx-console.exe bin\\MyAppTests.exe"
+  },
+  "toolchain": {
+    "compiler": "37.0",
+    "platform": "Win32"
+  }
+}
+```
+
+
 ## 💻 Code Contributors
 
 ![GitHub Contributors Image](https://contrib.rocks/image?repo=Hashload/boss)
 
 [githubContributorsBadge]: https://img.shields.io/github/contributors/hashload/boss
+[ciBadge]: https://github.com/hashload/boss/actions/workflows/ci.yml/badge.svg
+[ciLink]: https://github.com/hashload/boss/actions/workflows/ci.yml
+[codecovBadge]: https://codecov.io/gh/hashload/boss/branch/main/graph/badge.svg
+[codecovLink]: https://codecov.io/gh/hashload/boss
+[goReportBadge]: https://goreportcard.com/badge/github.com/hashload/boss
+[goReportLink]: https://goreportcard.com/report/github.com/hashload/boss
 [bossLogo]: ./assets/png/sized/boss-logo-128px.png
 [latestReleaseBadge]: https://img.shields.io/github/v/release/hashload/boss
 [releaseDateBadge]: https://img.shields.io/github/release-date/hashload/boss

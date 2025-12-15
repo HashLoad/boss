@@ -1,3 +1,5 @@
+// Package dcp provides functionality for managing Delphi DCP (Delphi Compiled Package) files.
+// It handles injection of DCP dependencies into project files (.dpr, .dpk).
 package dcp
 
 import (
@@ -8,8 +10,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
@@ -17,7 +19,13 @@ import (
 	"golang.org/x/text/transform"
 )
 
-func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
+var (
+	reRequires   = regexp.MustCompile(`(?m)^(requires)([\n\r \w,{}\\.]+)(;)`)
+	reWhitespace = regexp.MustCompile(`[\r\n ]+`)
+)
+
+// InjectDpcs injects DCP dependencies into project files.
+func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
 	dprojNames := librarypath.GetProjectNames(pkg)
 
 	for _, value := range dprojNames {
@@ -27,7 +35,8 @@ func InjectDpcs(pkg *models.Package, lock models.PackageLock) {
 	}
 }
 
-func InjectDpcsFile(fileName string, pkg *models.Package, lock models.PackageLock) {
+// InjectDpcsFile injects DCP dependencies into a specific file.
+func InjectDpcsFile(fileName string, pkg *domain.Package, lock domain.PackageLock) {
 	dprDpkFileName, exists := getDprDpkFromDproj(fileName)
 	if !exists {
 		return
@@ -41,8 +50,9 @@ func InjectDpcsFile(fileName string, pkg *models.Package, lock models.PackageLoc
 	}
 }
 
+// readFile reads a file with Windows1252 encoding.
 func readFile(filename string) string {
-	f, err := os.Open(filename)
+	f, err := os.Open(filename) // #nosec G304 -- Reading DCP files from controlled package directories
 	if err != nil {
 		msg.Die(err.Error())
 	}
@@ -56,8 +66,9 @@ func readFile(filename string) string {
 	return string(bytes)
 }
 
+// writeFile writes a file with Windows1252 encoding.
 func writeFile(filename string, content string) {
-	f, err := os.Create(filename)
+	f, err := os.Create(filename) // #nosec G304 -- Writing DCP files to controlled package directories
 	if err != nil {
 		msg.Die(err.Error())
 	}
@@ -71,6 +82,7 @@ func writeFile(filename string, content string) {
 	}
 }
 
+// getDprDpkFromDproj returns the DPR or DPK file name from a DPROJ file name.
 func getDprDpkFromDproj(dprojName string) (string, bool) {
 	baseName := strings.TrimSuffix(dprojName, filepath.Ext(dprojName))
 	dpkName := baseName + consts.FileExtensionDpk
@@ -81,28 +93,29 @@ func getDprDpkFromDproj(dprojName string) (string, bool) {
 	return "", false
 }
 
+// CommentBoss is the marker for Boss injected dependencies.
 const CommentBoss = "{BOSS}"
 
+// getDcpString returns the DCP requires string formatted for injection.
 func getDcpString(dcps []string) string {
-	var dpsLine = "\n"
+	var dcpRequiresLine = "\n"
 
 	for _, dcp := range dcps {
-		dpsLine += "  " + filepath.Base(dcp) + CommentBoss + ",\n"
+		dcpRequiresLine += "  " + filepath.Base(dcp) + CommentBoss + ",\n"
 	}
-	return dpsLine[:len(dpsLine)-2]
+	return dcpRequiresLine[:len(dcpRequiresLine)-2]
 }
 
+// injectDcps injects DCP dependencies into the file content.
 func injectDcps(filecontent string, dcps []string) (string, bool) {
-	regexRequires := regexp.MustCompile(`(?m)^(requires)([\n\r \w,{}\\.]+)(;)`)
-
-	resultRegex := regexRequires.FindAllStringSubmatch(filecontent, -1)
+	resultRegex := reRequires.FindAllStringSubmatch(filecontent, -1)
 	if len(resultRegex) == 0 {
 		return filecontent, false
 	}
 
-	resultRegexIndexes := regexRequires.FindAllStringSubmatchIndex(filecontent, -1)
+	resultRegexIndexes := reRequires.FindAllStringSubmatchIndex(filecontent, -1)
 
-	currentRequiresString := regexp.MustCompile("[\r\n ]+").ReplaceAllString(resultRegex[0][2], "")
+	currentRequiresString := reWhitespace.ReplaceAllString(resultRegex[0][2], "")
 
 	currentRequires := strings.Split(currentRequiresString, ",")
 
@@ -119,6 +132,8 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 	return result, true
 }
 
+// processFile processes the file content to inject DCP dependencies.
+// Returns the modified content and a boolean indicating if the file was changed.
 func processFile(content string, dcps []string) (string, bool) {
 	if len(dcps) == 0 {
 		return content, false
@@ -129,17 +144,17 @@ func processFile(content string, dcps []string) (string, bool) {
 
 	lines := strings.Split(content, "\n")
 
-	var dpcLine = getDcpString(dcps)
-	var containsindex = 1
+	var dcpRequiresLine = getDcpString(dcps)
+	var containsLineIndex = 1
 
 	for key, value := range lines {
 		if strings.TrimSpace(strings.ToLower(value)) == "contains" {
-			containsindex = key - 1
+			containsLineIndex = key - 1
 			break
 		}
 	}
 
-	content = strings.Join(lines[:containsindex], "\n\n") +
-		"requires" + dpcLine + ";\n\n" + strings.Join(lines[containsindex:], "\n")
+	content = strings.Join(lines[:containsLineIndex], "\n\n") +
+		"requires" + dcpRequiresLine + ";\n\n" + strings.Join(lines[containsLineIndex:], "\n")
 	return content, true
 }

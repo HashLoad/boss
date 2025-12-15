@@ -14,7 +14,8 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func buildMessage(path []string) string {
+// BuildMessage creates a message with instructions to add paths to the shell.
+func BuildMessage(path []string) string {
 	if runtime.GOOS == "windows" {
 		advice := "\nTo add the path permanently, run the following command in the terminal:\n\n" +
 			"Press Win + R, type 'sysdm.cpl' and press Enter\n" +
@@ -47,6 +48,7 @@ func buildMessage(path []string) string {
 		"source ~/" + shellFile + "\n"
 }
 
+// InitializePath initializes the path.
 func InitializePath() {
 	if env.GlobalConfiguration().Advices.SetupPath {
 		return
@@ -63,7 +65,7 @@ func InitializePath() {
 	var needAdd = false
 	currentPath, err := os.Getwd()
 	if err != nil {
-		msg.Die("Failed to load current working directory \n %s", err.Error())
+		msg.Die("❌ Failed to load current working directory \n %s", err.Error())
 		return
 	}
 
@@ -73,7 +75,7 @@ func InitializePath() {
 		if !utils.Contains(splitPath, path) {
 			splitPath = append(splitPath, path)
 			needAdd = true
-			msg.Info("Adding path %s", path)
+			msg.Info("📄 Adding path %s", path)
 		}
 	}
 
@@ -82,14 +84,14 @@ func InitializePath() {
 		currentPathEnv := os.Getenv(PATH)
 		err := os.Setenv(PATH, currentPathEnv+";"+newPath)
 		if err != nil {
-			msg.Die("Failed to update PATH \n %s", err.Error())
+			msg.Die("❌ Failed to update PATH \n %s", err.Error())
 			return
 		}
 
-		msg.Warn("Please restart your console after complete.")
+		msg.Warn("⚠️ Please restart your console after complete.")
 
 		if isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			msg.Info(buildMessage(paths))
+			msg.Info(BuildMessage(paths))
 
 			spinner, _ := pterm.DefaultSpinner.Start("Sleeping for 5 seconds")
 			if spinner != nil {

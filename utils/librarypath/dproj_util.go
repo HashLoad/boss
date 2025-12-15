@@ -1,3 +1,5 @@
+// Package librarypath provides utilities for manipulating Delphi .dproj files.
+// This file contains XML manipulation functions for updating library paths.
 package librarypath
 
 import (
@@ -8,13 +10,20 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
+	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
-	"github.com/hashload/boss/pkg/models"
 	"github.com/hashload/boss/pkg/msg"
 )
 
-func updateDprojLibraryPath(pkg *models.Package) {
+var (
+	//nolint:lll // Regex pattern readability is important
+	reProjectFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionDproj) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `$`)
+	reLazarusFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `$`)
+)
+
+// updateDprojLibraryPath updates the library path in the project file.
+func updateDprojLibraryPath(pkg *domain.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
 	for _, projectName := range projectNames {
@@ -26,16 +35,17 @@ func updateDprojLibraryPath(pkg *models.Package) {
 	}
 }
 
+// updateOtherUnitFilesProject updates the other unit files in the project file.
 func updateOtherUnitFilesProject(lpiName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(lpiName)
 	if os.IsNotExist(err) || info.IsDir() {
-		msg.Err(".lpi not found.")
+		msg.Err("❌ .lpi not found.")
 		return
 	}
 	err = doc.ReadFromFile(lpiName)
 	if err != nil {
-		msg.Err("Error on read lpi: %s", err)
+		msg.Err("❌ Error on read lpi: %s", err)
 		return
 	}
 
@@ -51,7 +61,7 @@ func updateOtherUnitFilesProject(lpiName string) {
 		attribute := item.SelectAttr(consts.XMLNameAttribute)
 		compilerOptions = item.SelectElement(consts.XMLTagNameCompilerOptions)
 		if compilerOptions != nil {
-			msg.Info("  Updating %s mode", attribute.Value)
+			msg.Info("  🔁 Updating %s mode", attribute.Value)
 			processCompilerOptions(compilerOptions)
 		}
 	}
@@ -61,10 +71,11 @@ func updateOtherUnitFilesProject(lpiName string) {
 	doc.WriteSettings.CanonicalText = true
 
 	if err = doc.WriteToFile(lpiName); err != nil {
-		panic(err)
+		msg.Err("❌ Failed to write .lpi file: %v", err)
 	}
 }
 
+// processCompilerOptions processes the compiler options.
 func processCompilerOptions(compilerOptions *etree.Element) {
 	searchPaths := compilerOptions.SelectElement(consts.XMLTagNameSearchPaths)
 	if searchPaths == nil {
@@ -80,13 +91,15 @@ func processCompilerOptions(compilerOptions *etree.Element) {
 	value.Value = strings.Join(currentPaths, ";")
 }
 
+// createTagOtherUnitFiles creates the other unit files tag.
 func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
 	child := node.CreateElement(consts.XMLTagNameOtherUnitFiles)
 	child.CreateAttr("Value", "")
 	return child
 }
 
-func updateGlobalBrowsingPath(pkg *models.Package) {
+// updateGlobalBrowsingPath updates the global browsing path.
+func updateGlobalBrowsingPath(pkg *domain.Package) {
 	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
 	for i, projectName := range projectNames {
@@ -96,16 +109,17 @@ func updateGlobalBrowsingPath(pkg *models.Package) {
 	}
 }
 
+// updateLibraryPathProject updates the library path in the project file.
 func updateLibraryPathProject(dprojName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(dprojName)
 	if os.IsNotExist(err) || info.IsDir() {
-		msg.Err(".dproj not found.")
+		msg.Err("❌ .dproj not found.")
 		return
 	}
 	err = doc.ReadFromFile(dprojName)
 	if err != nil {
-		msg.Err("Error on read dproj: %s", err)
+		msg.Err("❌ Error on read dproj: %s", err)
 		return
 	}
 	root := doc.Root()
@@ -131,34 +145,32 @@ func updateLibraryPathProject(dprojName string) {
 	doc.WriteSettings.CanonicalText = true
 
 	if err = doc.WriteToFile(dprojName); err != nil {
-		panic(err)
+		msg.Err("❌ Failed to write .dproj file: %v", err)
 	}
 }
 
+// createTagLibraryPath creates the library path tag.
 func createTagLibraryPath(node *etree.Element) *etree.Element {
 	child := node.CreateElement(consts.XMLTagNameLibraryPath)
 	return child
 }
 
-func GetProjectNames(pkg *models.Package) []string {
+// GetProjectNames returns the project names.
+func GetProjectNames(pkg *domain.Package) []string {
 	var result []string
-	var matches = 0
 
 	if len(pkg.Projects) > 0 {
 		result = pkg.Projects
 	} else {
 		files, err := os.ReadDir(env.GetCurrentDir())
 		if err != nil {
-			panic(err)
+			msg.Err("❌ Failed to read directory: %v", err)
+			return result
 		}
 
-		regex := regexp.MustCompile(".*.dproj|.*.lpi$")
-
 		for _, file := range files {
-			matched := regex.MatchString(file.Name())
-			if matched {
-				result = append(result, env.GetCurrentDir()+string(filepath.Separator)+file.Name())
-				matches++
+			if reProjectFile.MatchString(file.Name()) {
+				result = append(result, filepath.Join(env.GetCurrentDir(), file.Name()))
 			}
 		}
 	}
@@ -166,16 +178,16 @@ func GetProjectNames(pkg *models.Package) []string {
 	return result
 }
 
+// isLazarus checks if the project is a Lazarus project.
 func isLazarus() bool {
 	files, err := os.ReadDir(env.GetCurrentDir())
 	if err != nil {
-		panic(err)
+		msg.Debug("⚠️ Failed to check for Lazarus project: %v", err)
+		return false
 	}
 
-	r := regexp.MustCompile(".*.lpi$")
-
 	for _, file := range files {
-		matched := r.MatchString(file.Name())
+		matched := reLazarusFile.MatchString(file.Name())
 		if matched {
 			return true
 		}
@@ -183,6 +195,7 @@ func isLazarus() bool {
 	return false
 }
 
+// processCurrentPath processes the current path.
 func processCurrentPath(node *etree.Element, rootPath string) {
 	currentPaths := strings.Split(node.Text(), ";")
 

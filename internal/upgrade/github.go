@@ -1,3 +1,5 @@
+// Package upgrade provides GitHub API integration for fetching Boss releases.
+// This file handles release discovery, asset filtering, and download.
 package upgrade
 
 import (
@@ -10,10 +12,12 @@ import (
 
 	"errors"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-github/v69/github"
 	"github.com/snakeice/gogress"
 )
 
+// getBossReleases returns the boss releases.
 func getBossReleases() ([]*github.RepositoryRelease, error) {
 	gh := github.NewClient(nil)
 
@@ -48,16 +52,25 @@ func getBossReleases() ([]*github.RepositoryRelease, error) {
 	return releases, nil
 }
 
+// findLatestRelease finds the latest release using semantic versioning.
 func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*github.RepositoryRelease, error) {
 	var bestRelease *github.RepositoryRelease
+	var bestVersion *semver.Version
 
 	for _, release := range releases {
 		if release.GetPrerelease() && !preRelease {
 			continue
 		}
 
-		if bestRelease == nil || release.GetTagName() > bestRelease.GetTagName() {
+		tagName := release.GetTagName()
+		version, err := semver.NewVersion(tagName)
+		if err != nil {
+			continue
+		}
+
+		if bestRelease == nil || version.GreaterThan(bestVersion) {
 			bestRelease = release
+			bestVersion = version
 		}
 	}
 
@@ -68,6 +81,7 @@ func findLatestRelease(releases []*github.RepositoryRelease, preRelease bool) (*
 	return bestRelease, nil
 }
 
+// findAsset finds the asset in the release.
 func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) {
 	for _, asset := range release.Assets {
 		if asset.GetName() == getAssetName() {
@@ -78,6 +92,7 @@ func findAsset(release *github.RepositoryRelease) (*github.ReleaseAsset, error) 
 	return nil, errors.New("no asset found")
 }
 
+// downloadAsset downloads the asset.
 func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, asset.GetBrowserDownloadURL(), nil)
 	if err != nil {
