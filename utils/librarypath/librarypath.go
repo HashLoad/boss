@@ -102,7 +102,7 @@ func setReadOnlyProperty(dir string) {
 	if err != nil {
 		msg.Err("  ❌ Failed to set readonly property to folder", dir, " - ", err)
 	} else {
-		os.Remove(readonlybat)
+		os.Remove(readonlybat) // #nosec G104 -- Ignoring error on removing temporary file
 	}
 }
 

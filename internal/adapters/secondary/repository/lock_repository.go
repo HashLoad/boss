@@ -38,7 +38,9 @@ func (r *FileLockRepository) Load(lockPath string) (*domain.PackageLock, error) 
 
 	data, err := r.fs.ReadFile(lockPath)
 	if err != nil {
-		return r.createEmptyLock(""), err
+		// If file doesn't exist, return empty lock without error
+		//nolint:nilerr // Intentionally return nil error when file not found to create new lock
+		return r.createEmptyLock(""), nil
 	}
 
 	lock := &domain.PackageLock{
