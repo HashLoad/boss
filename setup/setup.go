@@ -70,7 +70,7 @@ func initializeInfrastructure() {
 func CreatePaths() {
 	_, err := os.Stat(env.GetGlobalEnvBpl())
 	if os.IsNotExist(err) {
-		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0755)
+		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0755) // #nosec G301 -- Standard permissions for shared directory
 	}
 }
 

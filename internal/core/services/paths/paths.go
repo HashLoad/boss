@@ -20,7 +20,7 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 	cacheDir := env.GetModulesDir()
 	cacheDirInfo, err := os.Stat(cacheDir)
 	if os.IsNotExist(err) {
-		err = os.MkdirAll(cacheDir, 0755)
+		err = os.MkdirAll(cacheDir, 0755) // #nosec G301 -- Standard permissions for cache directory
 		if err != nil {
 			msg.Die("❌ Failed to create modules directory: %v", err)
 		}
@@ -71,7 +71,7 @@ func EnsureCacheDir(config env.ConfigProvider, dep domain.Dependency) {
 	fi, err := os.Stat(cacheDir)
 	if err != nil {
 		msg.Debug("Creating %s", cacheDir)
-		err = os.MkdirAll(cacheDir, 0755)
+		err = os.MkdirAll(cacheDir, 0755) // #nosec G301 -- Standard permissions for cache directory
 		if err != nil {
 			msg.Die("❌ Could not create %s: %s", cacheDir, err)
 		}

@@ -54,8 +54,7 @@ func seven() {
 	if _, err := os.Stat(bossCfg); os.IsNotExist(err) {
 		return
 	}
-	//nolint:gosec,nolintlint // Reading Boss configuration file from known location
-	file, err := os.Open(bossCfg)
+	file, err := os.Open(bossCfg) // #nosec G304 -- Reading Boss configuration file from known location
 	if err != nil {
 		msg.Warn("⚠️ Migration 7: could not open config file: %v", err)
 		return

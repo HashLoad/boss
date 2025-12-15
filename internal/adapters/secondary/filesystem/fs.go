@@ -29,7 +29,7 @@ func NewOSFileSystem() *OSFileSystem {
 //
 //nolint:gosec,nolintlint // Filesystem adapter - file access controlled by caller
 func (fs *OSFileSystem) ReadFile(name string) ([]byte, error) {
-	return os.ReadFile(name)
+	return os.ReadFile(name) // #nosec G304 -- Filesystem adapter, paths controlled by caller
 }
 
 // WriteFile writes data to a file with the given permissions.
@@ -66,14 +66,14 @@ func (fs *OSFileSystem) Rename(oldpath, newpath string) error {
 //
 //nolint:gosec,nolintlint // Filesystem adapter - file access controlled by caller
 func (fs *OSFileSystem) Open(name string) (io.ReadCloser, error) {
-	return os.Open(name)
+	return os.Open(name) // #nosec G304 -- Filesystem adapter, paths controlled by caller
 }
 
 // Create creates or truncates the named file.
 //
 //nolint:gosec,nolintlint // Filesystem adapter - file access controlled by caller
 func (fs *OSFileSystem) Create(name string) (io.WriteCloser, error) {
-	return os.Create(name)
+	return os.Create(name) // #nosec G304 -- Filesystem adapter, paths controlled by caller
 }
 
 // Exists returns true if the file exists.

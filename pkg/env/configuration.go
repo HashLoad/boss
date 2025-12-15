@@ -143,15 +143,13 @@ func (c *Configuration) SaveConfiguration() {
 		msg.Die("❌ Failed to parse config file", err.Error())
 	}
 
-	//nolint:gosec,nolintlint // Standard permissions for Boss cache directory
-	err = os.MkdirAll(c.path, 0755)
+	err = os.MkdirAll(c.path, 0755) // #nosec G301 -- Standard permissions for Boss cache directory
 	if err != nil {
 		msg.Die("❌ Failed to create path", c.path, err.Error())
 	}
 
 	configPath := filepath.Join(c.path, consts.BossConfigFile)
-	//nolint:gosec,nolintlint // Creating Boss configuration file in known location
-	f, err := os.Create(configPath)
+	f, err := os.Create(configPath) // #nosec G304 -- Creating Boss configuration file in known location
 	if err != nil {
 		msg.Die("❌ Failed to create file ", configPath, err.Error())
 		return
@@ -186,8 +184,7 @@ func LoadConfiguration(cachePath string) (*Configuration, error) {
 	}
 
 	configFileName := filepath.Join(cachePath, consts.BossConfigFile)
-	//nolint:gosec,nolintlint // Reading Boss configuration file from cache directory
-	buffer, err := os.ReadFile(configFileName)
+	buffer, err := os.ReadFile(configFileName) // #nosec G304 -- Reading Boss configuration file from cache directory
 	if err != nil {
 		return makeDefault(cachePath), err
 	}

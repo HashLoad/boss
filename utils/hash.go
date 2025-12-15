@@ -34,8 +34,7 @@ func HashDir(dir string) string {
 			return nil
 		}
 
-		//nolint:gosec,nolintlint // Reading files from controlled directory structure for hashing
-		fileBytes, _ := os.ReadFile(path)
+		fileBytes, _ := os.ReadFile(path) // #nosec G304 -- Reading files from controlled directory structure for hashing
 		fileHash := hashByte(&fileBytes)
 		finalHash += fileHash
 		return nil
