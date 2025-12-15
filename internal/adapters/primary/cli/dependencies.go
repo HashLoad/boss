@@ -28,7 +28,7 @@ const (
 	branchOutdated
 )
 
-// dependenciesCmdRegister registers the dependencies command
+// dependenciesCmdRegister registers the dependencies command.
 func dependenciesCmdRegister(root *cobra.Command) {
 	var showVersion bool
 
@@ -57,7 +57,7 @@ func dependenciesCmdRegister(root *cobra.Command) {
 	dependenciesCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show dependency version")
 }
 
-// printDependencies prints the dependencies
+// printDependencies prints the dependencies.
 func printDependencies(showVersion bool) {
 	var tree = treeprint.New()
 	pkg, err := pkgmanager.LoadPackage()
@@ -75,7 +75,7 @@ func printDependencies(showVersion bool) {
 	msg.Info(tree.String())
 }
 
-// printDeps prints the dependencies recursively
+// printDeps prints the dependencies recursively.
 func printDeps(dep *domain.Dependency,
 	deps []domain.Dependency,
 	lock domain.PackageLock,
@@ -100,7 +100,7 @@ func printDeps(dep *domain.Dependency,
 	}
 }
 
-// printSingleDependency prints a single dependency
+// printSingleDependency prints a single dependency.
 func printSingleDependency(
 	dep *domain.Dependency,
 	lock domain.PackageLock,
@@ -129,7 +129,7 @@ func printSingleDependency(
 	return tree.AddBranch(output)
 }
 
-// isOutdated checks if the dependency is outdated
+// isOutdated checks if the dependency is outdated.
 func isOutdated(dependency domain.Dependency, version string) (dependencyStatus, string) {
 	if err := installer.GetDependency(dependency); err != nil {
 		return updated, ""

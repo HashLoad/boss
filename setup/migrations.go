@@ -19,12 +19,12 @@ import (
 	"github.com/hashload/boss/pkg/pkgmanager"
 )
 
-// one sets the internal refresh rate to 5
+// one sets the internal refresh rate to 5.
 func one() {
 	env.GlobalConfiguration().InternalRefreshRate = 5
 }
 
-// two renames the old internal directory to the new one
+// two renames the old internal directory to the new one.
 func two() {
 	oldPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDirOld+env.HashDelphiPath())
 	newPath := filepath.Join(env.GetBossHome(), consts.FolderDependencies, consts.BossInternalDir+env.HashDelphiPath())
@@ -33,13 +33,13 @@ func two() {
 	}
 }
 
-// three sets the git embedded to true
+// three sets the git embedded to true.
 func three() {
 	env.GlobalConfiguration().GitEmbedded = true
 	env.GlobalConfiguration().SaveConfiguration()
 }
 
-// six removes the internal global directory
+// six removes the internal global directory.
 func six() {
 	if err := os.RemoveAll(env.GetInternalGlobalDir()); err != nil {
 		msg.Warn("⚠️ Migration 6: could not remove internal global directory: %v", err)
@@ -47,6 +47,8 @@ func six() {
 }
 
 // seven migrates the auth configuration
+//
+//nolint:gocognit // Complex migration logic
 func seven() {
 	bossCfg := filepath.Join(env.GetBossHome(), consts.BossConfigFile)
 	if _, err := os.Stat(bossCfg); os.IsNotExist(err) {
@@ -103,7 +105,7 @@ func seven() {
 	}
 }
 
-// cleanup cleans up the internal global directory
+// cleanup cleans up the internal global directory.
 func cleanup() {
 	env.SetInternal(false)
 	env.GlobalConfiguration().LastInternalUpdate = time.Now().AddDate(-1000, 0, 0)

@@ -68,7 +68,7 @@ func BossUpgrade(preRelease bool) error {
 	return nil
 }
 
-// apply applies the update
+// apply applies the update.
 func apply(buff []byte) error {
 	ex, err := os.Executable()
 	if err != nil {
@@ -82,7 +82,7 @@ func apply(buff []byte) error {
 	})
 }
 
-// getAssetName returns the asset name
+// getAssetName returns the asset name.
 func getAssetName() string {
 	ext := "zip"
 	if runtime.GOOS != "windows" {

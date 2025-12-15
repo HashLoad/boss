@@ -24,6 +24,8 @@ const (
 )
 
 // dependencyStatusConfig defines how each status should be displayed.
+//
+//nolint:gochecknoglobals // Dependency status configuration
 var dependencyStatusConfig = tracker.StatusConfig[DependencyStatus]{
 	StatusWaiting: {
 		Icon:       pterm.LightYellow("⏳"),

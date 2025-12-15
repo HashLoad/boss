@@ -1,3 +1,4 @@
+//nolint:testpackage // Testing internal implementation details
 package installer
 
 import (
@@ -8,7 +9,6 @@ import (
 )
 
 func TestProgressTracker(t *testing.T) {
-
 	if testing.Short() {
 		t.Skip("Skipping interactive progress tracker test")
 	}

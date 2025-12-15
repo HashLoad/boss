@@ -55,6 +55,7 @@ func buildSearchPath(dep *domain.Dependency) string {
 	return searchPath
 }
 
+//nolint:funlen,gocognit,lll // Complex compilation orchestration with long function signature
 func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker, selectedCompiler *compilerselector.SelectedCompiler) bool {
 	if tracker == nil || !tracker.IsEnabled() {
 		msg.Info("  🔨 Building " + filepath.Base(dprojPath))

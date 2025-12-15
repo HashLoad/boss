@@ -47,7 +47,7 @@ type Messenger struct {
 	logLevel logLevel
 }
 
-// NewMessenger creates a new Messenger instance
+// NewMessenger creates a new Messenger instance.
 func NewMessenger() *Messenger {
 	m := &Messenger{
 		Stdout:     os.Stdout,
@@ -68,61 +68,61 @@ func NewMessenger() *Messenger {
 //nolint:gochecknoglobals // Global logger is acceptable for CLI apps
 var defaultMsg = NewMessenger()
 
-// Die prints an error message and exits the program
+// Die prints an error message and exits the program.
 func Die(msg string, args ...any) {
 	defaultMsg.Die(msg, args...)
 }
 
-// Info prints an informational message
+// Info prints an informational message.
 func Info(msg string, args ...any) {
 	defaultMsg.Info(msg, args...)
 }
 
-// Success prints a success message
+// Success prints a success message.
 func Success(msg string, args ...any) {
 	defaultMsg.Success(msg, args...)
 }
 
-// Debug prints a debug message
+// Debug prints a debug message.
 func Debug(msg string, args ...any) {
 	defaultMsg.Debug(msg, args...)
 }
 
-// Warn prints a warning message
+// Warn prints a warning message.
 func Warn(msg string, args ...any) {
 	defaultMsg.Warn(msg, args...)
 }
 
-// Err prints an error message
+// Err prints an error message.
 func Err(msg string, args ...any) {
 	defaultMsg.Err(msg, args...)
 }
 
-// LogLevel sets the global log level
+// LogLevel sets the global log level.
 func LogLevel(level logLevel) {
 	defaultMsg.LogLevel(level)
 }
 
-// LogLevel sets the log level for the messenger
+// LogLevel sets the log level for the messenger.
 func (m *Messenger) LogLevel(level logLevel) {
 	m.Lock()
 	m.logLevel = level
 	m.Unlock()
 }
 
-// IsDebugMode returns true if the log level is set to DEBUG
+// IsDebugMode returns true if the log level is set to DEBUG.
 func IsDebugMode() bool {
 	return defaultMsg.IsDebugMode()
 }
 
-// IsDebugMode returns true if the log level is set to DEBUG
+// IsDebugMode returns true if the log level is set to DEBUG.
 func (m *Messenger) IsDebugMode() bool {
 	m.Lock()
 	defer m.Unlock()
 	return m.logLevel >= DEBUG
 }
 
-// Err prints an error message
+// Err prints an error message.
 func (m *Messenger) Err(msg string, args ...any) {
 	if m.logLevel < ERROR {
 		return
@@ -139,7 +139,7 @@ func (m *Messenger) Err(msg string, args ...any) {
 	m.hasError = true
 }
 
-// Warn prints a warning message
+// Warn prints a warning message.
 func (m *Messenger) Warn(msg string, args ...any) {
 	if m.logLevel < WARN {
 		return
@@ -153,7 +153,7 @@ func (m *Messenger) Warn(msg string, args ...any) {
 	m.quietMode = wasQuiet
 }
 
-// Info prints an informational message
+// Info prints an informational message.
 func (m *Messenger) Info(msg string, args ...any) {
 	if m.logLevel < INFO {
 		return
@@ -164,7 +164,7 @@ func (m *Messenger) Info(msg string, args ...any) {
 	m.print(nil, msg, args...)
 }
 
-// Success prints a success message
+// Success prints a success message.
 func (m *Messenger) Success(msg string, args ...any) {
 	if m.logLevel < INFO {
 		return
@@ -175,7 +175,7 @@ func (m *Messenger) Success(msg string, args ...any) {
 	m.print(pterm.Success.MessageStyle, msg, args...)
 }
 
-// Debug prints a debug message
+// Debug prints a debug message.
 func (m *Messenger) Debug(msg string, args ...any) {
 	if m.logLevel < DEBUG {
 		return
@@ -183,25 +183,25 @@ func (m *Messenger) Debug(msg string, args ...any) {
 	m.print(pterm.Debug.MessageStyle, msg, args...)
 }
 
-// Die prints an error message and exits the program
+// Die prints an error message and exits the program.
 func (m *Messenger) Die(msg string, args ...any) {
 	m.Err(msg, args...)
 	os.Exit(m.exitStatus)
 }
 
-// ExitCode sets the exit code for the program
+// ExitCode sets the exit code for the program.
 func (m *Messenger) ExitCode(exitStatus int) {
 	m.Lock()
 	m.exitStatus = exitStatus
 	m.Unlock()
 }
 
-// ExitCode sets the exit code for the program
+// ExitCode sets the exit code for the program.
 func ExitCode(exitStatus int) {
 	defaultMsg.ExitCode(exitStatus)
 }
 
-// print prints a message with the given style
+// print prints a message with the given style.
 func (m *Messenger) print(style *pterm.Style, msg string, args ...any) {
 	m.Lock()
 	defer m.Unlock()
@@ -217,29 +217,29 @@ func (m *Messenger) print(style *pterm.Style, msg string, args ...any) {
 	style.Printf(msg, args...)
 }
 
-// HasErrored returns true if an error has occurred
+// HasErrored returns true if an error has occurred.
 func (m *Messenger) HasErrored() bool {
 	return m.hasError
 }
 
-// SetQuietMode sets the quiet mode flag
+// SetQuietMode sets the quiet mode flag.
 func SetQuietMode(quiet bool) {
 	defaultMsg.SetQuietMode(quiet)
 }
 
-// SetQuietMode sets the quiet mode flag
+// SetQuietMode sets the quiet mode flag.
 func (m *Messenger) SetQuietMode(quiet bool) {
 	m.Lock()
 	m.quietMode = quiet
 	m.Unlock()
 }
 
-// SetProgressTracker sets the progress tracker
+// SetProgressTracker sets the progress tracker.
 func SetProgressTracker(tracker Stoppable) {
 	defaultMsg.SetProgressTracker(tracker)
 }
 
-// SetProgressTracker sets the progress tracker
+// SetProgressTracker sets the progress tracker.
 func (m *Messenger) SetProgressTracker(tracker Stoppable) {
 	m.Lock()
 	m.progressTracker = tracker

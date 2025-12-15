@@ -13,6 +13,8 @@ import (
 )
 
 // CacheService provides cache management operations.
+//
+//nolint:revive // cache.CacheService is intentional for clarity
 type CacheService struct {
 	fs infra.FileSystem
 }

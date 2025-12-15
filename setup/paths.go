@@ -48,7 +48,7 @@ func BuildMessage(path []string) string {
 		"source ~/" + shellFile + "\n"
 }
 
-// InitializePath initializes the path
+// InitializePath initializes the path.
 func InitializePath() {
 	if env.GlobalConfiguration().Advices.SetupPath {
 		return

@@ -50,6 +50,7 @@ func (a *ArtifactService) movePath(oldPath string, newPath string) {
 	}
 }
 
+//nolint:lll // Function signature cannot be easily shortened
 func (a *ArtifactService) ensureArtifacts(lockedDependency *domain.LockedDependency, dep domain.Dependency, rootPath string) {
 	var moduleName = dep.Name()
 	lockedDependency.Artifacts.Clean()

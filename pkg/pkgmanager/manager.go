@@ -11,8 +11,9 @@ import (
 )
 
 var (
+	//nolint:gochecknoglobals // Singleton pattern for package manager
 	instance   *packages.PackageService
-	instanceMu sync.RWMutex
+	instanceMu sync.RWMutex //nolint:gochecknoglobals // Singleton mutex
 )
 
 // SetInstance sets the global package service instance.

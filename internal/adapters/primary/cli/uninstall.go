@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// uninstallCmdRegister registers the uninstall command
+// uninstallCmdRegister registers the uninstall command.
 func uninstallCmdRegister(root *cobra.Command) {
 	var noSaveUninstall bool
 	var selectMode bool
@@ -49,7 +49,7 @@ func uninstallCmdRegister(root *cobra.Command) {
 	uninstallCmd.Flags().BoolVarP(&selectMode, "select", "s", false, "select dependencies to uninstall")
 }
 
-// uninstallWithSelect uninstalls the selected dependencies
+// uninstallWithSelect uninstalls the selected dependencies.
 func uninstallWithSelect(noSave bool) {
 	pkg, err := pkgmanager.LoadPackage()
 	if err != nil {

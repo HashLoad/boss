@@ -1,3 +1,4 @@
+//nolint:testpackage // Testing internal implementation details
 package installer
 
 import (

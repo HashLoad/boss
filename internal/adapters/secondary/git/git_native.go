@@ -131,6 +131,7 @@ func initSubmodulesNative(dep domain.Dependency) error {
 
 func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
+	//nolint:gosec // Git command with controlled repository reference
 	cmd := exec.Command("git", "checkout", "-f", referenceName.Short())
 	cmd.Dir = dirModule
 	return runCommand(cmd)

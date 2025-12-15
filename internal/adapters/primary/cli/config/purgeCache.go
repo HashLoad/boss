@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// RegisterCmd registers the cache command
+// RegisterCmd registers the cache command.
 func RegisterCmd(cmd *cobra.Command) {
 	purgeCacheCmd := &cobra.Command{
 		Use:   "cache",
@@ -35,14 +35,14 @@ func RegisterCmd(cmd *cobra.Command) {
 	cmd.AddCommand(purgeCacheCmd)
 }
 
-// removeCacheWithConfirmation removes the cache with confirmation
+// removeCacheWithConfirmation removes the cache with confirmation.
 func removeCacheWithConfirmation() error {
 	modulesDir := env.GetModulesDir()
 
 	var totalSize int64
 	err := filepath.Walk(modulesDir, func(_ string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil
+			return err
 		}
 		if !info.IsDir() {
 			totalSize += info.Size()
@@ -82,7 +82,7 @@ func removeCacheWithConfirmation() error {
 	return gc.RunGC(true)
 }
 
-// formatBytes formats bytes to string
+// formatBytes formats bytes to string.
 func formatBytes(bytes int64) string {
 	const unit = 1024
 	if bytes < unit {

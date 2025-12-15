@@ -15,13 +15,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// delphiCmd registers the delphi command
+// delphiCmd registers the delphi command.
 func delphiCmd(root *cobra.Command) {
 	delphiCmd := &cobra.Command{
 		Use:   "delphi",
 		Short: "Configure Delphi version",
 		Long:  `Configure Delphi version to compile modules`,
-		Run: func(cmd *cobra.Command, _ []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			selectDelphiInteractive()
 		},
 	}
@@ -56,7 +56,7 @@ func delphiCmd(root *cobra.Command) {
 	delphiCmd.AddCommand(use)
 }
 
-// selectDelphiInteractive selects the delphi version interactively
+// selectDelphiInteractive selects the delphi version interactively.
 func selectDelphiInteractive() {
 	installations := registryadapter.GetDetectedDelphis()
 	if len(installations) == 0 {
@@ -114,7 +114,7 @@ func selectDelphiInteractive() {
 	msg.Info("  Path: %s", config.DelphiPath)
 }
 
-// listDelphiVersions lists the delphi versions
+// listDelphiVersions lists the delphi versions.
 func listDelphiVersions() {
 	installations := registryadapter.GetDetectedDelphis()
 	if len(installations) == 0 {
@@ -135,6 +135,8 @@ func listDelphiVersions() {
 }
 
 // useDelphiVersion uses the delphi version
+//
+//nolint:gocognit,nestif // Complex Delphi version selection logic
 func useDelphiVersion(pathOrIndex string) {
 	config := env.GlobalConfiguration()
 	installations := registryadapter.GetDetectedDelphis()
@@ -165,7 +167,6 @@ func useDelphiVersion(pathOrIndex string) {
 	} else {
 		found := false
 		for _, inst := range installations {
-
 			if inst.Version == pathOrIndex {
 				config.DelphiPath = filepath.Dir(inst.Path)
 				found = true

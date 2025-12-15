@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// loginCmdRegister registers the login command
+// loginCmdRegister registers the login command.
 func loginCmdRegister(root *cobra.Command) {
 	var removeLogin bool
 	var useSSH bool
@@ -50,7 +50,7 @@ func loginCmdRegister(root *cobra.Command) {
 	root.AddCommand(logoutCmd)
 }
 
-// login logs in the user
+// login logs in the user.
 func login(removeLogin bool, useSSH bool, privateKey string, userName string, password string, args []string) {
 	configuration := env.GlobalConfiguration()
 
@@ -87,7 +87,7 @@ func login(removeLogin bool, useSSH bool, privateKey string, userName string, pa
 	configuration.SaveConfiguration()
 }
 
-// setAuthWithParams sets the authentication with parameters
+// setAuthWithParams sets the authentication with parameters.
 func setAuthWithParams(auth *env.Auth, useSSH bool, privateKey, userName, password string) {
 	auth.UseSSH = useSSH
 	if auth.UseSSH || (privateKey != "") {
@@ -100,7 +100,7 @@ func setAuthWithParams(auth *env.Auth, useSSH bool, privateKey, userName, passwo
 	}
 }
 
-// setAuthInteractively sets the authentication interactively
+// setAuthInteractively sets the authentication interactively.
 func setAuthInteractively(auth *env.Auth) {
 	authMethods := []string{"SSH Key", "Username/Password"}
 	selectedMethod, err := pterm.DefaultInteractiveSelect.
@@ -123,7 +123,7 @@ func setAuthInteractively(auth *env.Auth) {
 	}
 }
 
-// getPass gets the password
+// getPass gets the password.
 func getPass(description string) string {
 	pass, err := pterm.DefaultInteractiveTextInput.WithMask("•").Show(description)
 	if err != nil {
@@ -132,7 +132,7 @@ func getPass(description string) string {
 	return pass
 }
 
-// getSSHKeyPath gets the ssh key path
+// getSSHKeyPath gets the ssh key path.
 func getSSHKeyPath() string {
 	usr, err := user.Current()
 	if err != nil {

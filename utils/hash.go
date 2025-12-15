@@ -11,7 +11,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
-// hashByte calculates the MD5 hash of a byte slice
+// hashByte calculates the MD5 hash of a byte slice.
 func hashByte(contentPtr *[]byte) string {
 	contents := *contentPtr
 	//nolint:gosec // MD5 is used for hash comparison
@@ -20,7 +20,7 @@ func hashByte(contentPtr *[]byte) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-// HashDir calculates the MD5 hash of a directory's contents
+// HashDir calculates the MD5 hash of a directory's contents.
 func HashDir(dir string) string {
 	var err error
 	var finalHash = "b:"

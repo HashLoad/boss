@@ -208,6 +208,7 @@ func reportBuildStart(trackerPtr *BuildTracker, depName string) {
 }
 
 func reportBuildResult(trackerPtr *BuildTracker, depName string, hasFailed bool) {
+	//nolint:nestif // Complex compiler logic requires nesting
 	if trackerPtr.IsEnabled() {
 		if hasFailed {
 			trackerPtr.SetFailed(depName, consts.StatusMsgBuildError)

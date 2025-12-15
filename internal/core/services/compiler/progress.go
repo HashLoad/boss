@@ -17,6 +17,8 @@ const (
 )
 
 // buildStatusConfig defines how each build status should be displayed.
+//
+//nolint:gochecknoglobals // Build status configuration
 var buildStatusConfig = tracker.StatusConfig[BuildStatus]{
 	BuildStatusWaiting: {
 		Icon:       pterm.LightYellow("⏳"),

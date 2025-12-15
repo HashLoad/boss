@@ -1,3 +1,4 @@
+//nolint:testpackage // Testing internal implementation details
 package cache
 
 import (
@@ -43,10 +44,10 @@ func (m *MockFileSystem) MkdirAll(path string, _ os.FileMode) error {
 
 func (m *MockFileSystem) Stat(name string) (os.FileInfo, error) {
 	if _, ok := m.files[name]; ok {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Mock returns nil FileInfo for testing
 	}
 	if _, ok := m.dirs[name]; ok {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Mock returns nil FileInfo for testing
 	}
 	return nil, errors.New("not found")
 }
@@ -136,5 +137,5 @@ func TestService_LoadRepositoryData_NotFound(t *testing.T) {
 	}
 }
 
-// Ensure consts is used (to avoid unused import error)
+// Ensure consts is used (to avoid unused import error).
 var _ = consts.FolderBossHome

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// updateCmdRegister registers the update command
+// updateCmdRegister registers the update command.
 func updateCmdRegister(root *cobra.Command) {
 	var selectMode bool
 
@@ -44,7 +44,7 @@ func updateCmdRegister(root *cobra.Command) {
 	root.AddCommand(updateCmd)
 }
 
-// updateWithSelect updates the selected dependencies
+// updateWithSelect updates the selected dependencies.
 func updateWithSelect() {
 	pkg, err := pkgmanager.LoadPackage()
 	if err != nil {
@@ -68,6 +68,7 @@ func updateWithSelect() {
 		depNames[i] = dep.Repository
 		installed := pkg.Lock.GetInstalled(dep)
 
+		//nolint:gocritic // if-else chain is more readable than switch here
 		if installed.Version == "" {
 			options[i] = fmt.Sprintf("%s (not installed)", dep.Name())
 		} else if dep.GetVersion() != installed.Version {

@@ -1,3 +1,4 @@
+//nolint:testpackage // Testing internal implementation details
 package lock
 
 import (
@@ -23,31 +24,31 @@ func NewMockFileSystem() *MockFileSystem {
 	}
 }
 
-func (m *MockFileSystem) ReadFile(name string) ([]byte, error) {
+func (m *MockFileSystem) ReadFile(_ string) ([]byte, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *MockFileSystem) WriteFile(name string, data []byte, perm os.FileMode) error {
+func (m *MockFileSystem) WriteFile(_ string, _ []byte, _ os.FileMode) error {
 	return nil
 }
 
-func (m *MockFileSystem) MkdirAll(path string, perm os.FileMode) error {
+func (m *MockFileSystem) MkdirAll(_ string, _ os.FileMode) error {
 	return nil
 }
 
-func (m *MockFileSystem) Stat(name string) (os.FileInfo, error) {
+func (m *MockFileSystem) Stat(_ string) (os.FileInfo, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *MockFileSystem) Remove(name string) error {
+func (m *MockFileSystem) Remove(_ string) error {
 	return nil
 }
 
-func (m *MockFileSystem) RemoveAll(path string) error {
+func (m *MockFileSystem) RemoveAll(_ string) error {
 	return nil
 }
 
-func (m *MockFileSystem) Rename(oldpath, newpath string) error {
+func (m *MockFileSystem) Rename(_, _ string) error {
 	return nil
 }
 
@@ -55,11 +56,11 @@ func (m *MockFileSystem) ReadDir(_ string) ([]infra.DirEntry, error) {
 	return nil, nil
 }
 
-func (m *MockFileSystem) Open(name string) (io.ReadCloser, error) {
+func (m *MockFileSystem) Open(_ string) (io.ReadCloser, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *MockFileSystem) Create(name string) (io.WriteCloser, error) {
+func (m *MockFileSystem) Create(_ string) (io.WriteCloser, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -91,19 +92,19 @@ func NewMockLockRepository() *MockLockRepository {
 	return &MockLockRepository{}
 }
 
-func (m *MockLockRepository) Load(lockPath string) (*domain.PackageLock, error) {
+func (m *MockLockRepository) Load(_ string) (*domain.PackageLock, error) {
 	if m.loadErr != nil {
 		return nil, m.loadErr
 	}
 	return m.lock, nil
 }
 
-func (m *MockLockRepository) Save(lock *domain.PackageLock, lockPath string) error {
+func (m *MockLockRepository) Save(lock *domain.PackageLock, _ string) error {
 	m.lock = lock
 	return m.saveErr
 }
 
-func (m *MockLockRepository) MigrateOldFormat(oldPath, newPath string) error {
+func (m *MockLockRepository) MigrateOldFormat(_, _ string) error {
 	m.migrateCalls++
 	return nil
 }

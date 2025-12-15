@@ -1,6 +1,7 @@
 package domain
 
 import (
+	//nolint:gosec // MD5 used for dependency hashing, not security
 	"crypto/md5"
 	"encoding/hex"
 	"io"
@@ -30,7 +31,7 @@ type Dependency struct {
 	UseSSH     bool
 }
 
-// HashName returns the MD5 hash of the repository name
+// HashName returns the MD5 hash of the repository name.
 func (p *Dependency) HashName() string {
 	//nolint:gosec // We are not using this for security purposes
 	hash := md5.New()
@@ -40,7 +41,7 @@ func (p *Dependency) HashName() string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-// GetVersion returns the version of the dependency
+// GetVersion returns the version of the dependency.
 func (p *Dependency) GetVersion() string {
 	return p.version
 }
@@ -56,12 +57,12 @@ func (p *Dependency) SSHUrl() string {
 	return "git@" + provider + ":" + repo
 }
 
-// GetURLPrefix returns the provider prefix of the repository URL
+// GetURLPrefix returns the provider prefix of the repository URL.
 func (p *Dependency) GetURLPrefix() string {
 	return reURLPrefix.FindString(p.Repository)
 }
 
-// GetURL returns the full URL for the repository, handling SSH and HTTPS
+// GetURL returns the full URL for the repository, handling SSH and HTTPS.
 func (p *Dependency) GetURL() string {
 	prefix := p.GetURLPrefix()
 	auth := env.GlobalConfiguration().Auth[prefix]
@@ -80,7 +81,7 @@ func (p *Dependency) GetURL() string {
 	return "https://" + p.Repository
 }
 
-// ParseDependency creates a Dependency object from repository string and version info
+// ParseDependency creates a Dependency object from repository string and version info.
 func ParseDependency(repo string, info string) Dependency {
 	parsed := strings.Split(info, ":")
 	dependency := Dependency{}
@@ -102,7 +103,7 @@ func ParseDependency(repo string, info string) Dependency {
 	return dependency
 }
 
-// GetDependencies converts a map of dependencies to a slice of Dependency objects
+// GetDependencies converts a map of dependencies to a slice of Dependency objects.
 func GetDependencies(deps map[string]string) []Dependency {
 	dependencies := make([]Dependency, 0)
 	for repo, info := range deps {
@@ -111,7 +112,7 @@ func GetDependencies(deps map[string]string) []Dependency {
 	return dependencies
 }
 
-// GetDependenciesNames returns a slice of dependency names
+// GetDependenciesNames returns a slice of dependency names.
 func GetDependenciesNames(deps []Dependency) []string {
 	var dependencies []string
 	for _, info := range deps {
@@ -120,7 +121,7 @@ func GetDependenciesNames(deps []Dependency) []string {
 	return dependencies
 }
 
-// Name returns the name of the dependency extracted from the repository URL
+// Name returns the name of the dependency extracted from the repository URL.
 func (p *Dependency) Name() string {
 	return reDepName.FindString(p.Repository)
 }

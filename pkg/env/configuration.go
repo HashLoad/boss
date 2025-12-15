@@ -39,7 +39,7 @@ type Configuration struct {
 	} `json:"advices"`
 }
 
-// Auth represents authentication credentials for a repository
+// Auth represents authentication credentials for a repository.
 type Auth struct {
 	UseSSH     bool   `json:"use,omitempty"`
 	Path       string `json:"path,omitempty"`
@@ -48,7 +48,7 @@ type Auth struct {
 	PassPhrase string `json:"keypass,omitempty"`
 }
 
-// GetUser returns the decrypted username
+// GetUser returns the decrypted username.
 func (a *Auth) GetUser() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.User)
 	if err != nil {
@@ -58,7 +58,7 @@ func (a *Auth) GetUser() string {
 	return ret
 }
 
-// GetPassword returns the decrypted password
+// GetPassword returns the decrypted password.
 func (a *Auth) GetPassword() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.Pass)
 	if err != nil {
@@ -69,7 +69,7 @@ func (a *Auth) GetPassword() string {
 	return ret
 }
 
-// GetPassPhrase returns the decrypted passphrase
+// GetPassPhrase returns the decrypted passphrase.
 func (a *Auth) GetPassPhrase() string {
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.PassPhrase)
 	if err != nil {
@@ -79,7 +79,7 @@ func (a *Auth) GetPassPhrase() string {
 	return ret
 }
 
-// SetUser encrypts and sets the username
+// SetUser encrypts and sets the username.
 func (a *Auth) SetUser(user string) {
 	if encryptedUser, err := crypto.Encrypt(crypto.MachineKey(), user); err != nil {
 		msg.Die("❌ Failed to crypt user: %s", err)
@@ -88,7 +88,7 @@ func (a *Auth) SetUser(user string) {
 	}
 }
 
-// SetPass encrypts and sets the password
+// SetPass encrypts and sets the password.
 func (a *Auth) SetPass(pass string) {
 	if cPass, err := crypto.Encrypt(crypto.MachineKey(), pass); err != nil {
 		msg.Die("❌ Failed to crypt pass: %s", err)
@@ -97,7 +97,7 @@ func (a *Auth) SetPass(pass string) {
 	}
 }
 
-// SetPassPhrase encrypts and sets the passphrase
+// SetPassPhrase encrypts and sets the passphrase.
 func (a *Auth) SetPassPhrase(passphrase string) {
 	if cPassPhrase, err := crypto.Encrypt(crypto.MachineKey(), passphrase); err != nil {
 		msg.Die("❌ Failed to crypt PassPhrase: %s", err)
@@ -106,7 +106,7 @@ func (a *Auth) SetPassPhrase(passphrase string) {
 	}
 }
 
-// GetAuth returns the authentication method for a repository
+// GetAuth returns the authentication method for a repository.
 func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	auth := c.Auth[repo]
 
@@ -136,7 +136,7 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	}
 }
 
-// SaveConfiguration saves the configuration to disk
+// SaveConfiguration saves the configuration to disk.
 func (c *Configuration) SaveConfiguration() {
 	jsonString, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
@@ -163,7 +163,7 @@ func (c *Configuration) SaveConfiguration() {
 	}
 }
 
-// makeDefault creates a default configuration
+// makeDefault creates a default configuration.
 func makeDefault(configPath string) *Configuration {
 	return &Configuration{
 		path:                configPath,
@@ -177,7 +177,7 @@ func makeDefault(configPath string) *Configuration {
 	}
 }
 
-// LoadConfiguration loads the configuration from disk
+// LoadConfiguration loads the configuration from disk.
 func LoadConfiguration(cachePath string) (*Configuration, error) {
 	configuration := &Configuration{
 		PurgeTime: 3,

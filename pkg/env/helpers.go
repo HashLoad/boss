@@ -7,17 +7,17 @@ type ConfigAccessor struct {
 	provider ConfigProvider
 }
 
-// NewConfigAccessor creates a new accessor with the given provider
+// NewConfigAccessor creates a new accessor with the given provider.
 func NewConfigAccessor(provider ConfigProvider) *ConfigAccessor {
 	return &ConfigAccessor{provider: provider}
 }
 
-// GetDelphiPath returns the configured Delphi path
+// GetDelphiPath returns the configured Delphi path.
 func (a *ConfigAccessor) GetDelphiPath() string {
 	return a.provider.GetDelphiPath()
 }
 
-// GetGitEmbedded returns whether embedded git is enabled
+// GetGitEmbedded returns whether embedded git is enabled.
 func (a *ConfigAccessor) GetGitEmbedded() bool {
 	return a.provider.GetGitEmbedded()
 }

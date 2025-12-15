@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// installCmdRegister registers the install command
+// installCmdRegister registers the install command.
 func installCmdRegister(root *cobra.Command) {
 	var noSaveInstall bool
 	var compilerVersion string

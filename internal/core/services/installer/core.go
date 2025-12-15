@@ -43,6 +43,7 @@ type installContext struct {
 	requestedDeps    map[string]bool // Track which dependencies were explicitly requested
 }
 
+//nolint:lll // Function signature readability
 func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options InstallOptions, progress *ProgressTracker) *installContext {
 	fs := filesystem.NewOSFileSystem()
 	lockRepo := repository.NewFileLockRepository(fs)
@@ -120,7 +121,9 @@ func DoInstall(config env.ConfigProvider, options InstallOptions, pkg *domain.Pa
 	paths.EnsureCleanModulesDir(dependencies, pkg.Lock)
 
 	pkg.Lock.CleanRemoved(dependencies)
-	pkgmanager.SavePackageCurrent(pkg)
+	if err := pkgmanager.SavePackageCurrent(pkg); err != nil {
+		msg.Warn("⚠️ Failed to save package: %v", err)
+	}
 	if err := installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir()); err != nil {
 		msg.Warn("⚠️ Failed to save lock file: %v", err)
 	}
@@ -128,7 +131,9 @@ func DoInstall(config env.ConfigProvider, options InstallOptions, pkg *domain.Pa
 	librarypath.UpdateLibraryPath(pkg)
 
 	compiler.Build(pkg, options.Compiler, options.Platform)
-	pkgmanager.SavePackageCurrent(pkg)
+	if err := pkgmanager.SavePackageCurrent(pkg); err != nil {
+		msg.Warn("⚠️ Failed to save package: %v", err)
+	}
 	if err := installContext.lockSvc.Save(&pkg.Lock, env.GetCurrentDir()); err != nil {
 		msg.Warn("⚠️ Failed to save lock file: %v", err)
 	}
@@ -217,6 +222,7 @@ func (ic *installContext) ensureDependencies(pkg *domain.Package) ([]domain.Depe
 	return deps, nil
 }
 
+//nolint:gocognit // Complex dependency processing logic
 func (ic *installContext) processOthers() ([]domain.Dependency, error) {
 	infos, err := os.ReadDir(env.GetModulesDir())
 	var lenProcessedInitial = len(ic.processed)
@@ -416,6 +422,7 @@ func (ic *installContext) reportSkipped(depName, reason string) {
 }
 
 func (ic *installContext) reportInstallResult(depName, warning string) {
+	//nolint:nestif // Complex warning handling
 	if warning != "" {
 		if ic.progress.IsEnabled() {
 			ic.progress.SetWarning(depName, warning)
@@ -505,9 +512,8 @@ func (ic *installContext) getReferenceName(
 
 func (ic *installContext) checkoutAndUpdate(
 	dep domain.Dependency,
-	repository *goGit.Repository,
+	_ *goGit.Repository,
 	referenceName plumbing.ReferenceName) error {
-
 	if !ic.progress.IsEnabled() {
 		msg.Debug("  🔍 Checking out %s to %s", dep.Name(), referenceName.Short())
 	}
@@ -561,6 +567,7 @@ func (ic *installContext) getVersion(
 				return version
 			}
 		}
+		//nolint:lll // Error message readability
 		warnMsg2 := fmt.Sprintf("No exact match found for version '%s'. Available versions: %d", dep.GetVersion(), len(versions))
 		if !ic.progress.IsEnabled() {
 			msg.Warn("  ⚠️ " + warnMsg2)
@@ -587,6 +594,7 @@ func (ic *installContext) getVersionSemantic(
 		if err != nil {
 			continue
 		}
+		//nolint:nestif // Version constraint checking
 		if contraint.Check(newVersion) {
 			if bestVersion != nil && newVersion.GreaterThan(bestVersion) {
 				bestVersion = newVersion
@@ -610,7 +618,7 @@ func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) (
 	depPath := filepath.Join(ic.modulesDir, dep.Name())
 	depPkg, err := pkgmanager.LoadPackageOther(filepath.Join(depPath, "boss.json"))
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if depPkg.Engines == nil || len(depPkg.Engines.Platforms) == 0 {
@@ -632,6 +640,7 @@ func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) (
 		}
 	}
 
+	//nolint:lll // Error message readability
 	errorMessage := fmt.Sprintf("Dependency '%s' does not support platform '%s'. Supported: %v", dep.Name(), targetPlatform, depPkg.Engines.Platforms)
 
 	isStrict := ic.options.Strict

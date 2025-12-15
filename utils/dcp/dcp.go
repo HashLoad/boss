@@ -24,7 +24,7 @@ var (
 	reWhitespace = regexp.MustCompile(`[\r\n ]+`)
 )
 
-// InjectDpcs injects DCP dependencies into project files
+// InjectDpcs injects DCP dependencies into project files.
 func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
 	dprojNames := librarypath.GetProjectNames(pkg)
 
@@ -35,7 +35,7 @@ func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
 	}
 }
 
-// InjectDpcsFile injects DCP dependencies into a specific file
+// InjectDpcsFile injects DCP dependencies into a specific file.
 func InjectDpcsFile(fileName string, pkg *domain.Package, lock domain.PackageLock) {
 	dprDpkFileName, exists := getDprDpkFromDproj(fileName)
 	if !exists {
@@ -50,7 +50,7 @@ func InjectDpcsFile(fileName string, pkg *domain.Package, lock domain.PackageLoc
 	}
 }
 
-// readFile reads a file with Windows1252 encoding
+// readFile reads a file with Windows1252 encoding.
 func readFile(filename string) string {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -66,7 +66,7 @@ func readFile(filename string) string {
 	return string(bytes)
 }
 
-// writeFile writes a file with Windows1252 encoding
+// writeFile writes a file with Windows1252 encoding.
 func writeFile(filename string, content string) {
 	f, err := os.Create(filename)
 	if err != nil {
@@ -82,7 +82,7 @@ func writeFile(filename string, content string) {
 	}
 }
 
-// getDprDpkFromDproj returns the DPR or DPK file name from a DPROJ file name
+// getDprDpkFromDproj returns the DPR or DPK file name from a DPROJ file name.
 func getDprDpkFromDproj(dprojName string) (string, bool) {
 	baseName := strings.TrimSuffix(dprojName, filepath.Ext(dprojName))
 	dpkName := baseName + consts.FileExtensionDpk
@@ -93,7 +93,7 @@ func getDprDpkFromDproj(dprojName string) (string, bool) {
 	return "", false
 }
 
-// CommentBoss is the marker for Boss injected dependencies
+// CommentBoss is the marker for Boss injected dependencies.
 const CommentBoss = "{BOSS}"
 
 // getDcpString returns the DCP requires string formatted for injection.
@@ -106,7 +106,7 @@ func getDcpString(dcps []string) string {
 	return dcpRequiresLine[:len(dcpRequiresLine)-2]
 }
 
-// injectDcps injects DCP dependencies into the file content
+// injectDcps injects DCP dependencies into the file content.
 func injectDcps(filecontent string, dcps []string) (string, bool) {
 	resultRegex := reRequires.FindAllStringSubmatch(filecontent, -1)
 	if len(resultRegex) == 0 {

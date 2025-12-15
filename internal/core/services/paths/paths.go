@@ -14,6 +14,8 @@ import (
 )
 
 // EnsureCleanModulesDir ensures that the modules directory is clean and contains only the required dependencies.
+//
+//nolint:gocognit // Refactoring would reduce readability
 func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.PackageLock) {
 	cacheDir := env.GetModulesDir()
 	cacheDirInfo, err := os.Stat(cacheDir)

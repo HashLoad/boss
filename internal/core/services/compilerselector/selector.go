@@ -113,6 +113,7 @@ func (s *Service) SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error
 	return nil, errors.New("could not determine compiler")
 }
 
+//nolint:lll // Function signature cannot be easily shortened
 func findCompiler(installations []registryadapter.DelphiInstallation, version string, platform string) (*SelectedCompiler, error) {
 	if platform == "" {
 		platform = "Win32"

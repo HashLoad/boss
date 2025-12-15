@@ -28,6 +28,8 @@ type DependencyManager struct {
 }
 
 // NewDependencyManager creates a new DependencyManager with the given dependencies.
+//
+//nolint:lll // Function signature cannot be easily shortened
 func NewDependencyManager(config env.ConfigProvider, gitClient ports.GitClient, depCache *DependencyCache, cacheService *cache.CacheService) *DependencyManager {
 	return &DependencyManager{
 		config:       config,

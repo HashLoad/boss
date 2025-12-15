@@ -1,3 +1,4 @@
+//nolint:testpackage // Testing internal implementation details
 package repository
 
 import (
@@ -43,6 +44,7 @@ func (m *MockFileSystem) MkdirAll(_ string, _ os.FileMode) error {
 
 func (m *MockFileSystem) Stat(name string) (os.FileInfo, error) {
 	if _, ok := m.files[name]; ok {
+		//nolint:nilnil // Mock for testing
 		return nil, nil
 	}
 	return nil, errors.New("file not found")
@@ -84,7 +86,7 @@ func (m *MockFileSystem) Exists(name string) bool {
 	return ok
 }
 
-func (m *MockFileSystem) IsDir(name string) bool {
+func (m *MockFileSystem) IsDir(_ string) bool {
 	return false
 }
 

@@ -65,7 +65,9 @@ func UninstallModules(args []string, noSave bool) {
 		pkg.UninstallDependency(dependencyRepository)
 	}
 
-	pkgmanager.SavePackageCurrent(pkg)
+	if err := pkgmanager.SavePackageCurrent(pkg); err != nil {
+		msg.Warn("⚠️ Failed to save package: %v", err)
+	}
 	lockSvc := createLockService()
 	_ = lockSvc.Save(&pkg.Lock, env.GetCurrentDir())
 

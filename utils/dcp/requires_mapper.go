@@ -10,7 +10,7 @@ import (
 	"github.com/hashload/boss/pkg/consts"
 )
 
-// getRequiresList returns a list of required DCP files for a package
+// getRequiresList returns a list of required DCP files for a package.
 func getRequiresList(pkg *domain.Package, rootLock domain.PackageLock) []string {
 	if pkg == nil {
 		return []string{}
@@ -35,7 +35,7 @@ func getRequiresList(pkg *domain.Package, rootLock domain.PackageLock) []string 
 	return dcpList
 }
 
-// getDcpListFromDep returns a list of DCP files for a dependency
+// getDcpListFromDep returns a list of DCP files for a dependency.
 func getDcpListFromDep(dependency domain.Dependency, lock domain.PackageLock) []string {
 	var dcpList []string
 	installedMetadata := lock.GetInstalled(dependency)

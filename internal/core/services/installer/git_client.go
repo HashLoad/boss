@@ -82,6 +82,8 @@ func (b *configBranch) Remote() string {
 // Note: go-git's Clone operation doesn't support context natively.
 // We check for cancellation before starting, but the clone operation itself
 // may not be interruptible once started.
+//
+//nolint:lll // Function signature cannot be easily shortened
 func (c *DefaultGitClient) CloneCacheWithContext(ctx context.Context, dep domain.Dependency) (*goGit.Repository, error) {
 	// Check for cancellation before starting
 	select {
@@ -97,6 +99,8 @@ func (c *DefaultGitClient) CloneCacheWithContext(ctx context.Context, dep domain
 // Note: go-git's Fetch operation doesn't support context natively.
 // We check for cancellation before starting, but the update operation itself
 // may not be interruptible once started.
+//
+//nolint:lll // Function signature cannot be easily shortened
 func (c *DefaultGitClient) UpdateCacheWithContext(ctx context.Context, dep domain.Dependency) (*goGit.Repository, error) {
 	select {
 	case <-ctx.Done():

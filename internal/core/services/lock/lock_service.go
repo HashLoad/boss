@@ -14,6 +14,8 @@ import (
 
 // LockService provides lock file management operations.
 // It orchestrates domain entities, repositories, and filesystem operations.
+//
+//nolint:revive // lock.LockService is intentional for clarity
 type LockService struct {
 	repo ports.LockRepository
 	fs   infra.FileSystem

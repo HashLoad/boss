@@ -1,3 +1,4 @@
+//nolint:testpackage // Testing internal implementation details
 package tracker
 
 import (
@@ -14,6 +15,7 @@ const (
 	StatusError
 )
 
+//nolint:gochecknoglobals // Test configuration
 var testStatusConfig = StatusConfig[TestStatus]{
 	StatusPending: {Icon: "⏳", StatusText: "Pending"},
 	StatusRunning: {Icon: "🔁", StatusText: "Running"},

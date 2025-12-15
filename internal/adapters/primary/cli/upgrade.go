@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// upgradeCmdRegister registers the upgrade command
+// upgradeCmdRegister registers the upgrade command.
 func upgradeCmdRegister(root *cobra.Command) {
 	var preRelease bool
 

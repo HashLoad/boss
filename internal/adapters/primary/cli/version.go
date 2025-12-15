@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// versionCmdRegister registers the version command
+// versionCmdRegister registers the version command.
 func versionCmdRegister(root *cobra.Command) {
 	var versionCmd = &cobra.Command{
 		Use:     "version",
@@ -24,7 +24,7 @@ func versionCmdRegister(root *cobra.Command) {
 	root.AddCommand(versionCmd)
 }
 
-// printVersion prints the version
+// printVersion prints the version.
 func printVersion() {
 	v := version.Get()
 

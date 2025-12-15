@@ -10,7 +10,7 @@ import (
 	"github.com/hashload/boss/internal/infra"
 )
 
-// testFileSystem is a simple test implementation of FileSystem
+// testFileSystem is a simple test implementation of FileSystem.
 type testFileSystem struct {
 	files map[string]bool
 }
@@ -20,14 +20,20 @@ var _ infra.FileSystem = (*testFileSystem)(nil)
 func (fs *testFileSystem) ReadFile(_ string) ([]byte, error)                 { return nil, nil }
 func (fs *testFileSystem) WriteFile(_ string, _ []byte, _ os.FileMode) error { return nil }
 func (fs *testFileSystem) MkdirAll(_ string, _ os.FileMode) error            { return nil }
-func (fs *testFileSystem) Stat(_ string) (os.FileInfo, error)                { return nil, nil }
-func (fs *testFileSystem) Remove(_ string) error                             { return nil }
-func (fs *testFileSystem) RemoveAll(_ string) error                          { return nil }
-func (fs *testFileSystem) Rename(_, _ string) error                          { return nil }
-func (fs *testFileSystem) Open(_ string) (io.ReadCloser, error)              { return nil, nil }
-func (fs *testFileSystem) Create(_ string) (io.WriteCloser, error)           { return nil, nil }
-func (fs *testFileSystem) IsDir(_ string) bool                               { return false }
-func (fs *testFileSystem) ReadDir(_ string) ([]infra.DirEntry, error)        { return nil, nil }
+
+//nolint:nilnil // Mock filesystem for testing
+func (fs *testFileSystem) Stat(_ string) (os.FileInfo, error) { return nil, nil }
+func (fs *testFileSystem) Remove(_ string) error              { return nil }
+func (fs *testFileSystem) RemoveAll(_ string) error           { return nil }
+func (fs *testFileSystem) Rename(_, _ string) error           { return nil }
+
+//nolint:nilnil // Mock filesystem for testing
+func (fs *testFileSystem) Open(_ string) (io.ReadCloser, error) { return nil, nil }
+
+//nolint:nilnil // Mock filesystem for testing
+func (fs *testFileSystem) Create(_ string) (io.WriteCloser, error)    { return nil, nil }
+func (fs *testFileSystem) IsDir(_ string) bool                        { return false }
+func (fs *testFileSystem) ReadDir(_ string) ([]infra.DirEntry, error) { return nil, nil }
 func (fs *testFileSystem) Exists(name string) bool {
 	return fs.files[name]
 }

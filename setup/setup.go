@@ -20,7 +20,7 @@ import (
 	"github.com/hashload/boss/utils/dcc32"
 )
 
-// PATH is the environment variable for the system path
+// PATH is the environment variable for the system path.
 const PATH string = "PATH"
 
 // DefaultModules returns the list of default internal modules.
@@ -30,9 +30,8 @@ func DefaultModules() []string {
 	}
 }
 
-// Initialize initializes the Boss environment
+// Initialize initializes the Boss environment.
 func Initialize() {
-
 	initializeInfrastructure()
 
 	var oldGlobal = env.GetGlobal()
@@ -75,7 +74,7 @@ func CreatePaths() {
 	}
 }
 
-// installModules installs the internal modules
+// installModules installs the internal modules.
 func installModules(modules []string) {
 	pkg, _ := pkgmanager.LoadPackage()
 	encountered := 0
@@ -101,7 +100,7 @@ func installModules(modules []string) {
 	moveBptIdentifier()
 }
 
-// moveBptIdentifier moves the bpl identifier
+// moveBptIdentifier moves the bpl identifier.
 func moveBptIdentifier() {
 	var outExeCompilation = filepath.Join(env.GetGlobalBinPath(), consts.BplIdentifierName)
 	if _, err := os.Stat(outExeCompilation); os.IsNotExist(err) {
@@ -120,7 +119,7 @@ func moveBptIdentifier() {
 	}
 }
 
-// initializeDelphiVersion initializes the delphi version
+// initializeDelphiVersion initializes the delphi version.
 func initializeDelphiVersion() {
 	if len(env.GlobalConfiguration().DelphiPath) != 0 {
 		return

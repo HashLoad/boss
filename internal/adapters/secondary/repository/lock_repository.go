@@ -38,7 +38,7 @@ func (r *FileLockRepository) Load(lockPath string) (*domain.PackageLock, error) 
 
 	data, err := r.fs.ReadFile(lockPath)
 	if err != nil {
-		return r.createEmptyLock(""), nil
+		return r.createEmptyLock(""), err
 	}
 
 	lock := &domain.PackageLock{
@@ -81,7 +81,7 @@ func (r *FileLockRepository) Save(lock *domain.PackageLock, lockPath string) err
 }
 
 // MigrateOldFormat migrates from old lock file format if needed.
-func (r *FileLockRepository) MigrateOldFormat(oldPath, newPath string) error {
+func (r *FileLockRepository) MigrateOldFormat(_, newPath string) error {
 	dir := filepath.Dir(newPath)
 	oldFileName := filepath.Join(dir, consts.FilePackageLockOld)
 	newFileName := filepath.Join(dir, consts.FilePackageLock)

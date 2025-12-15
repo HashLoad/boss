@@ -3,13 +3,14 @@
 package librarypath
 
 import (
-	"github.com/hashload/boss/pkg/pkgmanager"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hashload/boss/pkg/pkgmanager"
 
 	"slices"
 
@@ -20,7 +21,7 @@ import (
 	"github.com/hashload/boss/utils"
 )
 
-// UpdateLibraryPath updates the library path for the project or globally
+// UpdateLibraryPath updates the library path for the project or globally.
 func UpdateLibraryPath(pkg *domain.Package) {
 	msg.Info("♻️ Updating library path...")
 	if env.GetGlobal() {
@@ -31,7 +32,7 @@ func UpdateLibraryPath(pkg *domain.Package) {
 	}
 }
 
-// cleanPath removes duplicate paths and paths that are already in the modules directory
+// cleanPath removes duplicate paths and paths that are already in the modules directory.
 func cleanPath(paths []string, fullPath bool) []string {
 	prefix := env.GetModulesDir()
 	var processedPaths []string
@@ -50,7 +51,7 @@ func cleanPath(paths []string, fullPath bool) []string {
 	return processedPaths
 }
 
-// GetNewBrowsingPaths returns a list of new browsing paths
+// GetNewBrowsingPaths returns a list of new browsing paths.
 func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setReadOnly bool) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
@@ -63,7 +64,7 @@ func GetNewBrowsingPaths(paths []string, fullPath bool, rootPath string, setRead
 	return paths
 }
 
-// processBrowsingPath processes a browsing path for a package
+// processBrowsingPath processes a browsing path for a package.
 func processBrowsingPath(
 	value os.DirEntry,
 	paths []string,
@@ -86,7 +87,7 @@ func processBrowsingPath(
 	return paths
 }
 
-// setReadOnlyProperty sets the read-only property for a directory
+// setReadOnlyProperty sets the read-only property for a directory.
 func setReadOnlyProperty(dir string) {
 	readonlybat := filepath.Join(dir, "readonly.bat")
 	readFileStr := fmt.Sprintf(`attrib +r "%s" /s /d`, filepath.Join(dir, "*"))
@@ -105,7 +106,7 @@ func setReadOnlyProperty(dir string) {
 	}
 }
 
-// GetNewPaths returns a list of new paths
+// GetNewPaths returns a list of new paths.
 func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	paths = cleanPath(paths, fullPath)
 	var path = env.GetModulesDir()
@@ -124,7 +125,7 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	return paths
 }
 
-// getDefaultPath returns the default library paths
+// getDefaultPath returns the default library paths.
 func getDefaultPath(fullPath bool, rootPath string) []string {
 	var paths []string
 
@@ -153,7 +154,7 @@ func getDefaultPath(fullPath bool, rootPath string) []string {
 	return append(paths, "$(DCC_UnitSearchPath)")
 }
 
-// cleanEmpty removes empty strings from a slice
+// cleanEmpty removes empty strings from a slice.
 func cleanEmpty(paths []string) []string {
 	for index, value := range paths {
 		if value == "" {
@@ -163,7 +164,7 @@ func cleanEmpty(paths []string) []string {
 	return paths
 }
 
-// getNewBrowsingPathsFromDir returns a list of new browsing paths from a directory
+// getNewBrowsingPathsFromDir returns a list of new browsing paths from a directory.
 func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -187,7 +188,7 @@ func getNewBrowsingPathsFromDir(path string, paths []string, fullPath bool, root
 	return cleanEmpty(paths)
 }
 
-// getNewPathsFromDir returns a list of new paths from a directory
+// getNewPathsFromDir returns a list of new paths from a directory.
 func getNewPathsFromDir(path string, paths []string, fullPath bool, rootPath string) []string {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
