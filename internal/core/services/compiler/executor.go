@@ -95,6 +95,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	abs, _ := filepath.Abs(filepath.Dir(dprojPath))
 	buildLog := filepath.Join(abs, fileRes+".log")
 	buildBat := filepath.Join(abs, fileRes+".bat")
+	//nolint:gosec,nolintlint // Reading Delphi environment variables file from known location
 	readFile, err := os.ReadFile(rsvars)
 	if err != nil {
 		msg.Err("    ❌ Error on read rsvars.bat")

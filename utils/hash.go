@@ -2,7 +2,7 @@
 package utils
 
 import (
-	//nolint:gosec // MD5 is used for hash comparison
+	//nolint:gosec,nolintlint // MD5 is used for hash comparison
 	"crypto/md5"
 	"encoding/hex"
 	"os"
@@ -14,7 +14,7 @@ import (
 // hashByte calculates the MD5 hash of a byte slice.
 func hashByte(contentPtr *[]byte) string {
 	contents := *contentPtr
-	//nolint:gosec // MD5 is used for hash comparison
+	//nolint:gosec,nolintlint // MD5 is used for hash comparison
 	hasher := md5.New()
 	hasher.Write(contents)
 	return hex.EncodeToString(hasher.Sum(nil))
@@ -34,6 +34,7 @@ func HashDir(dir string) string {
 			return nil
 		}
 
+		//nolint:gosec,nolintlint // Reading files from controlled directory structure for hashing
 		fileBytes, _ := os.ReadFile(path)
 		fileHash := hashByte(&fileBytes)
 		finalHash += fileHash

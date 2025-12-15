@@ -96,6 +96,7 @@ func setReadOnlyProperty(dir string) {
 		msg.Warn("  ⚠️ Error on create build file")
 	}
 
+	//nolint:gosec,nolintlint // Executing controlled batch file with readonly attributes
 	cmd := exec.Command(readonlybat)
 
 	_, err = cmd.Output()

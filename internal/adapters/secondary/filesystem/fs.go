@@ -26,6 +26,8 @@ func NewOSFileSystem() *OSFileSystem {
 }
 
 // ReadFile reads the entire file and returns its contents.
+//
+//nolint:gosec,nolintlint // Filesystem adapter - file access controlled by caller
 func (fs *OSFileSystem) ReadFile(name string) ([]byte, error) {
 	return os.ReadFile(name)
 }
@@ -61,11 +63,15 @@ func (fs *OSFileSystem) Rename(oldpath, newpath string) error {
 }
 
 // Open opens a file for reading.
+//
+//nolint:gosec,nolintlint // Filesystem adapter - file access controlled by caller
 func (fs *OSFileSystem) Open(name string) (io.ReadCloser, error) {
 	return os.Open(name)
 }
 
 // Create creates or truncates the named file.
+//
+//nolint:gosec,nolintlint // Filesystem adapter - file access controlled by caller
 func (fs *OSFileSystem) Create(name string) (io.WriteCloser, error) {
 	return os.Create(name)
 }

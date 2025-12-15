@@ -52,6 +52,7 @@ func InjectDpcsFile(fileName string, pkg *domain.Package, lock domain.PackageLoc
 
 // readFile reads a file with Windows1252 encoding.
 func readFile(filename string) string {
+	//nolint:gosec,nolintlint // Reading DCP files from controlled package directories
 	f, err := os.Open(filename)
 	if err != nil {
 		msg.Die(err.Error())
@@ -68,6 +69,7 @@ func readFile(filename string) string {
 
 // writeFile writes a file with Windows1252 encoding.
 func writeFile(filename string, content string) {
+	//nolint:gosec,nolintlint // Writing DCP files to controlled package directories
 	f, err := os.Create(filename)
 	if err != nil {
 		msg.Die(err.Error())

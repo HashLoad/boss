@@ -65,6 +65,7 @@ func doClone(dep domain.Dependency) error {
 
 	args = append(args, dep.GetURL(), dirModule)
 
+	//nolint:gosec,nolintlint // Git command with controlled and validated repository URL
 	cmd := exec.Command("git", args...)
 
 	if err = runCommand(cmd); err != nil {
@@ -131,7 +132,7 @@ func initSubmodulesNative(dep domain.Dependency) error {
 
 func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
-	//nolint:gosec // Git command with controlled repository reference
+	//nolint:gosec,nolintlint // Git command with controlled repository reference
 	cmd := exec.Command("git", "checkout", "-f", referenceName.Short())
 	cmd.Dir = dirModule
 	return runCommand(cmd)
