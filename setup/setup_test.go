@@ -84,10 +84,11 @@ func TestBuildMessage_IncludesPaths(t *testing.T) {
 func TestCreatePaths(t *testing.T) {
 	// Create a temp directory for BOSS_HOME
 	tempDir := t.TempDir()
-	t.Setenv("BOSS_HOME", tempDir)
 
 	// Create boss home structure
 	bossHome := filepath.Join(tempDir, consts.FolderBossHome)
+	t.Setenv("BOSS_HOME", bossHome)
+
 	if err := os.MkdirAll(bossHome, 0755); err != nil {
 		t.Fatalf("Failed to create boss home: %v", err)
 	}

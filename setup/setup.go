@@ -71,7 +71,7 @@ func initializeInfrastructure() {
 func CreatePaths() {
 	_, err := os.Stat(env.GetGlobalEnvBpl())
 	if os.IsNotExist(err) {
-		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0600)
+		_ = os.MkdirAll(env.GetGlobalEnvBpl(), 0755)
 	}
 }
 
