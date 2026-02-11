@@ -11,7 +11,7 @@ require (
 	github.com/beevik/etree v1.5.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/go-git/go-billy/v5 v5.6.2
-	github.com/go-git/go-git/v5 v5.14.0
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/google/go-github/v69 v69.2.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/minio/selfupdate v0.6.0
