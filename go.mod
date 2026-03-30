@@ -10,8 +10,8 @@ require (
 	github.com/Masterminds/semver/v3 v3.3.0
 	github.com/beevik/etree v1.5.0
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/go-git/go-billy/v5 v5.6.2
-	github.com/go-git/go-git/v5 v5.16.5
+	github.com/go-git/go-billy/v5 v5.8.0
+	github.com/go-git/go-git/v5 v5.17.1
 	github.com/google/go-github/v69 v69.2.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/minio/selfupdate v0.6.0
@@ -66,7 +66,7 @@ require (
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.3.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/curioswitch/go-reassign v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
