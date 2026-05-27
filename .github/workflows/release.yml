@@ -47,7 +47,7 @@ jobs:
       - uses: actions/download-artifact@v8
 
       - name: Compile .ISS to .EXE Installer
-        uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.8
         env:
           VERSION: ${{ github.ref }}
           BIN_DIR: dist/boss_windows_amd64_v1/boss.exe
