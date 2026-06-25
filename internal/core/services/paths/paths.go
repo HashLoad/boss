@@ -16,7 +16,7 @@ import (
 // EnsureCleanModulesDir ensures that the modules directory is clean and contains only the required dependencies.
 //
 //nolint:gocognit // Refactoring would reduce readability
-func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.PackageLock) {
+func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.PackageLock, cleanAll bool) {
 	cacheDir := env.GetModulesDir()
 	cacheDirInfo, err := os.Stat(cacheDir)
 	if os.IsNotExist(err) {
@@ -47,7 +47,7 @@ func EnsureCleanModulesDir(dependencies []domain.Dependency, lock domain.Package
 			continue
 		}
 
-		if !utils.Contains(dependenciesNames, info.Name()) {
+		if cleanAll && !utils.Contains(dependenciesNames, info.Name()) {
 		remove:
 			if err = os.RemoveAll(filepath.Join(cacheDir, info.Name())); err != nil {
 				msg.Warn("⚠️ Failed to remove old cache: %s", err.Error())
