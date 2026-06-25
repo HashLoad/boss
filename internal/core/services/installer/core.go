@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/hashload/boss/pkg/pkgmanager"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
+	"github.com/hashload/boss/utils/normalizer"
 )
 
 type installContext struct {
@@ -538,6 +540,15 @@ func (ic *installContext) checkoutAndUpdate(
 		}
 		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
 	}
+
+	// Normalize line endings to CRLF on Windows (Issue #197)
+	if runtime.GOOS == "windows" {
+		depDir := filepath.Join(ic.modulesDir, dep.Name())
+		if err := normalizer.NormalizeDirectoryLineEndings(depDir); err != nil {
+			msg.Debug("Failed to normalize line endings for %s: %v", dep.Name(), err)
+		}
+	}
+
 	return nil
 }
 
