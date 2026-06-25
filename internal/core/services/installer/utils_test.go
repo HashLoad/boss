@@ -157,3 +157,72 @@ func TestEnsureDependency_HTTPSUrl(t *testing.T) {
 		t.Error("Should add dependency for HTTPS URL")
 	}
 }
+
+func TestEnsureDependency_SSHUrl(t *testing.T) {
+	tests := []struct {
+		name         string
+		input        string
+		expectedDep  string
+		expectedVer  string
+	}{
+		{
+			name:        "SSH URL with version tag",
+			input:       "git@github.com:hashload/boss.git:v1.0.0",
+			expectedDep: "git@github.com:hashload/boss",
+			expectedVer: "v1.0.0",
+		},
+		{
+			name:        "SSH URL without version tag",
+			input:       "git@github.com:hashload/boss.git",
+			expectedDep: "git@github.com:hashload/boss",
+			expectedVer: ">0.0.0",
+		},
+		{
+			name:        "Self-hosted gitlab SSH URL without version",
+			input:       "git@mygitlab.domain.de:delphi/libraries/mylib.git",
+			expectedDep: "git@mygitlab.domain.de:delphi/libraries/mylib",
+			expectedVer: ">0.0.0",
+		},
+		{
+			name:        "Self-hosted gitlab SSH URL with version",
+			input:       "git@mygitlab.domain.de:delphi/libraries/mylib.git:1.2.3",
+			expectedDep: "git@mygitlab.domain.de:delphi/libraries/mylib",
+			expectedVer: "1.2.3",
+		},
+		{
+			name:        "SSH URL with @ version tag",
+			input:       "git@github.com:hashload/boss.git@v2.5.0",
+			expectedDep: "git@github.com:hashload/boss",
+			expectedVer: "v2.5.0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pkg := &domain.Package{
+				Dependencies: make(map[string]string),
+			}
+
+			installer.EnsureDependency(pkg, []string{tt.input})
+
+			if len(pkg.Dependencies) != 1 {
+				t.Fatalf("EnsureDependency() did not add exactly 1 dependency for %s, got %d", tt.input, len(pkg.Dependencies))
+			}
+
+			actualVer, exists := pkg.Dependencies[tt.expectedDep]
+			if !exists {
+				// Print keys for debugging
+				var keys []string
+				for k := range pkg.Dependencies {
+					keys = append(keys, k)
+				}
+				t.Fatalf("Expected dependency %q not found, got keys: %v", tt.expectedDep, keys)
+			}
+
+			if actualVer != tt.expectedVer {
+				t.Errorf("pkg.Dependencies[%q] = %q, want %q", tt.expectedDep, actualVer, tt.expectedVer)
+			}
+		})
+	}
+}
+
