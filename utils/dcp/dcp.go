@@ -13,14 +13,13 @@ import (
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/msg"
-	"github.com/hashload/boss/utils"
 	"github.com/hashload/boss/utils/librarypath"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
 )
 
 var (
-	reRequires   = regexp.MustCompile(`(?m)^(requires)([\n\r \w,{}\\.]+)(;)`)
+	reRequires   = regexp.MustCompile(`(?m)^(requires)([^;]+)(;)`)
 	reWhitespace = regexp.MustCompile(`[\r\n ]+`)
 )
 
@@ -106,7 +105,7 @@ func getDcpString(dcps []string) string {
 	return dcpRequiresLine[:len(dcpRequiresLine)-2]
 }
 
-// injectDcps injects DCP dependencies into the file content.
+// injectDcps injects DCP dependencies into the file content while preserving original formatting, comments, and conditionals.
 func injectDcps(filecontent string, dcps []string) (string, bool) {
 	resultRegex := reRequires.FindAllStringSubmatch(filecontent, -1)
 	if len(resultRegex) == 0 {
@@ -115,20 +114,64 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 
 	resultRegexIndexes := reRequires.FindAllStringSubmatchIndex(filecontent, -1)
 
-	currentRequiresString := reWhitespace.ReplaceAllString(resultRegex[0][2], "")
+	// Group 2 (indices 4 and 5) is the body of the requires section
+	body := filecontent[resultRegexIndexes[0][4]:resultRegexIndexes[0][5]]
 
-	currentRequires := strings.Split(currentRequiresString, ",")
+	// Find all existing boss-injected dependencies in the body.
+	// They are marked with {BOSS}. We match them as \b([\w\.\-]+)\{BOSS\}
+	reBossDep := regexp.MustCompile(`(?i)\b([\w\.\-]+)\{BOSS\}`)
+	bossDepsMatches := reBossDep.FindAllStringSubmatch(body, -1)
 
-	var result = filecontent[:resultRegexIndexes[0][3]]
-
-	for _, value := range currentRequires {
-		if strings.Contains(value, CommentBoss) || utils.Contains(dcps, value) {
-			continue
-		}
-		result += "\n  " + value + ","
+	existingBossDeps := make(map[string]bool)
+	for _, match := range bossDepsMatches {
+		existingBossDeps[strings.ToLower(match[1])] = true
 	}
 
-	result = result + getDcpString(dcps) + ";" + filecontent[resultRegexIndexes[0][7]:]
+	// Prepare a map of the target dcps (lowercase for case-insensitive comparison)
+	targetDcpsMap := make(map[string]bool)
+	for _, dcp := range dcps {
+		targetDcpsMap[strings.ToLower(filepath.Base(dcp))] = true
+	}
+
+	// 1. Remove old boss deps that are no longer in the target dcps list
+	modifiedBody := body
+	for oldDcp := range existingBossDeps {
+		if !targetDcpsMap[oldDcp] {
+			// Remove this dependency, its {BOSS} comment, and any trailing comma/whitespace
+			escapedDcp := regexp.QuoteMeta(oldDcp)
+			reRemove := regexp.MustCompile(`(?i)\s*\b` + escapedDcp + `\{BOSS\}\s*,?`)
+			modifiedBody = reRemove.ReplaceAllString(modifiedBody, "")
+		}
+	}
+
+	// 2. Add new dcps that are not already present in the requires section
+	for _, dcp := range dcps {
+		dcpName := filepath.Base(dcp)
+		dcpNameLower := strings.ToLower(dcpName)
+
+		// Check if it's already in the requires section (case-insensitive)
+		// We match it as a whole word: \b<dcpName>\b
+		escapedDcp := regexp.QuoteMeta(dcpNameLower)
+		reCheck := regexp.MustCompile(`(?i)\b` + escapedDcp + `\b`)
+		if reCheck.MatchString(modifiedBody) {
+			continue // Already exists (either user-defined or already injected), skip
+		}
+
+		// Append the new dependency
+		trimmed := strings.TrimSpace(modifiedBody)
+		if trimmed != "" && !strings.HasSuffix(trimmed, ",") {
+			modifiedBody = trimmed + ",\n  " + dcpName + CommentBoss
+		} else {
+			if trimmed == "" {
+				modifiedBody = "\n  " + dcpName + CommentBoss
+			} else {
+				modifiedBody = modifiedBody + "\n  " + dcpName + CommentBoss
+			}
+		}
+	}
+
+	// Reconstruct the file content by replacing the body
+	result := filecontent[:resultRegexIndexes[0][4]] + modifiedBody + filecontent[resultRegexIndexes[0][5]:]
 	return result, true
 }
 
