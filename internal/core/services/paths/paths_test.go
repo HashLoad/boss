@@ -59,7 +59,7 @@ func TestEnsureCleanModulesDir_CreatesDir(t *testing.T) {
 	}
 
 	// EnsureCleanModulesDir should create the modules directory
-	paths.EnsureCleanModulesDir(deps, lock)
+	paths.EnsureCleanModulesDir(deps, lock, true)
 
 	// Verify modules directory was created
 	modulesDir := filepath.Join(tempDir, consts.FolderDependencies)
@@ -114,11 +114,62 @@ func TestEnsureCleanModulesDir_RemovesOldDependencies(t *testing.T) {
 	}
 
 	// EnsureCleanModulesDir should remove old dependency
-	paths.EnsureCleanModulesDir(deps, lock)
+	paths.EnsureCleanModulesDir(deps, lock, true)
 
 	// Verify old dependency was removed
 	if _, err := os.Stat(oldDepDir); !os.IsNotExist(err) {
 		t.Error("EnsureCleanModulesDir() should remove old dependency directories")
+	}
+
+	// Verify current dependency was kept
+	if _, err := os.Stat(currentDepDir); os.IsNotExist(err) {
+		t.Error("EnsureCleanModulesDir() should keep current dependency directories")
+	}
+}
+
+func TestEnsureCleanModulesDir_KeepOldDependenciesOnSelective(t *testing.T) {
+	// Create a temp directory for workspace
+	tempDir := t.TempDir()
+
+	// Save original state and set not global
+	originalGlobal := env.GetGlobal()
+	defer env.SetGlobal(originalGlobal)
+	env.SetGlobal(false)
+
+	// Change to temp directory
+	t.Chdir(tempDir)
+
+	// Create modules directory
+	modulesDir := filepath.Join(tempDir, consts.FolderDependencies)
+	if err := os.MkdirAll(modulesDir, 0755); err != nil {
+		t.Fatalf("Failed to create modules dir: %v", err)
+	}
+
+	// Create an old dependency directory that should NOT be removed because cleanAll is false
+	oldDepDir := filepath.Join(modulesDir, "old-dependency")
+	if err := os.MkdirAll(oldDepDir, 0755); err != nil {
+		t.Fatalf("Failed to create old dependency dir: %v", err)
+	}
+
+	// Create a current dependency directory that should be kept
+	currentDepDir := filepath.Join(modulesDir, "horse")
+	if err := os.MkdirAll(currentDepDir, 0755); err != nil {
+		t.Fatalf("Failed to create current dependency dir: %v", err)
+	}
+
+	// Define current dependencies
+	dep := domain.ParseDependency("github.com/hashload/horse", "^1.0.0")
+	deps := []domain.Dependency{dep}
+	lock := domain.PackageLock{
+		Installed: map[string]domain.LockedDependency{},
+	}
+
+	// EnsureCleanModulesDir with cleanAll=false should keep the old dependency
+	paths.EnsureCleanModulesDir(deps, lock, false)
+
+	// Verify old dependency was NOT removed
+	if _, err := os.Stat(oldDepDir); os.IsNotExist(err) {
+		t.Error("EnsureCleanModulesDir() with cleanAll=false should NOT remove old dependency directories")
 	}
 
 	// Verify current dependency was kept

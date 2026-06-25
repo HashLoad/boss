@@ -55,8 +55,60 @@ func buildSearchPath(dep *domain.Dependency) string {
 	return searchPath
 }
 
+func compileLazarus(lazarusPath string, tracker *BuildTracker) bool {
+	if tracker == nil || !tracker.IsEnabled() {
+		msg.Info("  🔨 Building Lazarus project/package: " + filepath.Base(lazarusPath))
+	}
+
+	_, err := exec.LookPath("lazbuild")
+	if err != nil {
+		if tracker == nil || !tracker.IsEnabled() {
+			msg.Err("    ❌ 'lazbuild' compiler not found on PATH. Please install Lazarus/lazbuild to compile.")
+		}
+		return false
+	}
+
+	absPath, _ := filepath.Abs(lazarusPath)
+	absDir := filepath.Dir(absPath)
+
+	cmd := exec.Command("lazbuild", "--build-mode=Debug", absPath)
+	cmd.Dir = absDir
+
+	buildLog := filepath.Join(absDir, "build_boss_" + strings.TrimSuffix(filepath.Base(lazarusPath), filepath.Ext(lazarusPath)) + ".log")
+	logFile, err := os.OpenFile(buildLog, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	if err != nil {
+		if tracker == nil || !tracker.IsEnabled() {
+			msg.Warn("  ⚠️ Error creating build log file: %v", err)
+		}
+		return false
+	}
+	defer logFile.Close()
+
+	cmd.Stdout = logFile
+	cmd.Stderr = logFile
+
+	if err := cmd.Run(); err != nil {
+		if tracker == nil || !tracker.IsEnabled() {
+			msg.Err("  ❌ Failed to compile, see " + buildLog + " for more information: %v", err)
+		}
+		return false
+	}
+
+	if tracker == nil || !tracker.IsEnabled() {
+		msg.Info("  ✅️ Success!")
+	}
+
+	_ = os.Remove(buildLog)
+	return true
+}
+
 //nolint:funlen,gocognit,lll // Complex compilation orchestration with long function signature
 func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker, selectedCompiler *compilerselector.SelectedCompiler) bool {
+	ext := strings.ToLower(filepath.Ext(dprojPath))
+	if ext == ".lpi" || ext == ".lpk" {
+		return compileLazarus(dprojPath, tracker)
+	}
+
 	if tracker == nil || !tracker.IsEnabled() {
 		msg.Info("  🔨 Building " + filepath.Base(dprojPath))
 	}

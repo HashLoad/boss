@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -27,6 +28,7 @@ func NewMockFileSystem() *MockFileSystem {
 }
 
 func (m *MockFileSystem) ReadFile(name string) ([]byte, error) {
+	name = filepath.ToSlash(name)
 	if data, ok := m.files[name]; ok {
 		return data, nil
 	}
@@ -34,6 +36,7 @@ func (m *MockFileSystem) ReadFile(name string) ([]byte, error) {
 }
 
 func (m *MockFileSystem) WriteFile(name string, data []byte, _ os.FileMode) error {
+	name = filepath.ToSlash(name)
 	m.files[name] = data
 	return nil
 }
@@ -43,6 +46,7 @@ func (m *MockFileSystem) MkdirAll(_ string, _ os.FileMode) error {
 }
 
 func (m *MockFileSystem) Stat(name string) (os.FileInfo, error) {
+	name = filepath.ToSlash(name)
 	if _, ok := m.files[name]; ok {
 		//nolint:nilnil // Mock for testing
 		return nil, nil
@@ -51,6 +55,7 @@ func (m *MockFileSystem) Stat(name string) (os.FileInfo, error) {
 }
 
 func (m *MockFileSystem) Remove(name string) error {
+	name = filepath.ToSlash(name)
 	delete(m.files, name)
 	return nil
 }
@@ -60,6 +65,8 @@ func (m *MockFileSystem) RemoveAll(_ string) error {
 }
 
 func (m *MockFileSystem) Rename(oldpath, newpath string) error {
+	oldpath = filepath.ToSlash(oldpath)
+	newpath = filepath.ToSlash(newpath)
 	if data, ok := m.files[oldpath]; ok {
 		m.files[newpath] = data
 		delete(m.files, oldpath)
@@ -82,6 +89,7 @@ func (m *MockFileSystem) Create(_ string) (io.WriteCloser, error) {
 }
 
 func (m *MockFileSystem) Exists(name string) bool {
+	name = filepath.ToSlash(name)
 	_, ok := m.files[name]
 	return ok
 }

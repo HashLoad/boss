@@ -68,3 +68,27 @@ func TestAddWarning(t *testing.T) {
 		t.Errorf("Expected warning 'Test warning', got %q", ctx.warnings[0])
 	}
 }
+
+func TestCollectDependenciesToInstall_WithFilter(t *testing.T) {
+	pkg := &domain.Package{
+		Dependencies: map[string]string{
+			"github.com/hashload/horse": "^1.0.0",
+			"github.com/hashload/boss":  "^2.0.0",
+		},
+	}
+
+	// Test empty filter (should return all)
+	all := collectDependenciesToInstall(pkg, []string{})
+	if len(all) != 2 {
+		t.Errorf("Expected 2 dependencies, got %d", len(all))
+	}
+
+	// Test with filter (should return only matching)
+	filtered := collectDependenciesToInstall(pkg, []string{"horse"})
+	if len(filtered) != 1 {
+		t.Errorf("Expected 1 dependency, got %d", len(filtered))
+	}
+	if filtered[0].Repository != "github.com/hashload/horse" {
+		t.Errorf("Expected horse dependency, got %q", filtered[0].Repository)
+	}
+}
