@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -95,6 +96,33 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	abs, _ := filepath.Abs(filepath.Dir(dprojPath))
 	buildLog := filepath.Join(abs, fileRes+".log")
 	buildBat := filepath.Join(abs, fileRes+".bat")
+	cfgPath := filepath.Join(abs, "boss.cfg")
+
+	// Create boss.cfg to hold search paths and avoid command-line too long errors (Issue #205)
+	var cfgContent strings.Builder
+	dcuPath := filepath.Join(env.GetModulesDir(), consts.DcuFolder)
+	dcpPath := filepath.Join(env.GetModulesDir(), consts.DcpFolder)
+	cfgContent.WriteString(fmt.Sprintf("-I\"%s\"\n-U\"%s\"\n", dcuPath, dcuPath))
+	cfgContent.WriteString(fmt.Sprintf("-I\"%s\"\n-U\"%s\"\n", dcpPath, dcpPath))
+
+	if searchPathsStr := buildSearchPath(dep); searchPathsStr != "" {
+		paths := strings.Split(searchPathsStr, ";")
+		for _, p := range paths {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				cfgContent.WriteString(fmt.Sprintf("-I\"%s\"\n-U\"%s\"\n", p, p))
+			}
+		}
+	}
+
+	err := os.WriteFile(cfgPath, []byte(cfgContent.String()), 0600)
+	if err != nil {
+		if tracker == nil || !tracker.IsEnabled() {
+			msg.Warn("  ⚠️ Error on create compiler configuration file")
+		}
+		return false
+	}
+
 	readFile, err := os.ReadFile(rsvars) // #nosec G304 -- Reading Delphi environment variables file from known location
 	if err != nil {
 		msg.Err("    ❌ Error on read rsvars.bat")
@@ -102,18 +130,13 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	readFileStr := string(readFile)
 	project, _ := filepath.Abs(dprojPath)
 
-	readFileStr += "\n@SET DCC_UnitSearchPath=%DCC_UnitSearchPath%;" +
-		filepath.Join(env.GetModulesDir(), consts.DcuFolder) +
-		";" + filepath.Join(env.GetModulesDir(), consts.DcpFolder) //+ ";" + getNewPathsDep(dep, abs) + " "
-
-	readFileStr += ";" + buildSearchPath(dep)
-
 	readFileStr += "\n@SET PATH=%PATH%;" + filepath.Join(env.GetModulesDir(), consts.BplFolder) + ";"
 	for _, value := range []string{platform} {
 		readFileStr += " \n msbuild \"" +
 			project +
 			"\" /p:Configuration=Debug " +
-			getCompilerParameters(env.GetModulesDir(), dep, value)
+			getCompilerParameters(env.GetModulesDir(), dep, value) +
+			" /p:DCC_AdditionalParameters=\"@" + cfgPath + "\""
 	}
 	readFileStr += " > \"" + buildLog + "\""
 
@@ -122,6 +145,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 		if tracker == nil || !tracker.IsEnabled() {
 			msg.Warn("  ⚠️ Error on create build file")
 		}
+		_ = os.Remove(cfgPath)
 		return false
 	}
 
@@ -131,6 +155,7 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 		if tracker == nil || !tracker.IsEnabled() {
 			msg.Err("  ❌ Failed to compile, see " + buildLog + " for more information")
 		}
+		_ = os.Remove(cfgPath)
 		return false
 	}
 	if tracker == nil || !tracker.IsEnabled() {
@@ -142,6 +167,9 @@ func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLo
 	}
 	if err := os.Remove(buildBat); err != nil {
 		msg.Debug("Could not remove build script %s: %v", buildBat, err)
+	}
+	if err := os.Remove(cfgPath); err != nil {
+		msg.Debug("Could not remove boss.cfg %s: %v", cfgPath, err)
 	}
 
 	return true
