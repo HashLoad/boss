@@ -69,3 +69,77 @@ func TestGetNewBrowsingPaths(t *testing.T) {
 		t.Error("GetNewBrowsingPaths() should return paths")
 	}
 }
+
+func TestGetNewPaths_MultipleMainSrc(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("BOSS_BASE_DIR", tempDir)
+
+	// Save and restore working directory
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working dir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(wd)
+	}()
+
+	err = os.Chdir(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to change working dir: %v", err)
+	}
+
+	// Create modules directory
+	modulesDir := filepath.Join(tempDir, "modules")
+	libDir := filepath.Join(modulesDir, "my_lib")
+	err = os.MkdirAll(filepath.Join(libDir, "src"), 0755)
+	if err != nil {
+		t.Fatalf("Failed to create src dir: %v", err)
+	}
+	err = os.MkdirAll(filepath.Join(libDir, "lib"), 0755)
+	if err != nil {
+		t.Fatalf("Failed to create lib dir: %v", err)
+	}
+
+	// Create a dummy source file inside both src and lib so they are walked and recognized
+	err = os.WriteFile(filepath.Join(libDir, "src", "my_lib.pas"), []byte("unit my_lib;"), 0600)
+	if err != nil {
+		t.Fatalf("Failed to create dummy file: %v", err)
+	}
+	err = os.WriteFile(filepath.Join(libDir, "lib", "helper.pas"), []byte("unit helper;"), 0600)
+	if err != nil {
+		t.Fatalf("Failed to create dummy file: %v", err)
+	}
+
+	// Create a boss.json with multiple mainsrc paths
+	bossJsonContent := `{
+		"name": "my_lib",
+		"mainsrc": "src;lib"
+	}`
+	err = os.WriteFile(filepath.Join(libDir, "boss.json"), []byte(bossJsonContent), 0600)
+	if err != nil {
+		t.Fatalf("Failed to write boss.json: %v", err)
+	}
+
+	paths := []string{}
+	result := GetNewPaths(paths, true, tempDir)
+
+	// Should contain both src and lib paths
+	foundSrc := false
+	foundLib := false
+	for _, p := range result {
+		if filepath.Base(p) == "src" {
+			foundSrc = true
+		}
+		if filepath.Base(p) == "lib" {
+			foundLib = true
+		}
+	}
+
+	if !foundSrc {
+		t.Error("Expected to find 'src' path in results")
+	}
+	if !foundLib {
+		t.Error("Expected to find 'lib' path in results")
+	}
+}
+
