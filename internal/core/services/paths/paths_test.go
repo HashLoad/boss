@@ -94,6 +94,10 @@ func TestEnsureCleanModulesDir_RemovesOldDependencies(t *testing.T) {
 		t.Fatalf("Failed to create modules dir: %v", err)
 	}
 
+	// Define current dependencies
+	dep := domain.ParseDependency("github.com/hashload/horse", "^1.0.0")
+	deps := []domain.Dependency{dep}
+
 	// Create an old dependency directory that should be removed
 	oldDepDir := filepath.Join(modulesDir, "old-dependency")
 	if err := os.MkdirAll(oldDepDir, 0755); err != nil {
@@ -101,14 +105,10 @@ func TestEnsureCleanModulesDir_RemovesOldDependencies(t *testing.T) {
 	}
 
 	// Create a current dependency directory that should be kept
-	currentDepDir := filepath.Join(modulesDir, "horse")
+	currentDepDir := filepath.Join(modulesDir, dep.Name())
 	if err := os.MkdirAll(currentDepDir, 0755); err != nil {
 		t.Fatalf("Failed to create current dependency dir: %v", err)
 	}
-
-	// Define current dependencies
-	dep := domain.ParseDependency("github.com/hashload/horse", "^1.0.0")
-	deps := []domain.Dependency{dep}
 	lock := domain.PackageLock{
 		Installed: map[string]domain.LockedDependency{},
 	}

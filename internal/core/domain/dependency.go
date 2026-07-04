@@ -121,9 +121,30 @@ func GetDependenciesNames(deps []Dependency) []string {
 	return dependencies
 }
 
-// Name returns the name of the dependency extracted from the repository URL.
+// Name returns the unique, collision-free name of the dependency based on its repository URL.
 func (p *Dependency) Name() string {
-	return reDepName.FindString(p.Repository)
+	repo := p.Repository
+	// Trim protocol and credentials
+	repo = strings.TrimPrefix(repo, "https://")
+	repo = strings.TrimPrefix(repo, "http://")
+	if idx := strings.Index(repo, "@"); idx != -1 {
+		repo = repo[idx+1:]
+	}
+	// Replace colon with slash (for SSH format like git@github.com:owner/repo)
+	repo = strings.ReplaceAll(repo, ":", "/")
+	// Trim trailing .git and slashes
+	repo = strings.TrimSuffix(repo, ".git")
+	repo = strings.TrimSuffix(repo, "/")
+
+	parts := strings.Split(repo, "/")
+	if len(parts) <= 1 {
+		return repo
+	}
+
+	// Join with underscore and replace dots in host/domain to get a clean, safe folder name
+	res := strings.Join(parts, "_")
+	res = strings.ReplaceAll(res, ".", "_")
+	return res
 }
 
 // GetKey returns the normalized key for the dependency (lowercase repository).

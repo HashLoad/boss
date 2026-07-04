@@ -15,27 +15,27 @@ func TestDependency_Name(t *testing.T) {
 		{
 			name:       "github repository",
 			repository: "github.com/hashload/boss",
-			expected:   "boss",
+			expected:   "github_com_hashload_boss",
 		},
 		{
 			name:       "gitlab repository",
 			repository: "gitlab.com/user/project",
-			expected:   "project",
+			expected:   "gitlab_com_user_project",
 		},
 		{
 			name:       "bitbucket repository",
 			repository: "bitbucket.org/team/repo",
-			expected:   "repo",
+			expected:   "bitbucket_org_team_repo",
 		},
 		{
 			name:       "nested path repository",
 			repository: "github.com/org/group/subgroup/repo",
-			expected:   "repo",
+			expected:   "github_com_org_group_subgroup_repo",
 		},
 		{
 			name:       "repository with trailing slash",
 			repository: "github.com/hashload/boss/",
-			expected:   "boss/",
+			expected:   "github_com_hashload_boss",
 		},
 		{
 			name:       "simple name",
@@ -263,7 +263,7 @@ func TestGetDependenciesNames(t *testing.T) {
 		t.Errorf("GetDependenciesNames() returned %d names, want 3", len(names))
 	}
 
-	expectedNames := []string{"boss", "horse", "repo"}
+	expectedNames := []string{"github_com_hashload_boss", "github_com_hashload_horse", "github_com_user_repo"}
 	for i, expected := range expectedNames {
 		if names[i] != expected {
 			t.Errorf("GetDependenciesNames()[%d] = %q, want %q", i, names[i], expected)

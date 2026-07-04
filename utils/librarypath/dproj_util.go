@@ -24,15 +24,21 @@ var (
 
 // updateDprojLibraryPath updates the library path in the project file.
 func updateDprojLibraryPath(pkg *domain.Package) {
-	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
 	for _, projectName := range projectNames {
-		if isLazarus {
+		if isLazarusFile(projectName) {
 			updateOtherUnitFilesProject(projectName)
 		} else {
 			updateLibraryPathProject(projectName)
 		}
 	}
+}
+
+// isLazarusFile checks if a specific project file is a Lazarus project or package.
+func isLazarusFile(filename string) bool {
+	lower := strings.ToLower(filename)
+	return strings.HasSuffix(lower, consts.FileExtensionLpi) ||
+		strings.HasSuffix(lower, consts.FileExtensionLpk)
 }
 
 // updateOtherUnitFilesProject updates the other unit files in the project file.
@@ -100,10 +106,9 @@ func createTagOtherUnitFiles(node *etree.Element) *etree.Element {
 
 // updateGlobalBrowsingPath updates the global browsing path.
 func updateGlobalBrowsingPath(pkg *domain.Package) {
-	var isLazarus = isLazarus()
 	var projectNames = GetProjectNames(pkg)
 	for i, projectName := range projectNames {
-		if !isLazarus {
+		if !isLazarusFile(projectName) {
 			updateGlobalBrowsingByProject(projectName, i == 0)
 		}
 	}
@@ -160,7 +165,13 @@ func GetProjectNames(pkg *domain.Package) []string {
 	var result []string
 
 	if len(pkg.Projects) > 0 {
-		result = pkg.Projects
+		for _, project := range pkg.Projects {
+			if filepath.IsAbs(project) {
+				result = append(result, project)
+			} else {
+				result = append(result, filepath.Join(env.GetCurrentDir(), project))
+			}
+		}
 	} else {
 		files, err := os.ReadDir(env.GetCurrentDir())
 		if err != nil {
