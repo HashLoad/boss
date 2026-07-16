@@ -55,15 +55,9 @@ const mockLpkContent = `<?xml version="1.0" encoding="UTF-8"?>
 // TestLazarusPathInjection verifies that other unit search paths are correctly injected in both .lpi and .lpk files.
 func TestLazarusPathInjection(t *testing.T) {
 	tempDir := t.TempDir()
+	t.Chdir(tempDir)
 
-	// Redirect working directory
-	oldWd, err := os.Getwd()
-	if err == nil {
-		defer func() { _ = os.Chdir(oldWd) }()
-	}
-	if err = os.Chdir(tempDir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
+	var err error
 
 	// Initialize package manager
 	fs := filesystem.NewOSFileSystem()
@@ -141,7 +135,7 @@ func TestLazarusPathInjection(t *testing.T) {
 
 	// Verify LPK XML contents
 	docLpk := etree.NewDocument()
-	if err := docLpk.ReadFromFile(lpkPath); err != nil {
+	if err = docLpk.ReadFromFile(lpkPath); err != nil {
 		t.Fatalf("Failed to read updated LPK: %v", err)
 	}
 

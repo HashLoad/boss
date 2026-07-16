@@ -227,4 +227,3 @@ end.`
 		t.Error("injectDcps() should preserve AnotherPkg dependency")
 	}
 }
-

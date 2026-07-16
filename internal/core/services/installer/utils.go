@@ -19,7 +19,7 @@ var (
 )
 
 // parseURLAndVersion parses the dependency URL and version, handling SSH git@ URLs safely.
-func parseURLAndVersion(input string) (url string, version string) {
+func parseURLAndVersion(input string) (string, string) {
 	if strings.HasPrefix(input, "git@") {
 		// SSH URL format: git@host:owner/repo[.git][:version] or git@host:owner/repo[.git]@version
 		firstColon := strings.Index(input, ":")
@@ -35,8 +35,8 @@ func parseURLAndVersion(input string) (url string, version string) {
 			possibleVersion := remainder[lastSep+1:]
 			// Version shouldn't contain slashes (which paths do) and shouldn't be empty
 			if !strings.Contains(possibleVersion, "/") && possibleVersion != "" {
-				url = input[:firstColon+1+lastSep]
-				version = possibleVersion
+				url := input[:firstColon+1+lastSep]
+				version := possibleVersion
 				return url, version
 			}
 		}
@@ -54,8 +54,8 @@ func parseURLAndVersion(input string) (url string, version string) {
 		}
 	}
 
-	url = match["url"]
-	version = match["version"]
+	url := match["url"]
+	version := match["version"]
 	return url, version
 }
 
