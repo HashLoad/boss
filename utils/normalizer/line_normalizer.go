@@ -1,3 +1,4 @@
+// Package normalizer provides line ending normalization for Delphi source files.
 package normalizer
 
 import (
@@ -10,7 +11,7 @@ import (
 	"github.com/hashload/boss/pkg/msg"
 )
 
-var delphiExtensions = map[string]bool{
+var delphiExtensions = map[string]bool{ //nolint:gochecknoglobals // Immutable lookup map
 	".pas":   true,
 	".inc":   true,
 	".dfm":   true,
@@ -67,5 +68,6 @@ func NormalizeFileLineEndings(filePath string) error {
 	crlfContent := bytes.ReplaceAll(normalized, []byte("\n"), []byte("\r\n"))
 
 	// Write back
+	// #nosec G703 -- Writing Delphi files from controlled directories
 	return os.WriteFile(filePath, crlfContent, 0600)
 }

@@ -96,7 +96,10 @@ func resolveTargetPlatform(ctx SelectionContext) string {
 	}
 }
 
-func findGlobalPathCompiler(installations []registryadapter.DelphiInstallation, globalPath, targetPlatform string) (*SelectedCompiler, error) {
+func findGlobalPathCompiler(
+	installations []registryadapter.DelphiInstallation,
+	globalPath, targetPlatform string,
+) (*SelectedCompiler, error) {
 	for _, inst := range installations {
 		instDir := filepath.Dir(inst.Path)
 		if strings.EqualFold(instDir, globalPath) && strings.EqualFold(inst.Arch, targetPlatform) {
@@ -118,7 +121,10 @@ func findGlobalPathCompiler(installations []registryadapter.DelphiInstallation, 
 	}, nil
 }
 
-func findLatestCompiler(installations []registryadapter.DelphiInstallation, targetPlatform string) (*SelectedCompiler, error) {
+func findLatestCompiler(
+	installations []registryadapter.DelphiInstallation,
+	targetPlatform string,
+) (*SelectedCompiler, error) {
 	var bestMatch *registryadapter.DelphiInstallation
 	for _, inst := range installations {
 		if strings.EqualFold(inst.Arch, targetPlatform) {

@@ -160,10 +160,10 @@ func TestEnsureDependency_HTTPSUrl(t *testing.T) {
 
 func TestEnsureDependency_SSHUrl(t *testing.T) {
 	tests := []struct {
-		name         string
-		input        string
-		expectedDep  string
-		expectedVer  string
+		name        string
+		input       string
+		expectedDep string
+		expectedVer string
 	}{
 		{
 			name:        "SSH URL with version tag",
@@ -225,4 +225,3 @@ func TestEnsureDependency_SSHUrl(t *testing.T) {
 		})
 	}
 }
-

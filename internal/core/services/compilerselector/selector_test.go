@@ -10,7 +10,7 @@ import (
 	"github.com/hashload/boss/pkg/env"
 )
 
-// mockRegistryAdapter is a mock for compilerselector.RegistryAdapter
+// mockRegistryAdapter is a mock for compilerselector.RegistryAdapter.
 type mockRegistryAdapter struct {
 	installations []registryadapter.DelphiInstallation
 }
@@ -19,7 +19,7 @@ func (m *mockRegistryAdapter) GetDetectedDelphis() []registryadapter.DelphiInsta
 	return m.installations
 }
 
-// mockConfigProvider embeds env.ConfigProvider to mock only GetDelphiPath
+// mockConfigProvider embeds env.ConfigProvider to mock only GetDelphiPath.
 type mockConfigProvider struct {
 	env.ConfigProvider
 	delphiPath string

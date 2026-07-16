@@ -39,9 +39,11 @@ func TestNewCommandRegistration(t *testing.T) {
 	}
 
 	typeFlag := newCmd.Flags().Lookup("type")
+	//nolint:staticcheck // Test intentionally keeps non-fatal assertion before the follow-up check
 	if typeFlag == nil {
 		t.Error("New command should have --type flag")
 	}
+	//nolint:staticcheck // Test handles nil case with t.Error
 	if typeFlag.DefValue != "app" {
 		t.Errorf("New command --type flag default value should be 'app', got %s", typeFlag.DefValue)
 	}
@@ -55,15 +57,9 @@ func TestNewCommandRegistration(t *testing.T) {
 // TestDoCreateProject_App tests bootstrapping an application project.
 func TestDoCreateProject_App(t *testing.T) {
 	tempDir := t.TempDir()
+	t.Chdir(tempDir)
 
-	// Redirect working directory
-	oldWd, err := os.Getwd()
-	if err == nil {
-		defer func() { _ = os.Chdir(oldWd) }()
-	}
-	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
+	var err error
 
 	// Initialize package manager
 	fs := filesystem.NewOSFileSystem()
@@ -76,31 +72,31 @@ func TestDoCreateProject_App(t *testing.T) {
 	doCreateProject(projectName, "app", true)
 
 	projectPath := filepath.Join(tempDir, projectName)
-	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(projectPath); os.IsNotExist(statErr) {
 		t.Fatalf("Project directory was not created")
 	}
 
 	// Check folders
-	if _, err := os.Stat(filepath.Join(projectPath, "src")); os.IsNotExist(err) {
+	if _, statErr := os.Stat(filepath.Join(projectPath, "src")); os.IsNotExist(statErr) {
 		t.Error("src directory was not created")
 	}
-	if _, err := os.Stat(filepath.Join(projectPath, "tests")); os.IsNotExist(err) {
+	if _, statErr := os.Stat(filepath.Join(projectPath, "tests")); os.IsNotExist(statErr) {
 		t.Error("tests directory was not created")
 	}
 
 	// Check boss.json
-	bossJsonPath := filepath.Join(projectPath, consts.FilePackage)
-	if _, err := os.Stat(bossJsonPath); os.IsNotExist(err) {
+	bossJSONPath := filepath.Join(projectPath, consts.FilePackage)
+	if _, statErr := os.Stat(bossJSONPath); os.IsNotExist(statErr) {
 		t.Fatal("boss.json was not created")
 	}
 
-	bossBytes, err := os.ReadFile(bossJsonPath)
+	bossBytes, err := os.ReadFile(bossJSONPath)
 	if err != nil {
 		t.Fatalf("Failed to read boss.json: %v", err)
 	}
 
 	var pkg domain.Package
-	if err := json.Unmarshal(bossBytes, &pkg); err != nil {
+	if err = json.Unmarshal(bossBytes, &pkg); err != nil {
 		t.Fatalf("Failed to parse boss.json: %v", err)
 	}
 
@@ -116,7 +112,7 @@ func TestDoCreateProject_App(t *testing.T) {
 
 	// Check .dpr file
 	dprPath := filepath.Join(projectPath, projectName+".dpr")
-	if _, err := os.Stat(dprPath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(dprPath); os.IsNotExist(statErr) {
 		t.Fatal(".dpr file was not created")
 	}
 
@@ -131,7 +127,7 @@ func TestDoCreateProject_App(t *testing.T) {
 
 	// Check .dproj file
 	dprojPath := filepath.Join(projectPath, projectName+".dproj")
-	if _, err := os.Stat(dprojPath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(dprojPath); os.IsNotExist(statErr) {
 		t.Fatal(".dproj file was not created")
 	}
 
@@ -151,15 +147,9 @@ func TestDoCreateProject_App(t *testing.T) {
 // TestDoCreateProject_Pkg tests bootstrapping a package project.
 func TestDoCreateProject_Pkg(t *testing.T) {
 	tempDir := t.TempDir()
+	t.Chdir(tempDir)
 
-	// Redirect working directory
-	oldWd, err := os.Getwd()
-	if err == nil {
-		defer func() { _ = os.Chdir(oldWd) }()
-	}
-	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
+	var err error
 
 	// Initialize package manager
 	fs := filesystem.NewOSFileSystem()
@@ -172,13 +162,13 @@ func TestDoCreateProject_Pkg(t *testing.T) {
 	doCreateProject(projectName, "pkg", true)
 
 	projectPath := filepath.Join(tempDir, projectName)
-	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(projectPath); os.IsNotExist(statErr) {
 		t.Fatalf("Project directory was not created")
 	}
 
 	// Check .dpk file
 	dpkPath := filepath.Join(projectPath, projectName+".dpk")
-	if _, err := os.Stat(dpkPath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(dpkPath); os.IsNotExist(statErr) {
 		t.Fatal(".dpk file was not created")
 	}
 
@@ -193,7 +183,7 @@ func TestDoCreateProject_Pkg(t *testing.T) {
 
 	// Check .dproj file
 	dprojPath := filepath.Join(projectPath, projectName+".dproj")
-	if _, err := os.Stat(dprojPath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(dprojPath); os.IsNotExist(statErr) {
 		t.Fatal(".dproj file was not created")
 	}
 

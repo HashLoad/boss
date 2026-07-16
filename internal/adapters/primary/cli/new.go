@@ -22,8 +22,8 @@ const (
 )
 
 var (
-	projectType string
-	quietNew    bool
+	projectType string //nolint:gochecknoglobals // cobra flag variable
+	quietNew    bool   //nolint:gochecknoglobals // cobra flag variable
 )
 
 const dprTemplate = `program %s;
@@ -120,7 +120,8 @@ const dprojTemplate = `<Project xmlns="http://schemas.microsoft.com/developer/ms
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
-    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"
+            Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
 </Project>
 `
 
@@ -138,16 +139,16 @@ func generateGUID() string {
 // newCmdRegister registers the new command.
 func newCmdRegister(root *cobra.Command) {
 	var newCmd = &cobra.Command{
-		Use:     "new [project_name]",
-		Short:   "Create a new Delphi project skeleton",
-		Long:    "Create a new Delphi project skeleton with source directories, templates, and boss.json",
-		Args:    cobra.MaximumNArgs(1),
+		Use:   "new [project_name]",
+		Short: "Create a new Delphi project skeleton",
+		Long:  "Create a new Delphi project skeleton with source directories, templates, and boss.json",
+		Args:  cobra.MaximumNArgs(1),
 		Example: `  Create a new console application:
   boss new my_project
 
   Create a new package/library:
   boss new my_package --type pkg`,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			var name string
 			if len(args) > 0 {
 				name = args[0]
@@ -194,9 +195,11 @@ func doCreateProject(name string, pType string, quiet bool) {
 	// Create directories
 	srcDir := filepath.Join(projectDir, "src")
 	testsDir := filepath.Join(projectDir, "tests")
+	//nolint:gosec // Standard directory permissions
 	if err := os.MkdirAll(srcDir, 0755); err != nil {
 		msg.Die("❌ Failed to create src directory: %v", err)
 	}
+	//nolint:gosec // Standard directory permissions
 	if err := os.MkdirAll(testsDir, 0755); err != nil {
 		msg.Die("❌ Failed to create tests directory: %v", err)
 	}
@@ -207,8 +210,8 @@ func doCreateProject(name string, pType string, quiet bool) {
 	packageData.Version = defaultPackageVersion
 	packageData.MainSrc = "src"
 
-	packageJsonPath := filepath.Join(projectDir, consts.FilePackage)
-	if err := pkgmanager.SavePackage(packageData, packageJsonPath); err != nil {
+	packageJSONPath := filepath.Join(projectDir, consts.FilePackage)
+	if err := pkgmanager.SavePackage(packageData, packageJSONPath); err != nil {
 		msg.Die("❌ Failed to save boss.json: %v", err)
 	}
 
