@@ -14,6 +14,7 @@ const (
 	FileExtensionDpr   = ".dpr"
 	FileExtensionDproj = ".dproj"
 	FileExtensionLpi   = ".lpi"
+	FileExtensionLpk   = ".lpk"
 
 	FilePackageLockOld = "boss.lock"
 	FolderDependencies = "modules"

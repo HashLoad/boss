@@ -18,8 +18,9 @@ import (
 
 var (
 	//nolint:lll // Regex pattern readability is important
-	reProjectFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionDproj) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `$`)
-	reLazarusFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `$`)
+	reProjectFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionDproj) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpk) + `$`)
+	//nolint:lll // Regex pattern readability is important
+	reLazarusFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpk) + `$`)
 )
 
 // updateDprojLibraryPath updates the library path in the project file.
@@ -40,28 +41,41 @@ func updateOtherUnitFilesProject(lpiName string) {
 	doc := etree.NewDocument()
 	info, err := os.Stat(lpiName)
 	if os.IsNotExist(err) || info.IsDir() {
-		msg.Err("❌ .lpi not found.")
+		msg.Err("❌ Lazarus project/package file not found.")
 		return
 	}
 	err = doc.ReadFromFile(lpiName)
 	if err != nil {
-		msg.Err("❌ Error on read lpi: %s", err)
+		msg.Err("❌ Error on read lazarus file: %s", err)
 		return
 	}
 
 	root := doc.Root()
 
 	compilerOptions := root.SelectElement(consts.XMLTagNameCompilerOptions)
-	processCompilerOptions(compilerOptions)
+	if compilerOptions != nil {
+		processCompilerOptions(compilerOptions)
+	}
 
 	projectOptions := root.SelectElement(consts.XMLTagNameProjectOptions)
+	if projectOptions != nil {
+		buildModes := projectOptions.SelectElement(consts.XMLTagNameBuildModes)
+		if buildModes != nil {
+			for _, item := range buildModes.SelectElements(consts.XMLTagNameItem) {
+				attribute := item.SelectAttr(consts.XMLNameAttribute)
+				compilerOptions = item.SelectElement(consts.XMLTagNameCompilerOptions)
+				if compilerOptions != nil {
+					msg.Info("  🔁 Updating %s mode", attribute.Value)
+					processCompilerOptions(compilerOptions)
+				}
+			}
+		}
+	}
 
-	buildModes := projectOptions.SelectElement(consts.XMLTagNameBuildModes)
-	for _, item := range buildModes.SelectElements(consts.XMLTagNameItem) {
-		attribute := item.SelectAttr(consts.XMLNameAttribute)
-		compilerOptions = item.SelectElement(consts.XMLTagNameCompilerOptions)
+	packageOptions := root.SelectElement("Package")
+	if packageOptions != nil {
+		compilerOptions = packageOptions.SelectElement(consts.XMLTagNameCompilerOptions)
 		if compilerOptions != nil {
-			msg.Info("  🔁 Updating %s mode", attribute.Value)
 			processCompilerOptions(compilerOptions)
 		}
 	}

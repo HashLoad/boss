@@ -120,9 +120,11 @@ func DoInstall(config env.ConfigProvider, options InstallOptions, pkg *domain.Pa
 	msg.SetProgressTracker(nil)
 	progress.Stop()
 
-	paths.EnsureCleanModulesDir(dependencies, pkg.Lock)
+	paths.EnsureCleanModulesDir(dependencies, pkg.Lock, len(options.Args) == 0)
 
-	pkg.Lock.CleanRemoved(dependencies)
+	if len(options.Args) == 0 {
+		pkg.Lock.CleanRemoved(dependencies)
+	}
 	if err := pkgmanager.SavePackageCurrent(pkg); err != nil {
 		msg.Warn("⚠️ Failed to save package: %v", err)
 	}
