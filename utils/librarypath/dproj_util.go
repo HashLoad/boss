@@ -19,6 +19,7 @@ import (
 var (
 	//nolint:lll // Regex pattern readability is important
 	reProjectFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionDproj) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpk) + `$`)
+	//nolint:lll // Regex pattern readability is important
 	reLazarusFile = regexp.MustCompile(`.*` + regexp.QuoteMeta(consts.FileExtensionLpi) + `|.*` + regexp.QuoteMeta(consts.FileExtensionLpk) + `$`)
 )
 
