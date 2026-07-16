@@ -16,8 +16,8 @@ func TestNewRepoInfo(t *testing.T) {
 		t.Errorf("NewRepoInfo().Key = %q, want %q", info.Key, dep.HashName())
 	}
 
-	if info.Name != "horse" {
-		t.Errorf("NewRepoInfo().Name = %q, want %q", info.Name, "horse")
+	if info.Name != "github_com_hashload_horse" {
+		t.Errorf("NewRepoInfo().Name = %q, want %q", info.Name, "github_com_hashload_horse")
 	}
 
 	if len(info.Versions) != 3 {

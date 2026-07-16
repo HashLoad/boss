@@ -115,8 +115,8 @@ func TestService_SaveAndLoadRepositoryDetails(t *testing.T) {
 		t.Fatalf("LoadRepositoryData() error = %v", err)
 	}
 
-	if info.Name != "horse" {
-		t.Errorf("LoadRepositoryData().Name = %q, want %q", info.Name, "horse")
+	if info.Name != "github_com_hashload_horse" {
+		t.Errorf("LoadRepositoryData().Name = %q, want %q", info.Name, "github_com_hashload_horse")
 	}
 
 	if len(info.Versions) != 3 {
