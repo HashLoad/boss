@@ -64,6 +64,9 @@ func (p *Dependency) GetURLPrefix() string {
 
 // GetURL returns the full URL for the repository, handling SSH and HTTPS.
 func (p *Dependency) GetURL() string {
+	if strings.HasPrefix(p.Repository, "git@") {
+		return p.Repository
+	}
 	prefix := p.GetURLPrefix()
 	auth := env.GlobalConfiguration().Auth[prefix]
 	if auth != nil {
