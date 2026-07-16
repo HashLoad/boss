@@ -61,7 +61,7 @@ func TestLazarusPathInjection(t *testing.T) {
 	if err == nil {
 		defer func() { _ = os.Chdir(oldWd) }()
 	}
-	if err := os.Chdir(tempDir); err != nil {
+	if err = os.Chdir(tempDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)
 	}
 
@@ -80,8 +80,8 @@ func TestLazarusPathInjection(t *testing.T) {
 	}
 
 	// Create boss.json for dependency
-	bossJsonContent := `{"name": "horse", "mainsrc": "src"}`
-	err = os.WriteFile(filepath.Join(modulesDir, "horse", "boss.json"), []byte(bossJsonContent), 0644)
+	bossJSONContent := `{"name": "horse", "mainsrc": "src"}`
+	err = os.WriteFile(filepath.Join(modulesDir, "horse", "boss.json"), []byte(bossJSONContent), 0644)
 	if err != nil {
 		t.Fatalf("Failed to write dependency boss.json: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestLazarusPathInjection(t *testing.T) {
 
 	// Verify LPI XML contents
 	doc := etree.NewDocument()
-	if err := doc.ReadFromFile(lpiPath); err != nil {
+	if err = doc.ReadFromFile(lpiPath); err != nil {
 		t.Fatalf("Failed to read updated LPI: %v", err)
 	}
 

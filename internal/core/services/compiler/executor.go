@@ -74,7 +74,8 @@ func compileLazarus(lazarusPath string, tracker *BuildTracker) bool {
 	cmd := exec.Command("lazbuild", "--build-mode=Debug", absPath)
 	cmd.Dir = absDir
 
-	buildLog := filepath.Join(absDir, "build_boss_" + strings.TrimSuffix(filepath.Base(lazarusPath), filepath.Ext(lazarusPath)) + ".log")
+	baseName := strings.TrimSuffix(filepath.Base(lazarusPath), filepath.Ext(lazarusPath))
+	buildLog := filepath.Join(absDir, "build_boss_"+baseName+".log")
 	logFile, err := os.OpenFile(buildLog, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
 		if tracker == nil || !tracker.IsEnabled() {
