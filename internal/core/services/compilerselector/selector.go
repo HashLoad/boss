@@ -67,53 +67,58 @@ func (s *Service) SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error
 		return nil, errors.New("no Delphi installation found")
 	}
 
-	// Determine target platform
-	var targetPlatform string
-	if ctx.CliPlatform != "" {
-		targetPlatform = ctx.CliPlatform
-	} else if ctx.Package != nil && ctx.Package.Toolchain != nil && ctx.Package.Toolchain.Platform != "" {
-		targetPlatform = ctx.Package.Toolchain.Platform
-	} else {
-		targetPlatform = consts.PlatformWin32.String()
-	}
+	targetPlatform := resolveTargetPlatform(ctx)
 
-	// 1. If CLI compiler version is specified
 	if ctx.CliCompilerVersion != "" {
 		return findCompiler(installations, ctx.CliCompilerVersion, targetPlatform)
 	}
 
-	// 2. If toolchain compiler version is specified
 	if ctx.Package != nil && ctx.Package.Toolchain != nil && ctx.Package.Toolchain.Compiler != "" {
 		return findCompiler(installations, ctx.Package.Toolchain.Compiler, targetPlatform)
 	}
 
-	// 3. Fallback to global path
 	globalPath := s.config.GetDelphiPath()
 	if globalPath != "" {
-		// Try to find a matching installation for the target platform in the global path
-		for _, inst := range installations {
-			instDir := filepath.Dir(inst.Path)
-			if strings.EqualFold(instDir, globalPath) && strings.EqualFold(inst.Arch, targetPlatform) {
-				return createSelectedCompiler(inst), nil
-			}
-		}
-
-		// Fallback if not found in registered installations
-		var compilerBinary string
-		switch targetPlatform {
-		case consts.PlatformWin64.String():
-			compilerBinary = "dcc64.exe"
-		default:
-			compilerBinary = "dcc32.exe"
-		}
-		return &SelectedCompiler{
-			Path:   filepath.Join(globalPath, compilerBinary),
-			BinDir: globalPath,
-			Arch:   targetPlatform,
-		}, nil
+		return findGlobalPathCompiler(installations, globalPath, targetPlatform)
 	}
 
-	// 4. Fallback to the latest installation that matches the target platform
+	return findLatestCompiler(installations, targetPlatform)
+}
+
+func resolveTargetPlatform(ctx SelectionContext) string {
+	switch {
+	case ctx.CliPlatform != "":
+		return ctx.CliPlatform
+	case ctx.Package != nil && ctx.Package.Toolchain != nil && ctx.Package.Toolchain.Platform != "":
+		return ctx.Package.Toolchain.Platform
+	default:
+		return consts.PlatformWin32.String()
+	}
+}
+
+func findGlobalPathCompiler(installations []registryadapter.DelphiInstallation, globalPath, targetPlatform string) (*SelectedCompiler, error) {
+	for _, inst := range installations {
+		instDir := filepath.Dir(inst.Path)
+		if strings.EqualFold(instDir, globalPath) && strings.EqualFold(inst.Arch, targetPlatform) {
+			return createSelectedCompiler(inst), nil
+		}
+	}
+
+	var compilerBinary string
+	switch targetPlatform {
+	case consts.PlatformWin64.String():
+		compilerBinary = "dcc64.exe"
+	default:
+		compilerBinary = "dcc32.exe"
+	}
+	return &SelectedCompiler{
+		Path:   filepath.Join(globalPath, compilerBinary),
+		BinDir: globalPath,
+		Arch:   targetPlatform,
+	}, nil
+}
+
+func findLatestCompiler(installations []registryadapter.DelphiInstallation, targetPlatform string) (*SelectedCompiler, error) {
 	var bestMatch *registryadapter.DelphiInstallation
 	for _, inst := range installations {
 		if strings.EqualFold(inst.Arch, targetPlatform) {
@@ -127,18 +132,13 @@ func (s *Service) SelectCompiler(ctx SelectionContext) (*SelectedCompiler, error
 		return createSelectedCompiler(*bestMatch), nil
 	}
 
-	// If no installation matching the target platform is found, fallback to the latest overall installation
-	if len(installations) > 0 {
-		latest := installations[0]
-		for _, inst := range installations[1:] {
-			if inst.Version > latest.Version {
-				latest = inst
-			}
+	latest := installations[0]
+	for _, inst := range installations[1:] {
+		if inst.Version > latest.Version {
+			latest = inst
 		}
-		return createSelectedCompiler(latest), nil
 	}
-
-	return nil, errors.New("could not determine compiler")
+	return createSelectedCompiler(latest), nil
 }
 
 //nolint:lll // Function signature cannot be easily shortened
