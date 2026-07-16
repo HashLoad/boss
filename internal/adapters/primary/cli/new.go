@@ -195,12 +195,10 @@ func doCreateProject(name string, pType string, quiet bool) {
 	// Create directories
 	srcDir := filepath.Join(projectDir, "src")
 	testsDir := filepath.Join(projectDir, "tests")
-	//nolint:gosec // Standard directory permissions
-	if err := os.MkdirAll(srcDir, 0755); err != nil {
+	if err := os.MkdirAll(srcDir, 0750); err != nil {
 		msg.Die("❌ Failed to create src directory: %v", err)
 	}
-	//nolint:gosec // Standard directory permissions
-	if err := os.MkdirAll(testsDir, 0755); err != nil {
+	if err := os.MkdirAll(testsDir, 0750); err != nil {
 		msg.Die("❌ Failed to create tests directory: %v", err)
 	}
 
