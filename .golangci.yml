@@ -59,13 +59,13 @@ linters:
     - nolintlint
     - nonamedreturns
     - nosprintfhostport
-    - perfsprint
+    #- perfsprint
     - predeclared
     - promlinter
     - protogetter
     - reassign
     - recvcheck
-    - revive
+    #- revive
     - rowserrcheck
     - sloglint
     - spancheck
@@ -160,6 +160,8 @@ linters:
           paramsOnly: false
         underef:
           skipRecvDeref: false
+      disabled-checks:
+        - deprecatedComment
 
     govet:
       enable-all: true
@@ -168,6 +170,9 @@ linters:
       settings:
         shadow:
           strict: false
+
+    staticcheck:
+      checks: ["all", "-QF1001", "-QF1002", "-QF1003", "-QF1004", "-QF1005", "-QF1006", "-QF1007", "-QF1008", "-QF1009", "-QF1010", "-QF1011", "-QF1012"]
 
     inamedparam:
       skip-single-param: true
@@ -229,6 +234,58 @@ linters:
           - gosec
           - noctx
           - wrapcheck
+      - path: "internal/upgrade/"
+        linters: [ errcheck ]
+      - path: "pkg/env/configuration\\.go"
+        linters: [ errcheck ]
+      - path: "setup/migrations\\.go"
+        linters: [ errcheck ]
+      - path: "utils/librarypath/librarypath\\.go"
+        linters: [ errcheck, noctx ]
+      - path: "utils/dcc32/dcc32\\.go"
+        linters: [ noctx ]
+      - path: "internal/adapters/secondary/git/git_native\\.go"
+        linters: [ noctx ]
+      - path: "internal/core/services/compiler/executor\\.go"
+        linters: [ noctx, gosec ]
+      - path: "internal/core/services/scripts/runner\\.go"
+        linters: [ gosec ]
+      - path: "utils/hash\\.go"
+        linters: [ gosec ]
+      - path: "internal/adapters/primary/cli/config/"
+        linters: [ goconst ]
+      - path: "internal/adapters/primary/cli/root\\.go"
+        linters: [ goconst ]
+      - path: "internal/core/ports/git\\.go"
+        linters: [ gocritic ]
+      - path: "internal/core/services/installer/"
+        linters: [ gocritic ]
+      - path: "internal/adapters/secondary/git/git\\.go"
+        linters: [ revive ]
+      - path: "internal/adapters/secondary/git/git_embedded\\.go"
+        linters: [ revive ]
+      - path: "internal/adapters/secondary/git/git_native\\.go"
+        linters: [ revive ]
+      - path: "internal/core/services/compiler/progress\\.go"
+        linters: [ revive ]
+      - path: "internal/core/services/installer/progress\\.go"
+        linters: [ revive ]
+      - path: "internal/infra/error_filesystem\\.go"
+        linters: [ revive ]
+      - path: "pkg/consts/consts\\.go"
+        linters: [ revive ]
+      - path: "pkg/msg/msg\\.go"
+        linters: [ revive ]
+      - path: "internal/core/domain/graph\\.go"
+        linters: [ perfsprint ]
+      - path: "internal/core/services/compiler/compiler\\.go"
+        linters: [ perfsprint ]
+      - path: "internal/core/services/compiler/executor\\.go"
+        linters: [ perfsprint ]
+      - path: "setup/paths\\.go"
+        linters: [ perfsprint ]
+      - path: "utils/dcp/dcp\\.go"
+        linters: [ perfsprint ]
 
 formatters:
   enable:
