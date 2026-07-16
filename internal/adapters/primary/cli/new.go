@@ -15,15 +15,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	defaultPackageVersion = "1.0.0"
-	projectTypeApp        = "app"
-	projectTypePkg        = "pkg"
-)
-
 var (
-	projectType string //nolint:gochecknoglobals // cobra flag variable
-	quietNew    bool   //nolint:gochecknoglobals // cobra flag variable
+	projectType string
+	targetIDE   string
+	quietNew    bool
 )
 
 const dprTemplate = `program %s;
@@ -120,9 +115,98 @@ const dprojTemplate = `<Project xmlns="http://schemas.microsoft.com/developer/ms
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
-    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"
-            Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
 </Project>
+`
+
+const lprTemplate = `program %s;
+
+{$mode objfpc}{$H+}
+
+uses
+  {$IFDEF UNIX}
+  cthreads,
+  {$ENDIF}
+  Classes, SysUtils;
+
+begin
+  WriteLn('Hello from %s!');
+end.
+`
+
+const lpiTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="%s"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes>
+      <Item Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+    </RunParams>
+    <Units>
+      <Unit>
+        <Filename Value="%s.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="%s"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+  </CompilerOptions>
+</CONFIG>
+`
+
+const lpkTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="%s"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files>
+      <!-- Add package files here -->
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
 `
 
 // generateGUID generates a random GUID in the standard {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} format.
@@ -139,32 +223,36 @@ func generateGUID() string {
 // newCmdRegister registers the new command.
 func newCmdRegister(root *cobra.Command) {
 	var newCmd = &cobra.Command{
-		Use:   "new [project_name]",
-		Short: "Create a new Delphi project skeleton",
-		Long:  "Create a new Delphi project skeleton with source directories, templates, and boss.json",
-		Args:  cobra.MaximumNArgs(1),
-		Example: `  Create a new console application:
+		Use:     "new [project_name]",
+		Short:   "Create a new Delphi or Lazarus project skeleton",
+		Long:    "Create a new Delphi or Lazarus project skeleton with source directories, templates, and boss.json",
+		Args:    cobra.MaximumNArgs(1),
+		Example: `  Create a new console application (Delphi by default):
   boss new my_project
 
-  Create a new package/library:
-  boss new my_package --type pkg`,
-		Run: func(_ *cobra.Command, args []string) {
+  Create a new Lazarus application:
+  boss new my_project --ide lazarus
+
+  Create a new package/library in Lazarus:
+  boss new my_package --type pkg --ide lazarus`,
+		Run: func(cmd *cobra.Command, args []string) {
 			var name string
 			if len(args) > 0 {
 				name = args[0]
 			}
-			doCreateProject(name, projectType, quietNew)
+			doCreateProject(name, projectType, targetIDE, quietNew)
 		},
 	}
 
-	newCmd.Flags().StringVarP(&projectType, "type", "t", projectTypeApp, "type of project to generate (app or pkg)")
+	newCmd.Flags().StringVarP(&projectType, "type", "t", "app", "type of project to generate (app or pkg)")
+	newCmd.Flags().StringVarP(&targetIDE, "ide", "i", "", "target IDE to generate for (delphi or lazarus)")
 	newCmd.Flags().BoolVarP(&quietNew, "quiet", "q", false, "without asking questions")
 
 	root.AddCommand(newCmd)
 }
 
 // doCreateProject performs the project creation.
-func doCreateProject(name string, pType string, quiet bool) {
+func doCreateProject(name string, pType string, ide string, quiet bool) {
 	if !quiet && name == "" {
 		name = getParamOrDef("Project name", "")
 	}
@@ -174,8 +262,18 @@ func doCreateProject(name string, pType string, quiet bool) {
 	}
 
 	pType = strings.ToLower(strings.TrimSpace(pType))
-	if pType != projectTypeApp && pType != projectTypePkg {
+	if pType != "app" && pType != "pkg" {
 		msg.Die("❌ Invalid project type. Supported types: 'app' (default) or 'pkg'.")
+	}
+
+	if !quiet && ide == "" {
+		ide = getParamOrDef("Target IDE (delphi or lazarus)", "delphi")
+	}
+	ide = strings.ToLower(strings.TrimSpace(ide))
+	if ide == "l" || ide == "lazarus" {
+		ide = "lazarus"
+	} else {
+		ide = "delphi"
 	}
 
 	cwd, err := os.Getwd()
@@ -188,8 +286,13 @@ func doCreateProject(name string, pType string, quiet bool) {
 		msg.Die("❌ Directory '%s' already exists.", name)
 	}
 
+	ideTitle := "Delphi"
+	if ide == "lazarus" {
+		ideTitle = "Lazarus"
+	}
+
 	if !quiet {
-		msg.Info("🚀 Creating a new Delphi project skeleton in %s...", projectDir)
+		msg.Info("🚀 Creating a new %s project skeleton in %s...", ideTitle, projectDir)
 	}
 
 	// Create directories
@@ -205,36 +308,59 @@ func doCreateProject(name string, pType string, quiet bool) {
 	// Save boss.json
 	packageData := domain.NewPackage()
 	packageData.Name = name
-	packageData.Version = defaultPackageVersion
+	packageData.Version = "1.0.0"
 	packageData.MainSrc = "src"
 
-	packageJSONPath := filepath.Join(projectDir, consts.FilePackage)
-	if err := pkgmanager.SavePackage(packageData, packageJSONPath); err != nil {
+	packageJsonPath := filepath.Join(projectDir, consts.FilePackage)
+	if err := pkgmanager.SavePackage(packageData, packageJsonPath); err != nil {
 		msg.Die("❌ Failed to save boss.json: %v", err)
 	}
 
-	// Write Delphi files
-	guid := generateGUID()
-	var dprojContent string
-	if pType == projectTypeApp {
-		dprPath := filepath.Join(projectDir, name+".dpr")
-		dprContent := fmt.Sprintf(dprTemplate, name, name)
-		if err := os.WriteFile(dprPath, []byte(dprContent), 0600); err != nil {
-			msg.Die("❌ Failed to create .dpr project file: %v", err)
-		}
-		dprojContent = fmt.Sprintf(dprojTemplate, guid, "Console", "Application", name, "dpr")
-	} else {
-		dpkPath := filepath.Join(projectDir, name+".dpk")
-		dpkContent := fmt.Sprintf(dpkTemplate, name)
-		if err := os.WriteFile(dpkPath, []byte(dpkContent), 0600); err != nil {
-			msg.Die("❌ Failed to create .dpk package file: %v", err)
-		}
-		dprojContent = fmt.Sprintf(dprojTemplate, guid, "Package", "Package", name, "dpk")
-	}
+	// Write files based on the chosen IDE
+	if ide == "lazarus" {
+		if pType == "app" {
+			lprPath := filepath.Join(projectDir, name+".lpr")
+			lprContent := fmt.Sprintf(lprTemplate, name, name)
+			if err := os.WriteFile(lprPath, []byte(lprContent), 0644); err != nil {
+				msg.Die("❌ Failed to create .lpr project file: %v", err)
+			}
 
-	dprojPath := filepath.Join(projectDir, name+".dproj")
-	if err := os.WriteFile(dprojPath, []byte(dprojContent), 0600); err != nil {
-		msg.Die("❌ Failed to create .dproj configuration file: %v", err)
+			lpiPath := filepath.Join(projectDir, name+".lpi")
+			lpiContent := fmt.Sprintf(lpiTemplate, name, name, name)
+			if err := os.WriteFile(lpiPath, []byte(lpiContent), 0644); err != nil {
+				msg.Die("❌ Failed to create .lpi project file: %v", err)
+			}
+		} else {
+			lpkPath := filepath.Join(projectDir, name+".lpk")
+			lpkContent := fmt.Sprintf(lpkTemplate, name)
+			if err := os.WriteFile(lpkPath, []byte(lpkContent), 0644); err != nil {
+				msg.Die("❌ Failed to create .lpk package file: %v", err)
+			}
+		}
+	} else {
+		// Write Delphi files
+		guid := generateGUID()
+		var dprojContent string
+		if pType == "app" {
+			dprPath := filepath.Join(projectDir, name+".dpr")
+			dprContent := fmt.Sprintf(dprTemplate, name, name)
+			if err := os.WriteFile(dprPath, []byte(dprContent), 0644); err != nil {
+				msg.Die("❌ Failed to create .dpr project file: %v", err)
+			}
+			dprojContent = fmt.Sprintf(dprojTemplate, guid, "Console", "Application", name, "dpr")
+		} else {
+			dpkPath := filepath.Join(projectDir, name+".dpk")
+			dpkContent := fmt.Sprintf(dpkTemplate, name)
+			if err := os.WriteFile(dpkPath, []byte(dpkContent), 0644); err != nil {
+				msg.Die("❌ Failed to create .dpk package file: %v", err)
+			}
+			dprojContent = fmt.Sprintf(dprojTemplate, guid, "Package", "Package", name, "dpk")
+		}
+
+		dprojPath := filepath.Join(projectDir, name+".dproj")
+		if err := os.WriteFile(dprojPath, []byte(dprojContent), 0644); err != nil {
+			msg.Die("❌ Failed to create .dproj configuration file: %v", err)
+		}
 	}
 
 	if !quiet {

@@ -23,6 +23,7 @@ func TestRootCommand(t *testing.T) {
 	t.Run("register commands", func(t *testing.T) {
 		// These should not panic
 		versionCmdRegister(root)
+		pubpascalCmdRegister(root)
 
 		// Verify command was added
 		if root.Commands() == nil {
@@ -117,6 +118,8 @@ func TestCommandHelp(t *testing.T) {
 	// Register all commands
 	versionCmdRegister(root)
 	installCmdRegister(root)
+	pubpascalCmdRegister(root)
+	craCmdRegister(root)
 
 	for _, cmd := range root.Commands() {
 		t.Run(cmd.Use, func(t *testing.T) {
@@ -158,5 +161,89 @@ func TestRootHelp(t *testing.T) {
 
 	if output == "" {
 		t.Error("Root command should produce help output")
+	}
+}
+
+// TestPubPascalCommands tests that the PubPascal commands are registered correctly.
+func TestPubPascalCommands(t *testing.T) {
+	root := &cobra.Command{Use: "boss"}
+	pubpascalCmdRegister(root)
+
+	// Check workspace command
+	var workspaceCmd *cobra.Command
+	for _, cmd := range root.Commands() {
+		if cmd.Name() == "workspace" {
+			workspaceCmd = cmd
+			break
+		}
+	}
+	if workspaceCmd == nil {
+		t.Fatal("Workspace command not found")
+	}
+
+	// Check workspace subcommands
+	expectedWorkspaceSubcmds := map[string]bool{
+		"clone":  false,
+		"status": false,
+		"update": false,
+		"push":   false,
+	}
+	for _, cmd := range workspaceCmd.Commands() {
+		if _, ok := expectedWorkspaceSubcmds[cmd.Name()]; ok {
+			expectedWorkspaceSubcmds[cmd.Name()] = true
+		}
+	}
+	for cmd, found := range expectedWorkspaceSubcmds {
+		if !found {
+			t.Errorf("Workspace subcommand '%s' not found", cmd)
+		}
+	}
+
+	// Check pkg command and root commands
+	var pkgCmd *cobra.Command
+	var sbomCmd *cobra.Command
+	var scanCmd *cobra.Command
+	var publishSbomCmd *cobra.Command
+	for _, cmd := range root.Commands() {
+		switch cmd.Name() {
+		case "pkg":
+			pkgCmd = cmd
+		case "sbom":
+			sbomCmd = cmd
+		case "scan":
+			scanCmd = cmd
+		case "publish-sbom":
+			publishSbomCmd = cmd
+		}
+	}
+	if pkgCmd == nil {
+		t.Fatal("Pkg command not found")
+	}
+	if sbomCmd == nil {
+		t.Error("Root command 'sbom' not found")
+	}
+	if scanCmd == nil {
+		t.Error("Root command 'scan' not found")
+	}
+	if publishSbomCmd == nil {
+		t.Error("Root command 'publish-sbom' not found")
+	}
+
+	// Check pkg subcommands
+	expectedPkgSubcmds := map[string]bool{
+		"spec":   false,
+		"pack":   false,
+		"sign":   false,
+		"verify": false,
+	}
+	for _, cmd := range pkgCmd.Commands() {
+		if _, ok := expectedPkgSubcmds[cmd.Name()]; ok {
+			expectedPkgSubcmds[cmd.Name()] = true
+		}
+	}
+	for cmd, found := range expectedPkgSubcmds {
+		if !found {
+			t.Errorf("Pkg subcommand '%s' not found", cmd)
+		}
 	}
 }

@@ -56,6 +56,11 @@ func Initialize() {
 	msg.Debug("finish boss system initialization")
 }
 
+// InitializeMinimal performs a lightweight composition root setup for help/version commands.
+func InitializeMinimal() {
+	initializeInfrastructure()
+}
+
 // initializeInfrastructure sets up infrastructure dependencies.
 // This is the composition root where we wire up adapters to ports.
 func initializeInfrastructure() {

@@ -71,7 +71,9 @@ func printDependencies(showVersion bool) {
 
 	main := tree.AddBranch(pkg.Name + ":")
 	deps := pkg.GetParsedDependencies()
-	printDeps(nil, deps, pkg.Lock, main, showVersion)
+	visited := make(map[string]bool)
+	visited[pkg.Name] = true
+	printDeps(nil, deps, pkg.Lock, main, showVersion, visited)
 	msg.Info(tree.String())
 }
 
@@ -80,7 +82,8 @@ func printDeps(dep *domain.Dependency,
 	deps []domain.Dependency,
 	lock domain.PackageLock,
 	tree treeprint.Tree,
-	showVersion bool) {
+	showVersion bool,
+	visited map[string]bool) {
 	var localTree treeprint.Tree
 
 	if dep != nil {
@@ -90,12 +93,25 @@ func printDeps(dep *domain.Dependency,
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := pkgmanager.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
+		name := dep.Name()
+		if visited[name] {
+			localTree.AddBranch(name + " <- circular dependency")
+			continue
+		}
+
+		// Copy visited map to avoid side effects across sibling branches
+		newVisited := make(map[string]bool)
+		for k, v := range visited {
+			newVisited[k] = v
+		}
+		newVisited[name] = true
+
+		pkgModule, err := pkgmanager.LoadPackageOther(filepath.Join(env.GetModulesDir(), name, consts.FilePackage))
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {
 			subDeps := pkgModule.GetParsedDependencies()
-			printDeps(&dep, subDeps, lock, localTree, showVersion)
+			printDeps(&dep, subDeps, lock, localTree, showVersion, newVisited)
 		}
 	}
 }
@@ -131,7 +147,7 @@ func printSingleDependency(
 
 // isOutdated checks if the dependency is outdated.
 func isOutdated(dependency domain.Dependency, version string) (dependencyStatus, string) {
-	if err := installer.GetDependency(dependency); err != nil { //nolint:staticcheck // TODO: migrate to DependencyManager
+	if err := installer.GetDependency(dependency); err != nil {
 		return updated, ""
 	}
 	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
