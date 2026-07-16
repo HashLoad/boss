@@ -75,11 +75,13 @@ func compileLazarus(lazarusPath string, tracker *BuildTracker) bool {
 	absPath, _ := filepath.Abs(lazarusPath)
 	absDir := filepath.Dir(absPath)
 
-	cmd := exec.Command("lazbuild", "--build-mode=Debug", absPath)
+	// #nosec G204 -- Controlled lazbuild command
+	cmd := exec.CommandContext(context.Background(), "lazbuild", "--build-mode=Debug", absPath)
 	cmd.Dir = absDir
 
 	baseName := strings.TrimSuffix(filepath.Base(lazarusPath), filepath.Ext(lazarusPath))
 	buildLog := filepath.Join(absDir, "build_boss_"+baseName+".log")
+	// #nosec G304 -- Controlled build log path
 	logFile, err := os.OpenFile(buildLog, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
 		if tracker == nil || !tracker.IsEnabled() {
@@ -87,14 +89,14 @@ func compileLazarus(lazarusPath string, tracker *BuildTracker) bool {
 		}
 		return false
 	}
-	defer logFile.Close()
+	defer func() { _ = logFile.Close() }()
 
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
 
 	if err := cmd.Run(); err != nil {
 		if tracker == nil || !tracker.IsEnabled() {
-			msg.Err("  ❌ Failed to compile, see " + buildLog + " for more information: %v", err)
+			msg.Err("  ❌ Failed to compile, see "+buildLog+" for more information: %v", err)
 		}
 		return false
 	}
@@ -107,7 +109,7 @@ func compileLazarus(lazarusPath string, tracker *BuildTracker) bool {
 	return true
 }
 
-//nolint:funlen,gocognit,lll // Complex compilation orchestration with long function signature
+//nolint:funlen,gocognit,gocyclo,cyclop,lll // Complex compilation orchestration
 func compile(dprojPath string, dep *domain.Dependency, rootLock domain.PackageLock, tracker *BuildTracker, selectedCompiler *compilerselector.SelectedCompiler) bool {
 	ext := strings.ToLower(filepath.Ext(dprojPath))
 	if ext == ".lpi" || ext == ".lpk" {

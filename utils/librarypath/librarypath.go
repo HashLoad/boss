@@ -75,14 +75,22 @@ func processBrowsingPath(
 	setReadOnly bool,
 ) []string {
 	var packagePath = filepath.Join(basePath, value.Name(), consts.FilePackage)
-	if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-		other, err := pkgmanager.LoadPackageOther(packagePath)
-		if err == nil && other != nil && other.BrowsingPath != "" {
-			dir := filepath.Join(basePath, value.Name(), other.BrowsingPath)
-			paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
-			if setReadOnly {
-				setReadOnlyProperty(dir)
-			}
+	other := loadPackageIfPresent(packagePath)
+	if other == nil || other.BrowsingPath == "" {
+		return paths
+	}
+
+	browsingPaths := strings.Split(other.BrowsingPath, ";")
+	for _, browsingPath := range browsingPaths {
+		browsingPath = strings.TrimSpace(browsingPath)
+		if browsingPath == "" {
+			continue
+		}
+
+		dir := filepath.Join(basePath, value.Name(), browsingPath)
+		paths = getNewBrowsingPathsFromDir(dir, paths, fullPath, rootPath)
+		if setReadOnly {
+			setReadOnlyProperty(dir)
 		}
 	}
 	return paths
@@ -116,18 +124,52 @@ func GetNewPaths(paths []string, fullPath bool, rootPath string) []string {
 	matches, _ := os.ReadDir(path)
 
 	for _, value := range matches {
-		var packagePath = filepath.Join(path, value.Name(), consts.FilePackage)
-		if _, err := os.Stat(packagePath); !os.IsNotExist(err) {
-			other, err := pkgmanager.LoadPackageOther(packagePath)
-			if err == nil && other != nil {
-				paths = getNewPathsFromDir(filepath.Join(path, value.Name(), other.MainSrc), paths, fullPath, rootPath)
-			} else {
-				paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath, rootPath)
-			}
-		} else {
-			paths = getNewPathsFromDir(filepath.Join(path, value.Name()), paths, fullPath, rootPath)
+		packageDir := filepath.Join(path, value.Name())
+		packagePath := filepath.Join(packageDir, consts.FilePackage)
+		other := loadPackageIfPresent(packagePath)
+		if other == nil {
+			paths = getNewPathsFromDir(packageDir, paths, fullPath, rootPath)
+			continue
+		}
+
+		paths = appendMainSrcPaths(paths, other, packageDir, fullPath, rootPath)
+	}
+	return paths
+}
+
+func loadPackageIfPresent(packagePath string) *domain.Package {
+	if _, err := os.Stat(packagePath); os.IsNotExist(err) {
+		return nil
+	}
+
+	other, err := pkgmanager.LoadPackageOther(packagePath)
+	if err != nil {
+		return nil
+	}
+
+	return other
+}
+
+func appendMainSrcPaths(
+	paths []string,
+	pkg *domain.Package,
+	packageDir string,
+	fullPath bool,
+	rootPath string,
+) []string {
+	mainSrcs := strings.Split(pkg.MainSrc, ";")
+	for _, mainSrc := range mainSrcs {
+		mainSrc = strings.TrimSpace(mainSrc)
+		if mainSrc != "" {
+			paths = getNewPathsFromDir(filepath.Join(packageDir, mainSrc), paths, fullPath, rootPath)
+			continue
+		}
+
+		if len(mainSrcs) == 1 {
+			paths = getNewPathsFromDir(packageDir, paths, fullPath, rootPath)
 		}
 	}
+
 	return paths
 }
 
