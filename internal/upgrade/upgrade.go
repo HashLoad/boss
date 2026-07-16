@@ -51,8 +51,8 @@ func BossUpgrade(preRelease bool) error {
 		return err
 	}
 
-	defer file.Close()
-	defer os.Remove(file.Name())
+	defer func() { _ = file.Close() }()
+	defer func() { _ = os.Remove(file.Name()) }()
 
 	buff, err := getAssetFromFile(file, getAssetName())
 	if err != nil {

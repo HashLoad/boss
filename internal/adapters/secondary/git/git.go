@@ -110,6 +110,7 @@ func GetVersions(config env.ConfigProvider, repository *goGit.Repository, dep do
 	return result
 }
 
+// GetTagsShortName returns the short names of all tags in the repository.
 func GetTagsShortName(repository *goGit.Repository) []string {
 	tags, _ := repository.Tags()
 	var result = []string{}
@@ -120,6 +121,7 @@ func GetTagsShortName(repository *goGit.Repository) []string {
 	return result
 }
 
+// GetByTag returns the reference matching the given short tag name.
 func GetByTag(repository *goGit.Repository, shortName string) *plumbing.Reference {
 	tags, _ := repository.Tags()
 
@@ -134,6 +136,7 @@ func GetByTag(repository *goGit.Repository, shortName string) *plumbing.Referenc
 	}
 }
 
+// GetRepository opens an existing dependency repository from the cache.
 func GetRepository(dep domain.Dependency) *goGit.Repository {
 	// GetRepository is used in places where we already have a cloned repo
 	// So we don't need config for EnsureCacheDir check
@@ -147,6 +150,7 @@ func GetRepository(dep domain.Dependency) *goGit.Repository {
 	return repository
 }
 
+// Checkout switches the dependency repository to the given reference.
 func Checkout(config env.ConfigProvider, dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	if config.GetGitEmbedded() {
 		return CheckoutEmbedded(config, dep, referenceName)
@@ -154,6 +158,7 @@ func Checkout(config env.ConfigProvider, dep domain.Dependency, referenceName pl
 	return CheckoutNative(dep, referenceName)
 }
 
+// Pull fetches and merges updates for the dependency repository.
 func Pull(config env.ConfigProvider, dep domain.Dependency) error {
 	if config.GetGitEmbedded() {
 		return PullEmbedded(config, dep)

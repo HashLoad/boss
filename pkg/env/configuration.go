@@ -155,7 +155,7 @@ func (c *Configuration) SaveConfiguration() {
 		return
 	}
 
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	_, err = f.Write(jsonString)
 	if err != nil {

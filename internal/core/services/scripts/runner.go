@@ -4,6 +4,7 @@ package scripts
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"io"
 	"os/exec"
@@ -14,7 +15,8 @@ import (
 
 // RunCmd executes a command with the given arguments.
 func RunCmd(name string, args ...string) {
-	cmd := exec.Command(name, args...)
+	//nolint:lll // #nosec comment makes line long
+	cmd := exec.CommandContext(context.Background(), name, args...) // #nosec G204 -- Executing user-defined script from boss.json
 	cmdReader, err := cmd.StdoutPipe()
 	cmdErr, _ := cmd.StderrPipe()
 	if err != nil {

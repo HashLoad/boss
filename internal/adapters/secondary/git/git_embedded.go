@@ -111,6 +111,7 @@ func createWorktreeFs(config env.ConfigProvider, dep domain.Dependency) billy.Fi
 	return fs
 }
 
+// CheckoutEmbedded switches the dependency repository to the given reference using go-git.
 func CheckoutEmbedded(_ env.ConfigProvider, dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	repository := GetRepository(dep)
 	worktree, err := repository.Worktree()
@@ -123,6 +124,7 @@ func CheckoutEmbedded(_ env.ConfigProvider, dep domain.Dependency, referenceName
 	})
 }
 
+// PullEmbedded fetches and merges updates using go-git.
 func PullEmbedded(config env.ConfigProvider, dep domain.Dependency) error {
 	repository := GetRepository(dep)
 	worktree, err := repository.Worktree()

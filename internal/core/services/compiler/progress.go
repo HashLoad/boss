@@ -9,10 +9,15 @@ import (
 type BuildStatus int
 
 const (
+	// BuildStatusWaiting indicates the package is waiting to be built.
 	BuildStatusWaiting BuildStatus = iota
+	// BuildStatusBuilding indicates the package is currently being built.
 	BuildStatusBuilding
+	// BuildStatusSuccess indicates the package was built successfully.
 	BuildStatusSuccess
+	// BuildStatusFailed indicates the package build failed.
 	BuildStatusFailed
+	// BuildStatusSkipped indicates the package build was skipped.
 	BuildStatusSkipped
 )
 

@@ -98,12 +98,17 @@ const CommentBoss = "{BOSS}"
 
 // getDcpString returns the DCP requires string formatted for injection.
 func getDcpString(dcps []string) string {
-	var dcpRequiresLine = "\n"
+	var dcpRequiresLine strings.Builder
+	dcpRequiresLine.WriteString("\n")
 
 	for _, dcp := range dcps {
-		dcpRequiresLine += "  " + filepath.Base(dcp) + CommentBoss + ",\n"
+		dcpRequiresLine.WriteString("  ")
+		dcpRequiresLine.WriteString(filepath.Base(dcp))
+		dcpRequiresLine.WriteString(CommentBoss)
+		dcpRequiresLine.WriteString(",\n")
 	}
-	return dcpRequiresLine[:len(dcpRequiresLine)-2]
+	result := dcpRequiresLine.String()
+	return result[:len(result)-2]
 }
 
 // injectDcps injects DCP dependencies into the file content.
@@ -119,17 +124,22 @@ func injectDcps(filecontent string, dcps []string) (string, bool) {
 
 	currentRequires := strings.Split(currentRequiresString, ",")
 
-	var result = filecontent[:resultRegexIndexes[0][3]]
+	var resultBuilder strings.Builder
+	resultBuilder.WriteString(filecontent[:resultRegexIndexes[0][3]])
 
 	for _, value := range currentRequires {
 		if strings.Contains(value, CommentBoss) || utils.Contains(dcps, value) {
 			continue
 		}
-		result += "\n  " + value + ","
+		resultBuilder.WriteString("\n  ")
+		resultBuilder.WriteString(value)
+		resultBuilder.WriteString(",")
 	}
 
-	result = result + getDcpString(dcps) + ";" + filecontent[resultRegexIndexes[0][7]:]
-	return result, true
+	resultBuilder.WriteString(getDcpString(dcps))
+	resultBuilder.WriteString(";")
+	resultBuilder.WriteString(filecontent[resultRegexIndexes[0][7]:])
+	return resultBuilder.String(), true
 }
 
 // processFile processes the file content to inject DCP dependencies.

@@ -21,7 +21,7 @@ var ErrRepositoryNil = errors.New("failed to clone or update repository")
 // DependencyManager manages dependency fetching with proper dependency injection.
 type DependencyManager struct {
 	config       env.ConfigProvider
-	gitClient    ports.GitClient
+	gitClient    ports.GitClient //nolint:staticcheck // TODO: migrate to GitRepository
 	cache        *DependencyCache
 	cacheDir     string
 	cacheService *cache.CacheService
@@ -29,7 +29,7 @@ type DependencyManager struct {
 
 // NewDependencyManager creates a new DependencyManager with the given dependencies.
 //
-//nolint:lll // Function signature cannot be easily shortened
+//nolint:lll,staticcheck // TODO: migrate to GitRepository; signature cannot be shortened
 func NewDependencyManager(config env.ConfigProvider, gitClient ports.GitClient, depCache *DependencyCache, cacheService *cache.CacheService) *DependencyManager {
 	return &DependencyManager{
 		config:       config,

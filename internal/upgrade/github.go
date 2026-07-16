@@ -103,7 +103,7 @@ func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to download asset: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	file, err := os.CreateTemp("", "boss")
 	if err != nil {
@@ -114,7 +114,7 @@ func downloadAsset(asset *github.ReleaseAsset) (*os.File, error) {
 	bar.Start()
 	defer bar.Finish()
 	proxyReader := bar.NewProxyReader(resp.Body)
-	defer proxyReader.Close()
+	defer func() { _ = proxyReader.Close() }()
 
 	_, err = io.Copy(file, proxyReader)
 	if err != nil {

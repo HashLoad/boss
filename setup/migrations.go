@@ -59,7 +59,7 @@ func seven() {
 		msg.Warn("⚠️ Migration 7: could not open config file: %v", err)
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	data := map[string]any{}
 

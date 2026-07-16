@@ -14,6 +14,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	appName        = "boss"
+	appDescription = "Dependency Manager for Delphi"
+)
+
 // Execute executes the root command.
 func Execute() error {
 	var versionPrint bool
@@ -21,9 +26,9 @@ func Execute() error {
 	var debug bool
 
 	var root = &cobra.Command{
-		Use:   "boss",
-		Short: "Dependency Manager for Delphi",
-		Long:  "Dependency Manager for Delphi",
+		Use:   appName,
+		Short: appDescription,
+		Long:  appDescription,
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			if debug {
 				msg.LogLevel(msg.DEBUG)

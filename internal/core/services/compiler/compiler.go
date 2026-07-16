@@ -44,22 +44,21 @@ func Build(pkg *domain.Package, compilerVersion, platform string) {
 }
 
 func saveLoadOrder(queue *domain.NodeQueue) error {
-	var projects = ""
-	for {
-		if queue.IsEmpty() {
-			break
-		}
+	var projects strings.Builder
+	for !queue.IsEmpty() {
 		node := queue.Dequeue()
 		dependencyPath := filepath.Join(env.GetModulesDir(), node.Dep.Name(), consts.FilePackage)
 		if dependencyPackage, err := pkgmanager.LoadPackageOther(dependencyPath); err == nil {
 			for _, value := range dependencyPackage.Projects {
-				projects += strings.TrimSuffix(filepath.Base(value), filepath.Ext(value)) + consts.FileExtensionBpl + "\n"
+				projects.WriteString(strings.TrimSuffix(filepath.Base(value), filepath.Ext(value)))
+				projects.WriteString(consts.FileExtensionBpl)
+				projects.WriteString("\n")
 			}
 		}
 	}
 	outDir := filepath.Join(env.GetModulesDir(), consts.BplFolder, consts.FileBplOrder)
 
-	if err := os.WriteFile(outDir, []byte(projects), 0600); err != nil {
+	if err := os.WriteFile(outDir, []byte(projects.String()), 0600); err != nil {
 		return fmt.Errorf("failed to save build load order to %s: %w", outDir, err)
 	}
 	return nil
