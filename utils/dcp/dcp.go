@@ -18,10 +18,7 @@ import (
 	"golang.org/x/text/transform"
 )
 
-var (
-	reRequires   = regexp.MustCompile(`(?m)^(requires)([^;]+)(;)`)
-	reWhitespace = regexp.MustCompile(`[\r\n ]+`)
-)
+var reRequires = regexp.MustCompile(`(?m)^(requires)([^;]+)(;)`)
 
 // InjectDpcs injects DCP dependencies into project files.
 func InjectDpcs(pkg *domain.Package, lock domain.PackageLock) {
@@ -105,7 +102,8 @@ func getDcpString(dcps []string) string {
 	return dcpRequiresLine[:len(dcpRequiresLine)-2]
 }
 
-// injectDcps injects DCP dependencies into the file content while preserving original formatting, comments, and conditionals.
+// injectDcps injects DCP dependencies into file content, preserving
+// original formatting, comments, and compiler conditionals.
 func injectDcps(filecontent string, dcps []string) (string, bool) {
 	resultRegex := reRequires.FindAllStringSubmatch(filecontent, -1)
 	if len(resultRegex) == 0 {
