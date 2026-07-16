@@ -107,8 +107,8 @@ func TestDoCreateProject_App(t *testing.T) {
 	if pkg.Name != projectName {
 		t.Errorf("Expected package name %q, got %q", projectName, pkg.Name)
 	}
-	if pkg.Version != "1.0.0" {
-		t.Errorf("Expected package version '1.0.0', got %q", pkg.Version)
+	if pkg.Version != defaultPackageVersion {
+		t.Errorf("Expected package version %q, got %q", defaultPackageVersion, pkg.Version)
 	}
 	if pkg.MainSrc != "src" {
 		t.Errorf("Expected mainsrc 'src', got %q", pkg.MainSrc)

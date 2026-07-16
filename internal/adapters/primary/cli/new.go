@@ -15,6 +15,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	defaultPackageVersion = "1.0.0"
+	projectTypeApp        = "app"
+	projectTypePkg        = "pkg"
+)
+
 var (
 	projectType string
 	quietNew    bool
@@ -150,7 +156,7 @@ func newCmdRegister(root *cobra.Command) {
 		},
 	}
 
-	newCmd.Flags().StringVarP(&projectType, "type", "t", "app", "type of project to generate (app or pkg)")
+	newCmd.Flags().StringVarP(&projectType, "type", "t", projectTypeApp, "type of project to generate (app or pkg)")
 	newCmd.Flags().BoolVarP(&quietNew, "quiet", "q", false, "without asking questions")
 
 	root.AddCommand(newCmd)
@@ -167,7 +173,7 @@ func doCreateProject(name string, pType string, quiet bool) {
 	}
 
 	pType = strings.ToLower(strings.TrimSpace(pType))
-	if pType != "app" && pType != "pkg" {
+	if pType != projectTypeApp && pType != projectTypePkg {
 		msg.Die("❌ Invalid project type. Supported types: 'app' (default) or 'pkg'.")
 	}
 
@@ -198,7 +204,7 @@ func doCreateProject(name string, pType string, quiet bool) {
 	// Save boss.json
 	packageData := domain.NewPackage()
 	packageData.Name = name
-	packageData.Version = "1.0.0"
+	packageData.Version = defaultPackageVersion
 	packageData.MainSrc = "src"
 
 	packageJsonPath := filepath.Join(projectDir, consts.FilePackage)
@@ -209,24 +215,24 @@ func doCreateProject(name string, pType string, quiet bool) {
 	// Write Delphi files
 	guid := generateGUID()
 	var dprojContent string
-	if pType == "app" {
+	if pType == projectTypeApp {
 		dprPath := filepath.Join(projectDir, name+".dpr")
 		dprContent := fmt.Sprintf(dprTemplate, name, name)
-		if err := os.WriteFile(dprPath, []byte(dprContent), 0644); err != nil {
+		if err := os.WriteFile(dprPath, []byte(dprContent), 0600); err != nil {
 			msg.Die("❌ Failed to create .dpr project file: %v", err)
 		}
 		dprojContent = fmt.Sprintf(dprojTemplate, guid, "Console", "Application", name, "dpr")
 	} else {
 		dpkPath := filepath.Join(projectDir, name+".dpk")
 		dpkContent := fmt.Sprintf(dpkTemplate, name)
-		if err := os.WriteFile(dpkPath, []byte(dpkContent), 0644); err != nil {
+		if err := os.WriteFile(dpkPath, []byte(dpkContent), 0600); err != nil {
 			msg.Die("❌ Failed to create .dpk package file: %v", err)
 		}
 		dprojContent = fmt.Sprintf(dprojTemplate, guid, "Package", "Package", name, "dpk")
 	}
 
 	dprojPath := filepath.Join(projectDir, name+".dproj")
-	if err := os.WriteFile(dprojPath, []byte(dprojContent), 0644); err != nil {
+	if err := os.WriteFile(dprojPath, []byte(dprojContent), 0600); err != nil {
 		msg.Die("❌ Failed to create .dproj configuration file: %v", err)
 	}
 
