@@ -17,15 +17,17 @@ import (
 // BuildMessage creates a message with instructions to add paths to the shell.
 func BuildMessage(path []string) string {
 	if runtime.GOOS == "windows" {
-		advice := "\nTo add the path permanently, run the following command in the terminal:\n\n" +
-			"Press Win + R, type 'sysdm.cpl' and press Enter\n" +
-			"Click on the 'Advanced' tab and then on 'Environment Variables'\n" +
-			"In the 'System Variables' section, click on 'Path' and then on 'Edit'\n" +
-			"Click on 'New' and add the following path:\n" +
-			"\n"
+		var advice strings.Builder
+		advice.WriteString("\nTo add the path permanently, run the following command in the terminal:\n\n")
+		advice.WriteString("Press Win + R, type 'sysdm.cpl' and press Enter\n")
+		advice.WriteString("Click on the 'Advanced' tab and then on 'Environment Variables'\n")
+		advice.WriteString("In the 'System Variables' section, click on 'Path' and then on 'Edit'\n")
+		advice.WriteString("Click on 'New' and add the following path:\n")
+		advice.WriteString("\n")
 
 		for _, p := range path {
-			advice += p + "\n"
+			advice.WriteString(p)
+			advice.WriteString("\n")
 		}
 	}
 

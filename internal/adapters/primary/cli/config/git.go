@@ -9,13 +9,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const gitModeNative = "native"
+
 // boolToMode converts boolean to mode string.
 func boolToMode(embedded bool) string {
 	if embedded {
 		return "embedded"
 	}
 
-	return "native"
+	return gitModeNative
 }
 
 // registryGitCmd registers the git command.
@@ -29,7 +31,7 @@ func registryGitCmd(root *cobra.Command) {
 	gitModeCmd := &cobra.Command{
 		Use:       "mode [type]",
 		Short:     "Configure Git mode",
-		ValidArgs: []string{"native", "embedded", "default"},
+		ValidArgs: []string{gitModeNative, "embedded", "default"},
 		Args: func(cmd *cobra.Command, args []string) error {
 			err := cobra.OnlyValidArgs(cmd, args)
 			if err == nil {
@@ -45,7 +47,7 @@ func registryGitCmd(root *cobra.Command) {
 			return nil
 		},
 		Run: func(_ *cobra.Command, args []string) {
-			env.GlobalConfiguration().GitEmbedded = args[0] != "native"
+			env.GlobalConfiguration().GitEmbedded = args[0] != gitModeNative
 
 			msg.Info("Using %s git", boolToMode(env.GlobalConfiguration().GitEmbedded))
 			env.GlobalConfiguration().SaveConfiguration()

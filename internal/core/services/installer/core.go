@@ -181,6 +181,7 @@ func collectDependenciesToInstall(pkg *domain.Package, args []string) []domain.D
 }
 
 // collectAllDependencies makes a dry-run to collect all dependencies without installing.
+//
 // Deprecated: Use collectDependenciesToInstall instead.
 func collectAllDependencies(pkg *domain.Package) []domain.Dependency {
 	return collectDependenciesToInstall(pkg, []string{})

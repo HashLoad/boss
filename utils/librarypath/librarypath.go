@@ -3,6 +3,7 @@
 package librarypath
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -96,13 +97,14 @@ func setReadOnlyProperty(dir string) {
 		msg.Warn("  ⚠️ Error on create build file")
 	}
 
-	cmd := exec.Command(readonlybat) // #nosec G204 -- Executing controlled batch file with readonly attributes
+	//nolint:lll // #nosec comment makes line long
+	cmd := exec.CommandContext(context.Background(), readonlybat) // #nosec G204 -- Executing controlled batch file with readonly attributes
 
 	_, err = cmd.Output()
 	if err != nil {
 		msg.Err("  ❌ Failed to set readonly property to folder", dir, " - ", err)
 	} else {
-		os.Remove(readonlybat) // #nosec G104 -- Ignoring error on removing temporary file
+		_ = os.Remove(readonlybat)
 	}
 }
 

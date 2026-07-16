@@ -4,6 +4,7 @@ package gitadapter
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -17,7 +18,7 @@ import (
 )
 
 func checkHasGitClient() {
-	command := exec.Command("where", "git")
+	command := exec.CommandContext(context.Background(), "where", "git")
 	_, err := command.Output()
 	if err != nil {
 		msg.Die("❌ 'git.exe' not found in path")
@@ -66,7 +67,7 @@ func doClone(dep domain.Dependency) error {
 	args = append(args, dep.GetURL(), dirModule)
 
 	//nolint:gosec,nolintlint // Git command with controlled and validated repository URL
-	cmd := exec.Command("git", args...) // #nosec G204 -- Controlled git clone command
+	cmd := exec.CommandContext(context.Background(), "git", args...) // #nosec G204 -- Controlled git clone command
 
 	if err = runCommand(cmd); err != nil {
 		return err
@@ -98,13 +99,13 @@ func getWrapperFetch(dep domain.Dependency) error {
 	}
 
 	writeDotGitFile(dep)
-	cmdReset := exec.Command("git", "reset", "--hard")
+	cmdReset := exec.CommandContext(context.Background(), "git", "reset", "--hard")
 	cmdReset.Dir = dirModule
 	if err := runCommand(cmdReset); err != nil {
 		return err
 	}
 
-	cmd := exec.Command("git", "fetch", "--all")
+	cmd := exec.CommandContext(context.Background(), "git", "fetch", "--all")
 	cmd.Dir = dirModule
 
 	if err := runCommand(cmd); err != nil {
@@ -121,7 +122,7 @@ func getWrapperFetch(dep domain.Dependency) error {
 
 func initSubmodulesNative(dep domain.Dependency) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
-	cmd := exec.Command("git", "submodule", "update", "--init", "--recursive")
+	cmd := exec.CommandContext(context.Background(), "git", "submodule", "update", "--init", "--recursive")
 	cmd.Dir = dirModule
 
 	if err := runCommand(cmd); err != nil {
@@ -130,17 +131,19 @@ func initSubmodulesNative(dep domain.Dependency) error {
 	return nil
 }
 
+// CheckoutNative switches the dependency repository to the given reference using system git.
 func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
-	//nolint:gosec,nolintlint // Git command with controlled repository reference
-	cmd := exec.Command("git", "checkout", "-f", referenceName.Short()) // #nosec G204 -- Controlled git checkout command
+	cmd := exec.CommandContext(context.Background(),
+		"git", "checkout", "-f", referenceName.Short()) // #nosec G204 -- Controlled git checkout command
 	cmd.Dir = dirModule
 	return runCommand(cmd)
 }
 
+// PullNative fetches and merges updates using system git.
 func PullNative(dep domain.Dependency) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
-	cmd := exec.Command("git", "pull", "--force")
+	cmd := exec.CommandContext(context.Background(), "git", "pull", "--force")
 	cmd.Dir = dirModule
 	return runCommand(cmd)
 }

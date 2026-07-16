@@ -12,12 +12,14 @@ func getConfigProvider() env.ConfigProvider {
 }
 
 // GetDependency fetches or updates a dependency in cache.
+//
 // Deprecated: Use DependencyManager directly for better testability.
 func GetDependency(dep domain.Dependency) error {
 	return NewDefaultDependencyManager(getConfigProvider()).GetDependency(dep)
 }
 
 // GetDependencyWithProgress fetches or updates a dependency with optional progress tracking.
+//
 // Deprecated: Use DependencyManager directly for better testability.
 func GetDependencyWithProgress(dep domain.Dependency, progress *ProgressTracker) error {
 	return NewDefaultDependencyManager(getConfigProvider()).GetDependencyWithProgress(dep, progress)

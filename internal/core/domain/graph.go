@@ -102,19 +102,22 @@ func (g *GraphItem) String() {
 
 	for index := range g.nodes {
 		var node = g.nodes[index]
-		var response = ""
-		response += g.nodes[index].String() + " -> \n\t\tDepends: "
+		var response strings.Builder
+		response.WriteString(g.nodes[index].String())
+		response.WriteString(" -> \n\t\tDepends: ")
 		nears := g.depends[node.Value]
 		for _, near := range nears {
-			response += near.String() + " - "
+			response.WriteString(near.String())
+			response.WriteString(" - ")
 		}
 
-		response += "\n\t\tUsed by: "
+		response.WriteString("\n\t\tUsed by: ")
 		nears = g.usedBy[node.Value]
 		for _, near := range nears {
-			response += near.String() + " - "
+			response.WriteString(near.String())
+			response.WriteString(" - ")
 		}
-		msg.Info(response)
+		msg.Info(response.String())
 	}
 	g.unlock()
 }
@@ -147,11 +150,7 @@ func (g *GraphItem) Queue(pkg *Package, allDeps bool) *NodeQueue {
 }
 
 func (g *GraphItem) processNodes(nodes []*Node, queue *NodeQueue) {
-	for {
-		if len(nodes) == 0 {
-			break
-		}
-
+	for len(nodes) > 0 {
 		for key := 0; key < len(nodes); key++ {
 			node := nodes[key]
 			if !containsOne(g.depends[node.Value], nodes) {
@@ -164,11 +163,8 @@ func (g *GraphItem) processNodes(nodes []*Node, queue *NodeQueue) {
 }
 
 func (g *GraphItem) expandGraphNodes(nodes []*Node, pkg *Package) []*Node {
-	var redo = true
-	for {
-		if !redo {
-			break
-		}
+	redo := true
+	for redo {
 		redo = false
 		for _, node := range nodes {
 			usedBy := g.usedBy[node.Value]

@@ -11,15 +11,25 @@ import (
 type DependencyStatus int
 
 const (
+	// StatusWaiting indicates the dependency is waiting to be processed.
 	StatusWaiting DependencyStatus = iota
+	// StatusCloning indicates the dependency is being cloned.
 	StatusCloning
+	// StatusDownloading indicates the dependency is being downloaded.
 	StatusDownloading
+	// StatusUpdating indicates the dependency is being updated.
 	StatusUpdating
+	// StatusChecking indicates the dependency is being checked.
 	StatusChecking
+	// StatusInstalling indicates the dependency is being installed.
 	StatusInstalling
+	// StatusCompleted indicates the dependency installation is completed.
 	StatusCompleted
+	// StatusSkipped indicates the dependency was skipped.
 	StatusSkipped
+	// StatusFailed indicates the dependency installation failed.
 	StatusFailed
+	// StatusWarning indicates a warning occurred during installation.
 	StatusWarning
 )
 

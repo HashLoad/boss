@@ -1,3 +1,4 @@
+// Package consts defines standard file names, extensions, and folder names used by Boss.
 package consts
 
 import "path/filepath"

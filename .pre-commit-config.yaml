@@ -16,7 +16,7 @@ repos:
             args: [--markdown-linebreak-ext=md]
 
     - repo: https://github.com/golangci/golangci-lint
-      rev: v1.64.5
+      rev: v2.12.2
       hooks:
           - id: golangci-lint-config-verify
             entry: go tool golangci-lint config verify

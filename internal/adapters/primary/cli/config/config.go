@@ -5,10 +5,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const cmdNameConfig = "config"
+
 // RegisterConfigCommand registers the config command.
 func RegisterConfigCommand(root *cobra.Command) {
 	configCmd := &cobra.Command{
-		Use:   "config",
+		Use:   cmdNameConfig,
 		Short: "Configurations",
 	}
 

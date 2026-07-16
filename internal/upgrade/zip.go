@@ -43,7 +43,7 @@ func readFileFromZip(file *os.File, assetName string, stat os.FileInfo) ([]byte,
 			if err != nil {
 				return nil, fmt.Errorf("failed to open file: %w", err)
 			}
-			defer rc.Close()
+			defer func() { _ = rc.Close() }()
 
 			return io.ReadAll(rc)
 		}
@@ -58,7 +58,7 @@ func readFileFromTargz(file *os.File, assetName string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
 	}
-	defer gzipReader.Close()
+	defer func() { _ = gzipReader.Close() }()
 
 	tarReader := tar.NewReader(gzipReader)
 

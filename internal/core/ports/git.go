@@ -45,6 +45,7 @@ type Branch interface {
 }
 
 // GitClient is a simplified interface for git operations without mandatory context.
+//
 // Deprecated: New code should use GitRepository which supports context.
 type GitClient interface {
 	// CloneCache clones a dependency repository to cache.
