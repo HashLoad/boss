@@ -445,7 +445,9 @@ func (ic *installContext) reportInstallResult(depName, warning string) {
 }
 
 func (ic *installContext) shouldSkipDependency(dep domain.Dependency) bool {
-	if utils.Contains(ic.options.ForceUpdate, dep.Name()) {
+	if utils.Contains(ic.options.ForceUpdate, dep.Repository) ||
+		utils.Contains(ic.options.ForceUpdate, dep.Name()) ||
+		utils.Contains(ic.options.ForceUpdate, ParseDependency(dep.Name())) {
 		return false
 	}
 
