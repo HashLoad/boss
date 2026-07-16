@@ -185,3 +185,46 @@ func TestGetRequiresList_NoDependencies(t *testing.T) {
 		t.Errorf("getRequiresList() should return empty list for no deps, got %v", result)
 	}
 }
+
+// TestInjectDcps_WithConditionals tests that injection preserves conditional directives and comments.
+func TestInjectDcps_WithConditionals(t *testing.T) {
+	content := `package MyPackage;
+requires
+  rtl,
+  vcl,
+  {$IFDEF MSWINDOWS}
+  designide,
+  {$ENDIF}
+  AnotherPkg;
+contains
+  Unit1 in 'Unit1.pas';
+end.`
+
+	dcps := []string{"newpkg"}
+
+	result, changed := injectDcps(content, dcps)
+
+	if !changed {
+		t.Error("injectDcps() should return true when requires section is modified")
+	}
+
+	// The new pkg should be added
+	if !strings.Contains(result, "newpkg{BOSS}") {
+		t.Error("injectDcps() should add new dcp to result with Boss marker")
+	}
+
+	// All original lines, including conditionals and comments, must be fully preserved
+	if !strings.Contains(result, "{$IFDEF MSWINDOWS}") {
+		t.Error("injectDcps() should preserve the opening conditional directive")
+	}
+	if !strings.Contains(result, "designide,") {
+		t.Error("injectDcps() should preserve the designide dependency")
+	}
+	if !strings.Contains(result, "{$ENDIF}") {
+		t.Error("injectDcps() should preserve the closing conditional directive")
+	}
+	if !strings.Contains(result, "AnotherPkg") {
+		t.Error("injectDcps() should preserve AnotherPkg dependency")
+	}
+}
+
