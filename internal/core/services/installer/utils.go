@@ -18,8 +18,8 @@ var (
 	reHasMultiSlash = regexp.MustCompile(`(?m)([?^/].*)(([?^/]).*)`)
 )
 
-// parseUrlAndVersion parses the dependency URL and version, handling SSH git@ URLs safely.
-func parseUrlAndVersion(input string) (url string, version string) {
+// parseURLAndVersion parses the dependency URL and version, handling SSH git@ URLs safely.
+func parseURLAndVersion(input string) (url string, version string) {
 	if strings.HasPrefix(input, "git@") {
 		// SSH URL format: git@host:owner/repo[.git][:version] or git@host:owner/repo[.git]@version
 		firstColon := strings.Index(input, ":")
@@ -64,7 +64,7 @@ func EnsureDependency(pkg *domain.Package, args []string) {
 	for _, dependency := range args {
 		dependency = ParseDependency(dependency)
 
-		dep, ver := parseUrlAndVersion(dependency)
+		dep, ver := parseURLAndVersion(dependency)
 		if ver == "" {
 			ver = consts.MinimalDependencyVersion
 		}
@@ -79,7 +79,9 @@ func EnsureDependency(pkg *domain.Package, args []string) {
 
 // ParseDependency parses the dependency name and returns the full URL if needed.
 func ParseDependency(dependencyName string) string {
-	if strings.HasPrefix(dependencyName, "git@") || strings.HasPrefix(dependencyName, "http://") || strings.HasPrefix(dependencyName, "https://") {
+	if strings.HasPrefix(dependencyName, "git@") ||
+		strings.HasPrefix(dependencyName, "http://") ||
+		strings.HasPrefix(dependencyName, "https://") {
 		return dependencyName
 	}
 	if !reHasSlash.MatchString(dependencyName) {
