@@ -2,7 +2,7 @@ module github.com/hashload/boss
 
 go 1.26.0
 
-tool github.com/golangci/golangci-lint/cmd/golangci-lint
+tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
 require (
 	github.com/Masterminds/semver/v3 v3.5.0
