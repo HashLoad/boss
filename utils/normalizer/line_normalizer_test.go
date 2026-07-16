@@ -10,11 +10,7 @@ import (
 )
 
 func TestNormalizeDirectoryLineEndings(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "boss-normalizer-test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	// 1. Create a Delphi .pas file with LF line endings
 	pasPath := filepath.Join(tempDir, "unit.pas")
