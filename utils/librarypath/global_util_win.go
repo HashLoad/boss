@@ -20,7 +20,7 @@ import (
 const SearchPathRegistry = "Search Path"
 const BrowsingPathRegistry = "Browsing Path"
 
-// updateGlobalLibraryPath updates the global library path.
+// updateGlobalLibraryPath updates the global library path
 func updateGlobalLibraryPath() {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {
@@ -64,9 +64,10 @@ func updateGlobalLibraryPath() {
 			msg.Debug("⚠️ Failed to set search path for platform %s: %v", platform, err)
 		}
 	}
+
 }
 
-// updateGlobalBrowsingByProject updates the global browsing path by project.
+// updateGlobalBrowsingByProject updates the global browsing path by project
 func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 	ideVersion := bossRegistry.GetCurrentDelphiVersion()
 	if ideVersion == "" {

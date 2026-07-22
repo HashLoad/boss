@@ -11,7 +11,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-// getDelphiVersionFromRegistry returns the delphi version from the registry.
+// getDelphiVersionFromRegistry returns the delphi version from the registry
 func getDelphiVersionFromRegistry() map[string]string {
 	var result = make(map[string]string)
 
@@ -44,11 +44,12 @@ func getDelphiVersionFromRegistry() map[string]string {
 			continue
 		}
 		result[value] = appPath
+
 	}
 	return result
 }
 
-// getDetectedDelphisFromRegistry returns the detected delphi installations from the registry.
+// getDetectedDelphisFromRegistry returns the detected delphi installations from the registry
 func getDetectedDelphisFromRegistry() []DelphiInstallation {
 	var result []DelphiInstallation
 
