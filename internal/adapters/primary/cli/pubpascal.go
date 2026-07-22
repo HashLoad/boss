@@ -680,6 +680,13 @@ func collectDependencySearchPaths(rootRepoPath string, repos []ManifestRepo) []s
 //
 // We do a simple string replacement instead of re-serialising the XML: it is
 // extremely surgical and preserves the formatting written by the Delphi IDE.
+//
+// The result is deterministic: the entries already declared in the .dproj keep
+// their relative order and come first, then the new ones in the order they were
+// collected. Building the list out of a Go map instead reordered the search
+// path on every run, which churned the versioned .dproj and -- worse -- kept
+// changing which unit wins when two dependencies ship the same unit name,
+// because the compiler resolves it by search path order.
 func mergeDprojSearchPaths(xmlStr string, paths []string) (string, bool) {
 	const searchPathOpen = "<DCC_UnitSearchPath>"
 	const searchPathClose = "</DCC_UnitSearchPath>"
@@ -694,22 +701,24 @@ func mergeDprojSearchPaths(xmlStr string, paths []string) (string, bool) {
 	}
 	endIndex += startIndex
 
-	// Merge paths ensuring no duplicates
-	pathMap := make(map[string]bool)
-	for _, p := range strings.Split(xmlStr[startIndex+len(searchPathOpen):endIndex], ";") {
-		if trimmed := strings.TrimSpace(p); trimmed != "" {
-			pathMap[trimmed] = true
+	seen := make(map[string]bool)
+	mergedPaths := make([]string, 0, len(paths))
+
+	appendPath := func(candidate string) {
+		if candidate == "" || seen[candidate] {
+			return
 		}
+		seen[candidate] = true
+		mergedPaths = append(mergedPaths, candidate)
+	}
+
+	for _, p := range strings.Split(xmlStr[startIndex+len(searchPathOpen):endIndex], ";") {
+		appendPath(strings.TrimSpace(p))
 	}
 
 	for _, p := range paths {
 		// Normalise path separators to match Delphi (\)
-		pathMap[strings.ReplaceAll(p, "/", "\\")] = true
-	}
-
-	mergedPaths := make([]string, 0, len(pathMap))
-	for p := range pathMap {
-		mergedPaths = append(mergedPaths, p)
+		appendPath(strings.ReplaceAll(p, "/", "\\"))
 	}
 
 	newSearchPath := searchPathOpen + strings.Join(mergedPaths, ";") + searchPathClose
