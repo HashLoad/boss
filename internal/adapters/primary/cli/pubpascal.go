@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,6 +45,9 @@ const (
 	refKindTag     = "tag"
 	refKindVersion = "version"
 
+	// defaultForgeHost is where a dependency without an explicit host lives.
+	defaultForgeHost = "github.com"
+
 	// subCmdNameUpdate is the workspace sub-command that fast-forwards repos.
 	subCmdNameUpdate = "update"
 )
@@ -59,10 +63,13 @@ type bossManifest struct {
 
 // sbomComponent is one resolved dependency, ready to be emitted in any format.
 type sbomComponent struct {
-	Name    string
+	Name string
+	// Version is the exact version from the lock file, empty when unresolved.
 	Version string
-	Purl    string
-	Hash    string
+	// Constraint is the range declared in boss.json, kept for reference.
+	Constraint string
+	Purl       string
+	Hash       string
 	// Resolved reports whether Version came from the lock file (an exact
 	// version) rather than from a boss.json constraint such as "^3.0.0".
 	Resolved bool
@@ -110,9 +117,10 @@ type ManifestRepo struct {
 
 // ManifestRef is the git reference a workspace repository is pinned to.
 type ManifestRef struct {
-	HasRef bool   `json:"has_ref"`
-	Kind   string `json:"type"`
-	Value  string `json:"value"`
+	// The portal emits ref as {type, value} or null; there is no has_ref
+	// field. A zero ManifestRef therefore means "no pinned reference".
+	Kind  string `json:"type"`
+	Value string `json:"value"`
 }
 
 // ManifestEdge is a dependency relation between two workspace repositories.
@@ -265,24 +273,6 @@ func pkgCmdRegister(root *cobra.Command) {
 	sbomCmd.Flags().StringVar(&format, "format", "cyclonedx", "SBOM format (cyclonedx or spdx)")
 	sbomCmd.Flags().StringVar(&sbomOutputDir, "output", "./sbom", "Directory to write the SBOM to")
 
-	var slug string
-	var version string
-	var sbomFile string
-
-	var publishSbomCmd = &cobra.Command{
-		Use:   cmdNamePublishSbom,
-		Short: "Upload a generated SBOM to the PubPascal portal",
-		Long: "Upload a generated CycloneDX SBOM JSON file to the PubPascal portal to complete " +
-			"CRA compliance checks for a registered package version.",
-		Run: func(cmd *cobra.Command, _ []string) {
-			runPkgPublishSbom(cmd.Context(), slug, version, sbomFile)
-		},
-	}
-
-	publishSbomCmd.Flags().StringVar(&slug, "slug", "", "The package slug on the portal")
-	publishSbomCmd.Flags().StringVar(&version, "pkgversion", "", "The package version (e.g. 1.0.0)")
-	publishSbomCmd.Flags().StringVar(&sbomFile, "file", "", "Path to the SBOM JSON file to upload")
-
 	var specID string
 	var specVersion string
 
@@ -316,7 +306,6 @@ func pkgCmdRegister(root *cobra.Command) {
 	root.AddCommand(pkgCmd)
 
 	root.AddCommand(sbomCmd)
-	root.AddCommand(publishSbomCmd)
 }
 
 // workspaceCloneOptions carries the flags that change how each repository of a
@@ -372,6 +361,11 @@ func runWorkspaceClone(ctx context.Context, workspaceID string, codename string,
 	for i, repo := range orderedRepos {
 		// Resolve the subdirectory
 		repoNameOnly := repoShortName(repo.Name)
+		if repoNameOnly == "" {
+			msg.Warn("⚠️ Skipping repository with an unusable name %q in the manifest.", repo.Name)
+			skipCount++
+			continue
+		}
 		repoSubdir := repoNameOnly
 		if !repo.IsRoot {
 			repoSubdir = filepath.Join(rootRepoName, modulesDirName, repoNameOnly)
@@ -440,12 +434,21 @@ func fetchWorkspaceManifest(ctx context.Context, config *PubPascalConfig, worksp
 // repoShortName returns the repository segment of an "owner/repo" manifest
 // name. Indexing the split directly panics when the portal returns a name
 // without a slash, which is data this client does not control.
+// The result is used to build paths on disk, and name comes from the portal
+// API, so traversal candidates are rejected rather than joined into a path.
 func repoShortName(name string) string {
+	short := name
 	if idx := strings.LastIndex(name, "/"); idx != -1 && idx+1 < len(name) {
-		return name[idx+1:]
+		short = name[idx+1:]
 	}
 
-	return name
+	short = strings.TrimSpace(short)
+	if short == "" || short == "." || short == ".." ||
+		strings.ContainsAny(short, `/\`) || strings.Contains(short, "..") {
+		return ""
+	}
+
+	return short
 }
 
 func resolveRootRepoName(repos []ManifestRepo) string {
@@ -504,7 +507,7 @@ func cloneWorkspaceRepo(
 	}
 
 	// Checkout ref if specified
-	if repo.Ref.HasRef && repo.Ref.Value != "" {
+	if repo.Ref.Value != "" {
 		// #nosec G204 -- fixed git binary; ref comes from the portal manifest
 		checkoutCmd := exec.CommandContext(ctx, "git", "-C", repoPath, "checkout", repo.Ref.Value)
 		checkoutCmd.Stdout = os.Stdout
@@ -605,7 +608,7 @@ func isDirPopulated(path string) bool {
 }
 
 func isBranchOrDefaultRef(ref ManifestRef) bool {
-	return !ref.HasRef || (ref.Kind != refKindTag && ref.Kind != refKindVersion)
+	return ref.Value == "" || (ref.Kind != refKindTag && ref.Kind != refKindVersion)
 }
 
 // injectDprojPaths updates the root project's .dproj file to include dependency search paths.
@@ -655,6 +658,9 @@ func collectDependencySearchPaths(rootRepoPath string, repos []ManifestRepo) []s
 			continue
 		}
 		repoNameOnly := repoShortName(repo.Name)
+		if repoNameOnly == "" {
+			continue
+		}
 		// Determine the source path of the dependency.
 		// Boss packages usually have their sources in "Source" or "src" or root.
 		// We default to "Source" and check if it exists, otherwise fall back to
@@ -966,12 +972,15 @@ func resolveSbomComponents(manifest bossManifest) []sbomComponent {
 	unresolved := 0
 	components := make([]sbomComponent, 0, len(names))
 	for _, name := range names {
-		component := sbomComponent{Name: name, Version: manifest.Dependencies[name]}
+		component := sbomComponent{Name: name, Constraint: manifest.Dependencies[name]}
 		if dep, ok := locked[normalizeDepKey(name)]; ok && dep.Version != "" {
 			component.Version = dep.Version
 			component.Hash = dep.Hash
 			component.Resolved = true
 		} else {
+			// Version stays empty on purpose. A constraint is not a version,
+			// and stating one as if it were is exactly what makes an SBOM
+			// dangerous: a scanner would read it as the version in the tree.
 			unresolved++
 		}
 		component.Purl = buildPurl(name, component.Version)
@@ -979,8 +988,8 @@ func resolveSbomComponents(manifest bossManifest) []sbomComponent {
 	}
 
 	if unresolved > 0 {
-		msg.Warn("  %d dependency(ies) not found in the lock file; falling back to the constraint "+
-			"declared in boss.json. Run 'boss install' for exact versions.", unresolved)
+		msg.Warn("  %d dependency(ies) not found in the lock file and are reported without a version. "+
+			"Run 'boss install' so the SBOM can state exact versions.", unresolved)
 	}
 
 	return components
@@ -1007,6 +1016,10 @@ func loadLockedVersions() map[string]domain.LockedDependency {
 
 // normalizeDepKey reduces a boss.json dependency name ("hashload/horse") and a
 // lock key (the lowercased repository URL) to the same "owner/repo" form.
+// The host is deliberately preserved. Dropping it made
+// "github.com/acme/lib" and "gitlab.com/acme/lib" collide on a single key,
+// so one dependency's locked version was reported for the other -- and the
+// winner depended on Go map iteration order, changing between runs.
 func normalizeDepKey(value string) string {
 	key := strings.ToLower(strings.TrimSpace(value))
 	key = strings.TrimPrefix(key, "https://")
@@ -1017,25 +1030,63 @@ func normalizeDepKey(value string) string {
 	key = strings.ReplaceAll(key, ":", "/")
 	key = strings.TrimSuffix(strings.TrimSuffix(key, "/"), ".git")
 
-	parts := strings.Split(key, "/")
-	if len(parts) >= 2 {
-		return strings.Join(parts[len(parts)-2:], "/")
-	}
+	return strings.Trim(key, "/")
+}
 
-	return key
+// splitRepoRef breaks a dependency reference into host, owner and repository.
+// A reference without a host defaults to github.com, which is where Boss
+// dependencies are resolved from when the manifest omits it.
+func splitRepoRef(name string) (string, string, string) {
+	parts := strings.Split(normalizeDepKey(name), "/")
+	switch len(parts) {
+	case 0:
+		return "", "", ""
+	case 1:
+		return defaultForgeHost, "", parts[0]
+	case 2:
+		return defaultForgeHost, parts[0], parts[1]
+	default:
+		return parts[0], parts[len(parts)-2], parts[len(parts)-1]
+	}
 }
 
 // buildPurl emits a package URL for the dependency. Boss dependencies are Git
 // repositories, so pkg:github is the correct type -- "pkg:delphi" is not a
 // registered purl type and would be rejected by conformant consumers.
 // See https://github.com/package-url/purl-spec
+// buildPurl emits a package URL for a dependency.
+//
+// Only an exact version is appended: purl requires a percent-encoded version
+// and the github type documents it as "a commit or tag", so a boss.json
+// constraint such as "^3.0.0" is not a version and is left out entirely.
+// See https://github.com/package-url/purl-spec.
+//
+// pkg:github requires a namespace, and there is no registered purl type for
+// other forges, so anything that is not github.com with an owner falls back
+// to pkg:generic carrying a vcs_url qualifier. Emitting pkg:github for a
+// GitLab dependency pointed at a different -- possibly unrelated -- project.
 func buildPurl(name, version string) string {
-	repo := normalizeDepKey(name)
-	if version == "" {
-		return "pkg:github/" + repo
+	host, owner, repo := splitRepoRef(name)
+	if repo == "" {
+		return ""
 	}
 
-	return fmt.Sprintf("pkg:github/%s@%s", repo, version)
+	suffix := ""
+	if version != "" {
+		suffix = "@" + url.PathEscape(version)
+	}
+
+	if host == defaultForgeHost && owner != "" {
+		return "pkg:github/" + owner + "/" + repo + suffix
+	}
+
+	vcs := "git+https://" + host + "/"
+	if owner != "" {
+		vcs += owner + "/"
+	}
+	vcs += repo
+
+	return "pkg:generic/" + repo + suffix + "?vcs_url=" + url.QueryEscape(vcs)
 }
 
 func generateCycloneDxSbom(projectName string, manifest bossManifest, components []sbomComponent, outputDir string) {
@@ -1049,7 +1100,7 @@ func generateCycloneDxSbom(projectName string, manifest bossManifest, components
 	type Component struct {
 		Type        string     `json:"type"`
 		Name        string     `json:"name"`
-		Version     string     `json:"version"`
+		Version     string     `json:"version,omitempty"`
 		Description string     `json:"description,omitempty"`
 		Purl        string     `json:"purl"`
 		Properties  []Property `json:"properties,omitempty"`
@@ -1101,14 +1152,19 @@ func generateCycloneDxSbom(projectName string, manifest bossManifest, components
 		// Deliberately no "hashes" entry: the digest boss stores in the lock is
 		// a directory-change fingerprint (utils.HashDir), not a cryptographic
 		// hash of a distributed artifact, so it must not be presented as one.
+		properties := []Property{
+			{Name: "boss:resolved", Value: strconv.FormatBool(dep.Resolved)},
+		}
+		if dep.Constraint != "" {
+			properties = append(properties, Property{Name: "boss:constraint", Value: dep.Constraint})
+		}
+
 		cdx.Components = append(cdx.Components, Component{
-			Type:    "library",
-			Name:    dep.Name,
-			Version: dep.Version,
-			Purl:    dep.Purl,
-			Properties: []Property{
-				{Name: "boss:resolved", Value: strconv.FormatBool(dep.Resolved)},
-			},
+			Type:       "library",
+			Name:       dep.Name,
+			Version:    dep.Version,
+			Purl:       dep.Purl,
+			Properties: properties,
 		})
 	}
 
@@ -1192,58 +1248,6 @@ func generateUUID() string {
 	b[8] = (b[8] & 0x3f) | 0x80 // variant RFC 4122
 
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
-}
-
-// runPkgPublishSbom uploads the generated SBOM to the portal.
-func runPkgPublishSbom(ctx context.Context, slug string, version string, sbomFile string) {
-	if slug == "" || version == "" || sbomFile == "" {
-		msg.Die("❌ All parameters are required: --slug <slug> --pkgversion <ver> --file <sbom.json>")
-	}
-
-	config, err := LoadPubPascalConfig()
-	if err != nil {
-		msg.Die("❌ Failed to load PubPascal configuration: %s", err)
-	}
-
-	if config.AuthToken == "" {
-		msg.Die("❌ You must log in first. Run 'boss login' with your portal token.")
-	}
-
-	msg.Info("Publishing SBOM for %s@%s to the portal...", slug, version)
-	// #nosec G304 -- the path is the SBOM file the user asked to upload
-	data, err := os.ReadFile(sbomFile)
-	if err != nil {
-		msg.Die("❌ Failed to read SBOM file: %s", err)
-	}
-
-	publishURL := fmt.Sprintf("%s/api/packages/%s/%s/sbom",
-		strings.TrimSuffix(config.PortalBaseURL, "/"), slug, version)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, publishURL, bytes.NewBuffer(data))
-	if err != nil {
-		msg.Die("❌ Failed to create HTTP request: %s", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+config.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: portalRequestTimeout}
-	resp, err := client.Do(req)
-	if err != nil {
-		msg.Die("❌ Network error: %s", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	switch {
-	case resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden:
-		msg.Die("❌ Unauthorized. Your portal auth token is invalid or expired.")
-	case resp.StatusCode == http.StatusNotFound:
-		msg.Die("❌ Package or version not found on the portal. Publish the package release first.")
-	case resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated:
-		body, _ := io.ReadAll(resp.Body)
-		msg.Die("❌ Portal returned HTTP status %d: %s", resp.StatusCode, string(body))
-	}
-
-	msg.Info("SBOM successfully uploaded and published to the portal.")
 }
 
 // runPkgSpec scaffolds a starter pubpascal.json manifest file.

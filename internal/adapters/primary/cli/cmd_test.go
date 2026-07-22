@@ -206,9 +206,6 @@ func TestPubPascalCommands(t *testing.T) {
 	if findCommand(root, "sbom") == nil {
 		t.Error("Root command 'sbom' not found")
 	}
-	if findCommand(root, "publish-sbom") == nil {
-		t.Error("Root command 'publish-sbom' not found")
-	}
 
 	// Check pkg subcommands
 	assertSubcommands(t, pkgCmd, "Pkg", []string{"spec", "pack"})

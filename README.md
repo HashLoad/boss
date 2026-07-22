@@ -130,12 +130,13 @@ These commands add modern project creation, compiling, and script running capabi
 #### > new
 Generate a fully structured Delphi or Lazarus project template (skeleton) in the current directory:
 ```sh
-boss new delphi
-boss new lazarus
+boss new my_project
+boss new my_project --ide lazarus
+boss new my_package --type pkg --ide lazarus
 ```
 
 #### > pkg
-Perform Delphi package operations including packaging, signing, and verification.
+Perform Delphi package operations for manifests and packaging.
 * **`pkg spec`**: Scaffolds a starter `pubpascal.json` manifest file for the package:
   ```sh
   boss pkg spec --id my-package --pkgversion 1.0.0
@@ -143,14 +144,6 @@ Perform Delphi package operations including packaging, signing, and verification
 * **`pkg pack`**: Build a redistributable package bundle (`.dpkg`):
   ```sh
   boss pkg pack --spec pubpascal.json --output ./dist
-  ```
-* **`pkg sign`**: Statically sign a package bundle using a PFX certificate:
-  ```sh
-  boss pkg sign --package mypkg.dpkg --pfx cert.pfx --pfx-password-env CERT_PASSWORD
-  ```
-* **`pkg verify`**: Verify a package bundle's signature and integrity:
-  ```sh
-  boss pkg verify --package mypkg.dpkg
   ```
 
 #### > run
@@ -179,9 +172,6 @@ Authenticate your local environment with the PubPascal portal using a Personal A
 ```sh
 # Authenticate using a personal access token
 boss login --token <pat>
-
-# Or start interactive login (prompts for the token)
-boss login portal
 ```
 #### > contribute
 Contribute to a third-party package by automating repository forking and Pull Request creation.
@@ -196,7 +186,7 @@ Contribute to a third-party package by automating repository forking and Pull Re
 
 #### > workspace
 Manage multi-repository PubPascal workspaces locally.
-* **`workspace clone`**: Clones a workspace and all its member repositories, setting up writable forks:
+* **`workspace clone`**: Clones a workspace and all its member repositories, checking out the reference each one is pinned to:
   ```sh
   boss workspace clone <workspace-id>
   boss workspace clone <workspace-id> --codename my-branch
@@ -205,11 +195,11 @@ Manage multi-repository PubPascal workspaces locally.
   ```sh
   boss workspace status
   ```
-* **`workspace update`**: Fast-forward all repositories to their pinned reference branch/commit:
+* **`workspace update`**: Fast-forward each repository on its current branch:
   ```sh
   boss workspace update
   ```
-* **`workspace push`**: Push committed changes across all writable repositories in the workspace:
+* **`workspace push`**: Push committed changes for each repository that has an upstream branch:
   ```sh
   boss workspace push
   ```
@@ -235,7 +225,7 @@ Check your project's CRA compliance status or initialize required files automati
 #### > sbom
 Generate a standard CycloneDX or SPDX Software Bill of Materials (SBOM) for your Delphi project:
 ```sh
-# Generate CycloneDX SBOM (outputs to ./sbom/sbom.cdx.json)
+# Generate CycloneDX SBOM (outputs to ./sbom/<ProjectName>.cdx.json)
 boss sbom
 
 # Specify custom project file and output path
@@ -243,19 +233,6 @@ boss sbom --project ./src/MyProj.dproj --output ./custom-sbom-folder
 
 # Generate in SPDX format
 boss sbom --format spdx
-```
-
-#### > scan
-Scan a generated SBOM against the OSV.dev database for known vulnerabilities:
-```sh
-boss scan
-boss scan --sbom ./sbom/sbom.cdx.json
-```
-
-#### > publish-sbom
-Upload a generated SBOM to the PubPascal portal for remote compliance badge rendering:
-```sh
-boss publish-sbom --slug my-pkg-slug --pkgversion 1.0.0 --file ./sbom/sbom.cdx.json
 ```
 
 ---

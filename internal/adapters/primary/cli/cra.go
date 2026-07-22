@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashload/boss/pkg/msg"
@@ -70,7 +71,13 @@ func runCraCheck() {
 	}
 
 	hasSbom := false
-	sbomCandidates := []string{sbomFileName, "sbom.spdx.json", "bom.json", "sbom/" + sbomFileName}
+	// boss sbom writes sbom/<ProjectName>.cdx.json, so a glob is needed on top
+	// of the fixed names: matching only "sbom/sbom.cdx.json" meant the check
+	// never saw the file the generator had just produced.
+	sbomCandidates := []string{sbomFileName, "sbom.spdx.json", "bom.json"}
+	if globbed, err := filepath.Glob(filepath.Join(sbomBaseName, "*.cdx.json")); err == nil {
+		sbomCandidates = append(sbomCandidates, globbed...)
+	}
 	for _, c := range sbomCandidates {
 		if _, err := os.Stat(c); err == nil {
 			hasSbom = true

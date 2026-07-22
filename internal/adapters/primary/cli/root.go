@@ -22,14 +22,13 @@ const (
 // Command names, shared between each command registration and the grouping
 // pass in applyCommandGroups, which matches commands by name.
 const (
-	cmdNameNew         = "new"
-	cmdNameRun         = "run"
-	cmdNameLogin       = "login"
-	cmdNameWorkspace   = "workspace"
-	cmdNameContribute  = "contribute"
-	cmdNameCRA         = "cra"
-	cmdNamePublishSbom = "publish-sbom"
-	cmdNameVersion     = "version"
+	cmdNameNew        = "new"
+	cmdNameRun        = "run"
+	cmdNameLogin      = "login"
+	cmdNameWorkspace  = "workspace"
+	cmdNameContribute = "contribute"
+	cmdNameCRA        = "cra"
+	cmdNameVersion    = "version"
 )
 
 // Identifiers of the help groups printed by 'boss --help'.
@@ -155,7 +154,7 @@ func applyCommandGroups(root *cobra.Command) {
 			cmd.GroupID = groupIDProject
 		case cmdNameLogin, cmdNameWorkspace, cmdNameContribute:
 			cmd.GroupID = groupIDPubPascal
-		case cmdNameCRA, sbomBaseName, cmdNamePublishSbom:
+		case cmdNameCRA, sbomBaseName:
 			cmd.GroupID = groupIDCRA
 		default:
 			cmd.GroupID = groupIDLegacy
