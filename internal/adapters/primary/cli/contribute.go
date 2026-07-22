@@ -135,7 +135,7 @@ func handleForkSetupFlow(packageSlug string, pkgDir string, config *PubPascalCon
 			msg.Die("❌ Failed to remove old origin: %s", err)
 		}
 	}
-	
+
 	// Choose clone URL format (prefer SSH if git config contains git@ or SSH)
 	forkUrl := res.CloneUrl
 	if auth := env.GlobalConfiguration().Auth[depPrefix(packageSlug)]; auth != nil && auth.UseSSH {

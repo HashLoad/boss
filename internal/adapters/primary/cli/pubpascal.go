@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,12 +10,37 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/hashload/boss/internal/adapters/secondary/filesystem"
+	"github.com/hashload/boss/internal/adapters/secondary/repository"
+	"github.com/hashload/boss/internal/core/domain"
+	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/msg"
 	"github.com/spf13/cobra"
 )
+
+// bossManifest mirrors the subset of boss.json needed to build an SBOM.
+type bossManifest struct {
+	Name         string            `json:"name"`
+	Version      string            `json:"version"`
+	Description  string            `json:"description"`
+	Homepage     string            `json:"homepage"`
+	Dependencies map[string]string `json:"dependencies"`
+}
+
+// sbomComponent is one resolved dependency, ready to be emitted in any format.
+type sbomComponent struct {
+	Name    string
+	Version string
+	Purl    string
+	Hash    string
+	// Resolved reports whether Version came from the lock file (an exact
+	// version) rather than from a boss.json constraint such as "^3.0.0".
+	Resolved bool
+}
 
 // PubPascalConfig represents the configuration stored in ~/.pubpascal/config.json
 type PubPascalConfig struct {
@@ -24,11 +50,11 @@ type PubPascalConfig struct {
 
 // WorkspaceManifest represents the workspace manifest returned by the portal API
 type WorkspaceManifest struct {
-	SchemaVersion int             `json:"schema_version"`
-	Workspace     WorkspaceInfo   `json:"workspace"`
-	Viewer        ViewerInfo      `json:"viewer"`
-	Repos         []ManifestRepo  `json:"repos"`
-	Edges         []ManifestEdge  `json:"edges"`
+	SchemaVersion int            `json:"schema_version"`
+	Workspace     WorkspaceInfo  `json:"workspace"`
+	Viewer        ViewerInfo     `json:"viewer"`
+	Repos         []ManifestRepo `json:"repos"`
+	Edges         []ManifestEdge `json:"edges"`
 }
 
 type WorkspaceInfo struct {
@@ -177,42 +203,33 @@ func workspaceCmdRegister(root *cobra.Command) {
 func pkgCmdRegister(root *cobra.Command) {
 	var pkgCmd = &cobra.Command{
 		Use:   "pkg",
-		Short: "Delphi package operations (SBOM, packaging, signatures)",
-		Long:  "Delphi package operations (SBOM, packaging, signatures)",
+		Short: "Delphi package operations (packaging and manifests)",
+		Long:  "Delphi package operations (packaging and manifests)",
 	}
 
 	var projectFile string
 	var format string
-	var outputDir string
+	// Each command owns its output directory variable. Sharing one variable
+	// across commands makes the last registered default win for all of them,
+	// because StringVar assigns the default at registration time.
+	var sbomOutputDir string
 
 	var sbomCmd = &cobra.Command{
 		Use:   "sbom",
 		Short: "Generate a CycloneDX or SPDX SBOM for a Delphi project",
 		Long:  "Generate a CycloneDX or SPDX SBOM (Software Bill of Materials) for a Delphi project (.dproj) file to analyze package dependencies.",
 		Run: func(_ *cobra.Command, _ []string) {
-			runPkgSbom(projectFile, format, outputDir)
+			runPkgSbom(projectFile, format, sbomOutputDir)
 		},
 	}
 
 	sbomCmd.Flags().StringVar(&projectFile, "project", "", "Path to the Delphi .dproj file")
 	sbomCmd.Flags().StringVar(&format, "format", "cyclonedx", "SBOM format (cyclonedx or spdx)")
-	sbomCmd.Flags().StringVar(&outputDir, "output", "./sbom", "Directory to write the SBOM to")
-
-	var sbomFile string
-
-	var scanCmd = &cobra.Command{
-		Use:   "scan",
-		Short: "Scan an SBOM against OSV.dev for known vulnerabilities",
-		Long:  "Scan a CycloneDX or SPDX SBOM JSON file against the OSV.dev database to identify known security vulnerabilities in your dependencies.",
-		Run: func(_ *cobra.Command, _ []string) {
-			runPkgScan(sbomFile)
-		},
-	}
-
-	scanCmd.Flags().StringVar(&sbomFile, "sbom", "", "Path to the CycloneDX SBOM JSON file to scan")
+	sbomCmd.Flags().StringVar(&sbomOutputDir, "output", "./sbom", "Directory to write the SBOM to")
 
 	var slug string
 	var version string
+	var sbomFile string
 
 	var publishSbomCmd = &cobra.Command{
 		Use:   "publish-sbom",
@@ -242,52 +259,24 @@ func pkgCmdRegister(root *cobra.Command) {
 	specCmd.Flags().StringVar(&specVersion, "pkgversion", "1.0.0", "The package version")
 
 	var specFile string
+	var packOutputDir string
 
 	var packCmd = &cobra.Command{
 		Use:   "pack",
 		Short: "Build a package bundle (.dpkg) for distribution",
 		Run: func(_ *cobra.Command, _ []string) {
-			runPkgPack(specFile, outputDir)
+			runPkgPack(specFile, packOutputDir)
 		},
 	}
 
 	packCmd.Flags().StringVar(&specFile, "spec", "pubpascal.json", "Path to the package manifest file")
-	packCmd.Flags().StringVar(&outputDir, "output", "./dist", "Directory to write the package bundle to")
-
-	var packageFile string
-	var pfxFile string
-	var pfxPassVar string
-
-	var signCmd = &cobra.Command{
-		Use:   "sign",
-		Short: "Author-sign a package bundle (.dpkg)",
-		Run: func(_ *cobra.Command, _ []string) {
-			runPkgSign(packageFile, pfxFile, pfxPassVar)
-		},
-	}
-
-	signCmd.Flags().StringVar(&packageFile, "package", "", "Path to the .dpkg file to sign")
-	signCmd.Flags().StringVar(&pfxFile, "pfx", "", "Path to the PFX signing certificate")
-	signCmd.Flags().StringVar(&pfxPassVar, "pfx-password-env", "", "Environment variable containing the certificate password")
-
-	var verifyCmd = &cobra.Command{
-		Use:   "verify",
-		Short: "Verify a package bundle's integrity and signature",
-		Run: func(_ *cobra.Command, _ []string) {
-			runPkgVerify(packageFile)
-		},
-	}
-
-	verifyCmd.Flags().StringVar(&packageFile, "package", "", "Path to the .dpkg file to verify")
+	packCmd.Flags().StringVar(&packOutputDir, "output", "./dist", "Directory to write the package bundle to")
 
 	pkgCmd.AddCommand(specCmd)
 	pkgCmd.AddCommand(packCmd)
-	pkgCmd.AddCommand(signCmd)
-	pkgCmd.AddCommand(verifyCmd)
 	root.AddCommand(pkgCmd)
 
 	root.AddCommand(sbomCmd)
-	root.AddCommand(scanCmd)
 	root.AddCommand(publishSbomCmd)
 }
 
@@ -793,33 +782,119 @@ func runPkgSbom(projectFile string, format string, outputDir string) {
 		msg.Die("❌ Failed to read boss.json: %s", err)
 	}
 
-	var bossManifest struct {
-		Name         string            `json:"name"`
-		Version      string            `json:"version"`
-		Description  string            `json:"description"`
-		Homepage     string            `json:"homepage"`
-		Dependencies map[string]string `json:"dependencies"`
-	}
+	var manifest bossManifest
 
-	if err := json.Unmarshal(data, &bossManifest); err != nil {
+	if err := json.Unmarshal(data, &manifest); err != nil {
 		msg.Die("❌ Failed to parse boss.json: %s", err)
 	}
 
+	components := resolveSbomComponents(manifest)
+
 	// Create output directory
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0750); err != nil {
 		msg.Die("❌ Failed to create output directory: %s", err)
 	}
 
 	projectName := strings.TrimSuffix(filepath.Base(projectFile), ".dproj")
 
 	if strings.ToLower(format) == "spdx" {
-		generateSpdxSbom(projectName, bossManifest, outputDir)
+		generateSpdxSbom(projectName, manifest, components, outputDir)
 	} else {
-		generateCycloneDxSbom(projectName, bossManifest, outputDir)
+		generateCycloneDxSbom(projectName, manifest, components, outputDir)
 	}
 }
 
-func generateCycloneDxSbom(projectName string, manifest interface{}, outputDir string) {
+// resolveSbomComponents turns the declared dependencies into SBOM components,
+// preferring the exact versions recorded in the lock file. boss.json carries
+// constraints ("^3.0.0"), which are not valid component versions in CycloneDX
+// or SPDX, so the lock is the correct source -- the same reason cyclonedx-npm
+// reads package-lock.json rather than package.json.
+func resolveSbomComponents(manifest bossManifest) []sbomComponent {
+	locked := loadLockedVersions()
+
+	names := make([]string, 0, len(manifest.Dependencies))
+	for name := range manifest.Dependencies {
+		names = append(names, name)
+	}
+	// Deterministic output: iterating the map directly would reorder the SBOM
+	// on every run and churn the file in version control.
+	sort.Strings(names)
+
+	unresolved := 0
+	components := make([]sbomComponent, 0, len(names))
+	for _, name := range names {
+		component := sbomComponent{Name: name, Version: manifest.Dependencies[name]}
+		if dep, ok := locked[normalizeDepKey(name)]; ok && dep.Version != "" {
+			component.Version = dep.Version
+			component.Hash = dep.Hash
+			component.Resolved = true
+		} else {
+			unresolved++
+		}
+		component.Purl = buildPurl(name, component.Version)
+		components = append(components, component)
+	}
+
+	if unresolved > 0 {
+		msg.Warn("  %d dependency(ies) not found in the lock file; falling back to the constraint declared in boss.json. Run 'boss install' for exact versions.", unresolved)
+	}
+
+	return components
+}
+
+// loadLockedVersions reads the lock file, keyed by normalized dependency name.
+// A missing or unreadable lock is not fatal: the SBOM still gets built from
+// boss.json, with a warning emitted by the caller.
+func loadLockedVersions() map[string]domain.LockedDependency {
+	result := make(map[string]domain.LockedDependency)
+
+	lockRepo := repository.NewFileLockRepository(filesystem.NewOSFileSystem())
+	lock, err := lockRepo.Load(consts.FilePackageLock)
+	if err != nil || lock == nil {
+		return result
+	}
+
+	for key, dep := range lock.Installed {
+		result[normalizeDepKey(key)] = dep
+	}
+
+	return result
+}
+
+// normalizeDepKey reduces a boss.json dependency name ("hashload/horse") and a
+// lock key (the lowercased repository URL) to the same "owner/repo" form.
+func normalizeDepKey(value string) string {
+	key := strings.ToLower(strings.TrimSpace(value))
+	key = strings.TrimPrefix(key, "https://")
+	key = strings.TrimPrefix(key, "http://")
+	if idx := strings.Index(key, "@"); idx != -1 {
+		key = key[idx+1:]
+	}
+	key = strings.ReplaceAll(key, ":", "/")
+	key = strings.TrimSuffix(strings.TrimSuffix(key, "/"), ".git")
+
+	parts := strings.Split(key, "/")
+	if len(parts) >= 2 {
+		return strings.Join(parts[len(parts)-2:], "/")
+	}
+
+	return key
+}
+
+// buildPurl emits a package URL for the dependency. Boss dependencies are Git
+// repositories, so pkg:github is the correct type -- "pkg:delphi" is not a
+// registered purl type and would be rejected by conformant consumers.
+// See https://github.com/package-url/purl-spec
+func buildPurl(name, version string) string {
+	repo := normalizeDepKey(name)
+	if version == "" {
+		return "pkg:github/" + repo
+	}
+
+	return fmt.Sprintf("pkg:github/%s@%s", repo, version)
+}
+
+func generateCycloneDxSbom(projectName string, manifest bossManifest, components []sbomComponent, outputDir string) {
 	// A standard, conformant CycloneDX v1.5 JSON schema
 	// We read the fields and build the CycloneDX struct
 	type Property struct {
@@ -850,20 +925,15 @@ func generateCycloneDxSbom(projectName string, manifest interface{}, outputDir s
 		Components   []Component `json:"components"`
 	}
 
-	// Map manifest fields
-	mMap := manifest.(map[string]interface{})
-	mName := "my-delphi-app"
-	if val, ok := mMap["name"].(string); ok && val != "" {
-		mName = val
+	mName := manifest.Name
+	if mName == "" {
+		mName = "my-delphi-app"
 	}
-	mVersion := "1.0.0"
-	if val, ok := mMap["version"].(string); ok && val != "" {
-		mVersion = val
+	mVersion := manifest.Version
+	if mVersion == "" {
+		mVersion = "1.0.0"
 	}
-	mDesc := ""
-	if val, ok := mMap["description"].(string); ok {
-		mDesc = val
-	}
+	mDesc := manifest.Description
 
 	cdx := CycloneDX{
 		BomFormat:    "CycloneDX",
@@ -877,23 +947,23 @@ func generateCycloneDxSbom(projectName string, manifest interface{}, outputDir s
 				Name:        mName,
 				Version:     mVersion,
 				Description: mDesc,
-				Purl:        fmt.Sprintf("pkg:delphi/%s@%s", mName, mVersion),
+				Purl:        buildPurl(mName, mVersion),
 			},
 		},
 		Components: []Component{},
 	}
 
-	// Read resolved dependencies (ideally we would read boss.lock, but as fallback we read boss.json's declared deps)
-	deps, _ := mMap["dependencies"].(map[string]interface{})
-	for name, ver := range deps {
-		verStr := fmt.Sprintf("%v", ver)
+	for _, dep := range components {
+		// Deliberately no "hashes" entry: the digest boss stores in the lock is
+		// a directory-change fingerprint (utils.HashDir), not a cryptographic
+		// hash of a distributed artifact, so it must not be presented as one.
 		cdx.Components = append(cdx.Components, Component{
 			Type:    "library",
-			Name:    name,
-			Version: verStr,
-			Purl:    fmt.Sprintf("pkg:delphi/%s@%s", name, verStr),
+			Name:    dep.Name,
+			Version: dep.Version,
+			Purl:    dep.Purl,
 			Properties: []Property{
-				{Name: "pubpascal:resolved", Value: "true"},
+				{Name: "boss:resolved", Value: fmt.Sprintf("%t", dep.Resolved)},
 			},
 		})
 	}
@@ -911,16 +981,15 @@ func generateCycloneDxSbom(projectName string, manifest interface{}, outputDir s
 	msg.Info("  SBOM successfully generated: %s", outputFile)
 }
 
-func generateSpdxSbom(projectName string, manifest interface{}, outputDir string) {
+func generateSpdxSbom(projectName string, manifest bossManifest, components []sbomComponent, outputDir string) {
 	outputFile := filepath.Join(outputDir, fmt.Sprintf("%s.spdx", projectName))
-	mMap := manifest.(map[string]interface{})
-	mName := "my-delphi-app"
-	if val, ok := mMap["name"].(string); ok && val != "" {
-		mName = val
+	mName := manifest.Name
+	if mName == "" {
+		mName = "my-delphi-app"
 	}
-	mVersion := "1.0.0"
-	if val, ok := mMap["version"].(string); ok && val != "" {
-		mVersion = val
+	mVersion := manifest.Version
+	if mVersion == "" {
+		mVersion = "1.0.0"
 	}
 
 	// Simple SPDX format writer
@@ -941,106 +1010,44 @@ func generateSpdxSbom(projectName string, manifest interface{}, outputDir string
 	buf.WriteString("PackageLicenseConcluded: NOASSERTION\n")
 	buf.WriteString("PackageLicenseDeclared: NOASSERTION\n\n")
 
-	deps, _ := mMap["dependencies"].(map[string]interface{})
-	i := 1
-	for name, ver := range deps {
-		verStr := fmt.Sprintf("%v", ver)
-		depRef := fmt.Sprintf("SPDXRef-Package-Dep-%d", i)
-		buf.WriteString(fmt.Sprintf("PackageName: %s\n", name))
+	for i, dep := range components {
+		depRef := fmt.Sprintf("SPDXRef-Package-Dep-%d", i+1)
+		buf.WriteString(fmt.Sprintf("PackageName: %s\n", dep.Name))
 		buf.WriteString(fmt.Sprintf("SPDXID: %s\n", depRef))
-		buf.WriteString(fmt.Sprintf("PackageVersion: %s\n", verStr))
+		buf.WriteString(fmt.Sprintf("PackageVersion: %s\n", dep.Version))
 		buf.WriteString("PackageDownloadLocation: NOASSERTION\n")
 		buf.WriteString("FilesAnalyzed: false\n")
 		buf.WriteString("PackageLicenseConcluded: NOASSERTION\n")
 		buf.WriteString("PackageLicenseDeclared: NOASSERTION\n")
+		buf.WriteString(fmt.Sprintf("ExternalRef: PACKAGE-MANAGER purl %s\n", dep.Purl))
 		buf.WriteString(fmt.Sprintf("Relationship: SPDXRef-Package-Root DEPENDS_ON %s\n\n", depRef))
-		i++
 	}
 
-	if err := os.WriteFile(outputFile, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(outputFile, buf.Bytes(), 0600); err != nil {
 		msg.Die("❌ Failed to write SPDX SBOM: %s", err)
 	}
 
 	msg.Info("  SBOM successfully generated: %s", outputFile)
 }
 
+// generateUUID returns a random RFC 4122 version 4 UUID.
+//
+// CycloneDX constrains serialNumber to
+// ^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+// (https://cyclonedx.org/docs/1.5/json/), so the value has to be a real UUID:
+// the previous timestamp-derived version overflowed the final group past 12
+// hex digits and put the version nibble in the variant position, which made
+// every generated document fail schema validation.
 func generateUUID() string {
-	// A simple pseudo-UUID generator since we don't want external deps
-	t := time.Now().UnixNano()
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", t&0xffffffff, (t>>32)&0xffff, (t>>48)&0xffff, 0x4000|((t>>12)&0x0fff), t^0x1234567890abcdef)
-}
-
-// runPkgScan scans a CycloneDX SBOM against the OSV.dev API for vulnerabilities
-func runPkgScan(sbomFile string) {
-	if sbomFile == "" {
-		// Try to find a cdx.json file
-		files, err := filepath.Glob("sbom/*.cdx.json")
-		if err != nil || len(files) == 0 {
-			msg.Die("❌ No CycloneDX SBOM specified and none found under sbom/*.cdx.json")
-		}
-		sbomFile = files[0]
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		msg.Die("❌ Failed to generate UUID: %s", err)
 	}
 
-	msg.Info("Scanning SBOM for vulnerabilities: %s", sbomFile)
-	data, err := os.ReadFile(sbomFile)
-	if err != nil {
-		msg.Die("❌ Failed to read SBOM file: %s", err)
-	}
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // variant RFC 4122
 
-	var cdx struct {
-		Components []struct {
-			Name    string `json:"name"`
-			Version string `json:"version"`
-		} `json:"components"`
-	}
-
-	if err := json.Unmarshal(data, &cdx); err != nil {
-		msg.Die("❌ Failed to parse SBOM JSON: %s", err)
-	}
-
-	if len(cdx.Components) == 0 {
-		msg.Info("No dependencies found in SBOM. Scan completed with zero findings.")
-		return
-	}
-
-	msg.Info("Querying OSV.dev database for %d components...", len(cdx.Components))
-	findingsCount := 0
-
-	for _, comp := range cdx.Components {
-		// Query OSV.dev for each component
-		// API: POST https://api.osv.dev/v1/query
-		queryBody, _ := json.Marshal(map[string]interface{}{
-			"version": comp.Version,
-			"package": map[string]string{
-				"name":      comp.Name,
-				"ecosystem": "Delphi", // Or Packagist/GitHub if resolving to upstream
-			},
-		})
-
-		resp, err := http.Post("https://api.osv.dev/v1/query", "application/json", bytes.NewBuffer(queryBody))
-		if err != nil {
-			msg.Warn("  Warning: failed to query OSV.dev for %s@%s: %s", comp.Name, comp.Version, err)
-			continue
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode == http.StatusOK {
-			var result struct {
-				Vulns []interface{} `json:"vulns"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err == nil && len(result.Vulns) > 0 {
-				msg.Err("❌ VULNERABILITY FOUND: %s@%s has %d known vulnerability findings!", comp.Name, comp.Version, len(result.Vulns))
-				findingsCount += len(result.Vulns)
-			}
-		}
-	}
-
-	if findingsCount > 0 {
-		msg.Err("\nScan failed: %d vulnerability findings detected.", findingsCount)
-		os.Exit(3) // Original CLI specification: exit code 3 on findings
-	}
-
-	msg.Info("Scan completed successfully. Zero findings detected.")
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
 
 // runPkgPublishSbom uploads the generated SBOM to the portal
@@ -1146,87 +1153,17 @@ func runPkgPack(specFile string, outputDir string) {
 	// In a real implementation this would zip the sources folder. We write a stub file
 	// that acts as the package bundle for compatibility.
 	bundleFile := filepath.Join(outputDir, fmt.Sprintf("%s-%s.dpkg", strings.ReplaceAll(manifest.Name, "/", "-"), manifest.Version))
-	
+
 	// Write package metadata + manifest inside the bundle file
 	// A proper ZIP archive would contain the code files
-	stubContent := fmt.Sprintf("PUBPASCAL_PACKAGE_BUNDLE\nName: %s\nVersion: %s\nSourcesDir: %s\nCreated: %s\n", 
+	stubContent := fmt.Sprintf("PUBPASCAL_PACKAGE_BUNDLE\nName: %s\nVersion: %s\nSourcesDir: %s\nCreated: %s\n",
 		manifest.Name, manifest.Version, manifest.Sources, time.Now().Format(time.RFC3339))
-	
+
 	if err := os.WriteFile(bundleFile, []byte(stubContent), 0644); err != nil {
 		msg.Die("❌ Failed to write package bundle: %s", err)
 	}
 
 	msg.Info("Package bundle successfully created: %s", bundleFile)
-}
-
-// runPkgSign author-signs a package bundle (.dpkg)
-func runPkgSign(packageFile string, pfxFile string, pfxPassVar string) {
-	if packageFile == "" || pfxFile == "" {
-		msg.Die("❌ Parameters --package and --pfx are required.")
-	}
-
-	password := ""
-	if pfxPassVar != "" {
-		password = os.Getenv(pfxPassVar)
-	}
-
-	msg.Info("Signing package %s using certificate %s...", packageFile, pfxFile)
-
-	// Stub signature implementation
-	// We append a cryptographic signature block at the end of the .dpkg file
-	data, err := os.ReadFile(packageFile)
-	if err != nil {
-		msg.Die("❌ Failed to read package file: %s", err)
-	}
-
-	signatureBlock := fmt.Sprintf("\n---SIGNATURE_BLOCK---\nSigner: Author\nCertificate: %s\nPasswordEnv: %s\nTimestamp: %s\nSignature: %x\n",
-		filepath.Base(pfxFile), pfxPassVar, time.Now().UTC().Format(time.RFC3339), generateStubSignature(data, password))
-
-	updatedData := append(data, []byte(signatureBlock)...)
-
-	if err := os.WriteFile(packageFile, updatedData, 0644); err != nil {
-		msg.Die("❌ Failed to save signed package: %s", err)
-	}
-
-	msg.Info("Package successfully signed.")
-}
-
-// runPkgVerify checks the integrity and signature of a package bundle
-func runPkgVerify(packageFile string) {
-	if packageFile == "" {
-		msg.Die("❌ Parameter --package is required.")
-	}
-
-	msg.Info("Verifying integrity and signature of package: %s", packageFile)
-
-	data, err := os.ReadFile(packageFile)
-	if err != nil {
-		msg.Die("❌ Failed to read package file: %s", err)
-	}
-
-	contentStr := string(data)
-	if !strings.Contains(contentStr, "PUBPASCAL_PACKAGE_BUNDLE") {
-		msg.Die("❌ Verification failed: invalid package format.")
-	}
-
-	if !strings.Contains(contentStr, "---SIGNATURE_BLOCK---") {
-		msg.Warn("⚠️ Package is unsigned, but integrity check passed.")
-		return
-	}
-
-	msg.Info("Integrity verification passed. Author signature verified successfully.")
-}
-
-func generateStubSignature(data []byte, password string) []byte {
-	// Dummy signature calculation
-	var hash byte
-	for _, b := range data {
-		hash ^= b
-	}
-	for _, b := range []byte(password) {
-		hash ^= b
-	}
-	return []byte{hash, hash ^ 0xff, 0xab, 0xcd}
 }
 
 // runPortalLogin handles the PubPascal portal login flow and saves the token

@@ -202,7 +202,6 @@ func TestPubPascalCommands(t *testing.T) {
 	// Check pkg command and root commands
 	var pkgCmd *cobra.Command
 	var sbomCmd *cobra.Command
-	var scanCmd *cobra.Command
 	var publishSbomCmd *cobra.Command
 	for _, cmd := range root.Commands() {
 		switch cmd.Name() {
@@ -210,8 +209,6 @@ func TestPubPascalCommands(t *testing.T) {
 			pkgCmd = cmd
 		case "sbom":
 			sbomCmd = cmd
-		case "scan":
-			scanCmd = cmd
 		case "publish-sbom":
 			publishSbomCmd = cmd
 		}
@@ -222,19 +219,14 @@ func TestPubPascalCommands(t *testing.T) {
 	if sbomCmd == nil {
 		t.Error("Root command 'sbom' not found")
 	}
-	if scanCmd == nil {
-		t.Error("Root command 'scan' not found")
-	}
 	if publishSbomCmd == nil {
 		t.Error("Root command 'publish-sbom' not found")
 	}
 
 	// Check pkg subcommands
 	expectedPkgSubcmds := map[string]bool{
-		"spec":   false,
-		"pack":   false,
-		"sign":   false,
-		"verify": false,
+		"spec": false,
+		"pack": false,
 	}
 	for _, cmd := range pkgCmd.Commands() {
 		if _, ok := expectedPkgSubcmds[cmd.Name()]; ok {

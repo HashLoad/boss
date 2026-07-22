@@ -223,10 +223,10 @@ func generateGUID() string {
 // newCmdRegister registers the new command.
 func newCmdRegister(root *cobra.Command) {
 	var newCmd = &cobra.Command{
-		Use:     "new [project_name]",
-		Short:   "Create a new Delphi or Lazarus project skeleton",
-		Long:    "Create a new Delphi or Lazarus project skeleton with source directories, templates, and boss.json",
-		Args:    cobra.MaximumNArgs(1),
+		Use:   "new [project_name]",
+		Short: "Create a new Delphi or Lazarus project skeleton",
+		Long:  "Create a new Delphi or Lazarus project skeleton with source directories, templates, and boss.json",
+		Args:  cobra.MaximumNArgs(1),
 		Example: `  Create a new console application (Delphi by default):
   boss new my_project
 
