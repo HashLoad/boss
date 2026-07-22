@@ -371,7 +371,7 @@ func runWorkspaceClone(ctx context.Context, workspaceID string, codename string,
 
 	for i, repo := range orderedRepos {
 		// Resolve the subdirectory
-		repoNameOnly := strings.Split(repo.Name, "/")[1]
+		repoNameOnly := repoShortName(repo.Name)
 		repoSubdir := repoNameOnly
 		if !repo.IsRoot {
 			repoSubdir = filepath.Join(rootRepoName, modulesDirName, repoNameOnly)
@@ -437,10 +437,21 @@ func fetchWorkspaceManifest(ctx context.Context, config *PubPascalConfig, worksp
 }
 
 // resolveRootRepoName returns the directory name of the root (PAI) repository.
+// repoShortName returns the repository segment of an "owner/repo" manifest
+// name. Indexing the split directly panics when the portal returns a name
+// without a slash, which is data this client does not control.
+func repoShortName(name string) string {
+	if idx := strings.LastIndex(name, "/"); idx != -1 && idx+1 < len(name) {
+		return name[idx+1:]
+	}
+
+	return name
+}
+
 func resolveRootRepoName(repos []ManifestRepo) string {
 	for _, repo := range repos {
 		if repo.IsRoot {
-			return strings.Split(repo.Name, "/")[1]
+			return repoShortName(repo.Name)
 		}
 	}
 
@@ -643,7 +654,7 @@ func collectDependencySearchPaths(rootRepoPath string, repos []ManifestRepo) []s
 		if repo.IsRoot {
 			continue
 		}
-		repoNameOnly := strings.Split(repo.Name, "/")[1]
+		repoNameOnly := repoShortName(repo.Name)
 		// Determine the source path of the dependency.
 		// Boss packages usually have their sources in "Source" or "src" or root.
 		// We default to "Source" and check if it exists, otherwise fall back to
