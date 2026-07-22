@@ -4,7 +4,6 @@
 
 [![Go Report Card][goReportBadge]][goReportLink]
 [![GitHub release (latest by date)][latestReleaseBadge]](https://github.com/HashLoad/boss/releases/latest)
-[![CRA Compliance][craBadge]][securityPolicyLink]
 [![SBOM Badge][sbomBadge]](https://www.pubpascal.dev)
 [![GitHub Release Date][releaseDateBadge]](https://github.com/HashLoad/boss/releases)
 [![GitHub repo size][repoSizeBadge]](https://github.com/HashLoad/boss/archive/refs/heads/main.zip)
@@ -557,6 +556,4 @@ boss init -q
 [telegramBadge]: https://img.shields.io/badge/telegram-join%20channel-7289DA?style=flat-square
 [telegramLink]: https://t.me/hashload
 [repoStarsBadge]: https://img.shields.io/github/stars/hashload/boss?style=social
-[craBadge]: https://img.shields.io/badge/CRA-100%25%20compliant-brightgreen
-[securityPolicyLink]: SECURITY.md
 [sbomBadge]: https://img.shields.io/badge/SBOM-compliant-brightgreen
