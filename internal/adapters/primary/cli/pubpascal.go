@@ -141,7 +141,7 @@ func LoadPubPascalConfig() (*PubPascalConfig, error) {
 		return config, nil
 	}
 
-	//nolint:gosec // G304: the path is this CLI's own config in the user's home
+	// #nosec G304 -- the path is this CLI's own config in the user's home
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return config, err
@@ -167,7 +167,7 @@ func SavePubPascalConfig(config *PubPascalConfig) error {
 
 	// Persisting the token is the whole purpose of this file: it is written
 	// with mode 0600 into the user's home and never sent anywhere else.
-	//nolint:gosec // G117: the portal token is stored locally on purpose
+	// #nosec G117 -- the portal token is stored locally on purpose
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
@@ -494,7 +494,7 @@ func cloneWorkspaceRepo(
 		return cloneFailed
 	}
 
-	//nolint:gosec // G204: fixed git binary; URL and path come from the portal manifest
+	// #nosec G204 -- fixed git binary; URL and path come from the portal manifest
 	cloneCmd := exec.CommandContext(ctx, "git", "clone", repo.CloneURL, repoPath)
 	cloneCmd.Stdout = os.Stdout
 	cloneCmd.Stderr = os.Stderr
@@ -505,7 +505,7 @@ func cloneWorkspaceRepo(
 
 	// Checkout ref if specified
 	if repo.Ref.HasRef && repo.Ref.Value != "" {
-		//nolint:gosec // G204: fixed git binary; ref comes from the portal manifest
+		// #nosec G204 -- fixed git binary; ref comes from the portal manifest
 		checkoutCmd := exec.CommandContext(ctx, "git", "-C", repoPath, "checkout", repo.Ref.Value)
 		checkoutCmd.Stdout = os.Stdout
 		checkoutCmd.Stderr = os.Stderr
@@ -544,7 +544,7 @@ func createCodenameBranch(ctx context.Context, repoPath string, codename string)
 	}
 
 	newBranch := baseBranch + "-" + codename
-	//nolint:gosec // G204: fixed git binary; branch name derives from the repo HEAD
+	// #nosec G204 -- fixed git binary; branch name derives from the repo HEAD
 	createBranchCmd := exec.CommandContext(ctx, "git", "-C", repoPath, "checkout", "-b", newBranch)
 	if err := createBranchCmd.Run(); err != nil {
 		msg.Warn("  Warning: could not create branch %s (continuing)", newBranch)
@@ -575,7 +575,7 @@ func runBossInstall(ctx context.Context, repoPath string, repoSubdir string) {
 // reports whether git exited successfully; callers that only need the output
 // treat a failure as "no information available".
 func gitCapture(ctx context.Context, path string, args ...string) (string, bool) {
-	//nolint:gosec // G204: fixed git binary; the arguments are built by this CLI
+	// #nosec G204 -- fixed git binary; the arguments are built by this CLI
 	cmd := exec.CommandContext(ctx, "git", append([]string{"-C", path}, args...)...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -592,7 +592,7 @@ func isGitRepo(path string) bool {
 }
 
 func isDirPopulated(path string) bool {
-	//nolint:gosec // G304: path is built from the workspace manifest, not user input
+	// #nosec G304 -- path is built from the workspace manifest, not user input
 	f, err := os.Open(path)
 	if err != nil {
 		return false
@@ -625,7 +625,7 @@ func injectDprojPaths(cwd string, repos []ManifestRepo, rootRepoName string) {
 		return
 	}
 
-	//nolint:gosec // G304: the path is a .dproj discovered inside the cloned workspace
+	// #nosec G304 -- the path is a .dproj discovered inside the cloned workspace
 	content, err := os.ReadFile(dprojPath)
 	if err != nil {
 		return
@@ -638,7 +638,7 @@ func injectDprojPaths(cwd string, repos []ManifestRepo, rootRepoName string) {
 
 	// os.WriteFile keeps the mode of an already existing file, so the value
 	// below only applies if the .dproj disappeared between read and write.
-	//nolint:gosec // G703: dprojPath comes from a Glob inside the cloned workspace
+	// #nosec G703 -- dprojPath comes from a Glob inside the cloned workspace
 	if err := os.WriteFile(dprojPath, []byte(updatedXML), 0600); err != nil {
 		msg.Err("❌ Failed to save updated .dproj file: %s", err)
 	} else {
@@ -859,7 +859,7 @@ func runWorkspaceUpdate(ctx context.Context) {
 
 	for _, repoPath := range discoverWorkspaceRepos(cwd) {
 		msg.Info("Updating %s...", filepath.Base(repoPath))
-		//nolint:gosec // G204: fixed git binary; repoPath is a directory found on disk
+		// #nosec G204 -- fixed git binary; repoPath is a directory found on disk
 		pullCmd := exec.CommandContext(ctx, "git", "-C", repoPath, "pull", "--ff-only")
 		pullCmd.Stdout = os.Stdout
 		pullCmd.Stderr = os.Stderr
@@ -890,7 +890,7 @@ func runWorkspacePush(ctx context.Context) {
 		}
 
 		msg.Info("Pushing changes in %s...", filepath.Base(repoPath))
-		//nolint:gosec // G204: fixed git binary; repoPath is a directory found on disk
+		// #nosec G204 -- fixed git binary; repoPath is a directory found on disk
 		pushCmd := exec.CommandContext(ctx, "git", "-C", repoPath, "push")
 		pushCmd.Stdout = os.Stdout
 		pushCmd.Stderr = os.Stderr
@@ -1210,7 +1210,7 @@ func runPkgPublishSbom(ctx context.Context, slug string, version string, sbomFil
 	}
 
 	msg.Info("Publishing SBOM for %s@%s to the portal...", slug, version)
-	//nolint:gosec // G304: the path is the SBOM file the user asked to upload
+	// #nosec G304 -- the path is the SBOM file the user asked to upload
 	data, err := os.ReadFile(sbomFile)
 	if err != nil {
 		msg.Die("❌ Failed to read SBOM file: %s", err)
@@ -1277,7 +1277,7 @@ func runPkgSpec(id string, version string) {
 func runPkgPack(specFile string, outputDir string) {
 	msg.Info("Packaging Delphi library based on manifest: %s", specFile)
 	// Read manifest
-	//nolint:gosec // G304: the path is the manifest the user pointed --spec at
+	// #nosec G304 -- the path is the manifest the user pointed --spec at
 	data, err := os.ReadFile(specFile)
 	if err != nil {
 		msg.Die("❌ Failed to read manifest file: %s", err)

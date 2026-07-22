@@ -271,7 +271,7 @@ func submitPullRequest(
 
 // Helper to run git commands.
 func runGitCmd(ctx context.Context, dir string, args ...string) (string, error) {
-	//nolint:gosec // G204: fixed git binary; arguments are built by this CLI
+	// #nosec G204 -- fixed git binary; arguments are built by this CLI
 	cmd := exec.CommandContext(ctx, "git", args...)
 	cmd.Dir = dir
 	var stdout, stderr bytes.Buffer
