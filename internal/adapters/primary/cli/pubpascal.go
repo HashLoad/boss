@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,13 +44,13 @@ type sbomComponent struct {
 	Resolved bool
 }
 
-// PubPascalConfig represents the configuration stored in ~/.pubpascal/config.json
+// PubPascalConfig represents the configuration stored in ~/.pubpascal/config.json.
 type PubPascalConfig struct {
 	PortalBaseUrl string `json:"portalBaseUrl"`
 	AuthToken     string `json:"authToken"`
 }
 
-// WorkspaceManifest represents the workspace manifest returned by the portal API
+// WorkspaceManifest represents the workspace manifest returned by the portal API.
 type WorkspaceManifest struct {
 	SchemaVersion int            `json:"schema_version"`
 	Workspace     WorkspaceInfo  `json:"workspace"`
@@ -90,7 +92,7 @@ type ManifestEdge struct {
 	ToNodeID   string `json:"to_node_id"`
 }
 
-// GetPubPascalConfigPath resolves the path to the PubPascal config file
+// GetPubPascalConfigPath resolves the path to the PubPascal config file.
 func GetPubPascalConfigPath() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -99,7 +101,7 @@ func GetPubPascalConfigPath() string {
 	return filepath.Join(home, ".pubpascal", "config.json")
 }
 
-// LoadPubPascalConfig loads the PubPascal configuration from disk
+// LoadPubPascalConfig loads the PubPascal configuration from disk.
 func LoadPubPascalConfig() (*PubPascalConfig, error) {
 	configPath := GetPubPascalConfigPath()
 	config := &PubPascalConfig{
@@ -122,7 +124,7 @@ func LoadPubPascalConfig() (*PubPascalConfig, error) {
 	return config, nil
 }
 
-// SavePubPascalConfig saves the PubPascal configuration to disk
+// SavePubPascalConfig saves the PubPascal configuration to disk.
 func SavePubPascalConfig(config *PubPascalConfig) error {
 	configPath := GetPubPascalConfigPath()
 	dir := filepath.Dir(configPath)
@@ -141,13 +143,13 @@ func SavePubPascalConfig(config *PubPascalConfig) error {
 	return os.WriteFile(configPath, data, 0600)
 }
 
-// pubpascalCmdRegister registers the workspace and pkg commands under the boss CLI
+// pubpascalCmdRegister registers the workspace and pkg commands under the boss CLI.
 func pubpascalCmdRegister(root *cobra.Command) {
 	workspaceCmdRegister(root)
 	pkgCmdRegister(root)
 }
 
-// workspaceCmdRegister registers the workspace commands
+// workspaceCmdRegister registers the workspace commands.
 func workspaceCmdRegister(root *cobra.Command) {
 	var workspaceCmd = &cobra.Command{
 		Use:   "workspace",
@@ -201,7 +203,7 @@ func workspaceCmdRegister(root *cobra.Command) {
 	root.AddCommand(workspaceCmd)
 }
 
-// pkgCmdRegister registers the pkg commands
+// pkgCmdRegister registers the pkg commands.
 func pkgCmdRegister(root *cobra.Command) {
 	var pkgCmd = &cobra.Command{
 		Use:   "pkg",
@@ -282,7 +284,7 @@ func pkgCmdRegister(root *cobra.Command) {
 	root.AddCommand(publishSbomCmd)
 }
 
-// runWorkspaceClone executes the clone workspace operation
+// runWorkspaceClone executes the clone workspace operation.
 func runWorkspaceClone(workspaceID string, codename string, noInstall bool) {
 	config, err := LoadPubPascalConfig()
 	if err != nil {
@@ -296,7 +298,7 @@ func runWorkspaceClone(workspaceID string, codename string, noInstall bool) {
 	msg.Info("Fetching workspace manifest for %s...", workspaceID)
 	manifestURL := fmt.Sprintf("%s/api/workspaces/%s/manifest", strings.TrimSuffix(config.PortalBaseUrl, "/"), workspaceID)
 
-	req, err := http.NewRequest("GET", manifestURL, nil)
+	req, err := http.NewRequest(http.MethodGet, manifestURL, nil)
 	if err != nil {
 		msg.Die("❌ Failed to create HTTP request: %s", err)
 	}
@@ -460,14 +462,14 @@ func isDirPopulated(path string) bool {
 	defer f.Close()
 
 	_, err = f.Readdirnames(1)
-	return err != io.EOF
+	return !errors.Is(err, io.EOF)
 }
 
 func isBranchOrDefaultRef(ref ManifestRef) bool {
 	return !ref.HasRef || (ref.Kind != "tag" && ref.Kind != "version")
 }
 
-// injectDprojPaths updates the root project's .dproj file to include dependency search paths
+// injectDprojPaths updates the root project's .dproj file to include dependency search paths.
 func injectDprojPaths(cwd string, repos []ManifestRepo, rootRepoName string) {
 	rootRepoPath := filepath.Join(cwd, rootRepoName)
 	// Find all .dproj files in the root repo
@@ -563,7 +565,7 @@ func injectDprojPaths(cwd string, repos []ManifestRepo, rootRepoName string) {
 	}
 }
 
-// runWorkspaceStatus checks git status of the repositories in the workspace
+// runWorkspaceStatus checks git status of the repositories in the workspace.
 func runWorkspaceStatus() {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -658,7 +660,7 @@ func printRepoStatus(label string, path string) {
 	fmt.Printf("%-35s [%s] branch: %s%s\n", label, statusStr, branch, aheadBehind)
 }
 
-// runWorkspaceUpdate updates all repositories in the workspace
+// runWorkspaceUpdate updates all repositories in the workspace.
 func runWorkspaceUpdate() {
 	msg.Info("Updating workspace repositories (pulling changes)...")
 	// Similar to status, find all repos and run `git pull` or `git fetch && git merge`
@@ -704,7 +706,7 @@ func runWorkspaceUpdate() {
 	}
 }
 
-// runWorkspacePush pushes committed changes in all writable repositories in the workspace
+// runWorkspacePush pushes committed changes in all writable repositories in the workspace.
 func runWorkspacePush() {
 	msg.Info("Pushing committed changes in workspace...")
 	cwd, err := os.Getwd()
@@ -758,7 +760,7 @@ func runWorkspacePush() {
 	}
 }
 
-// runPkgSbom generates a CycloneDX or SPDX SBOM for a Delphi project
+// runPkgSbom generates a CycloneDX or SPDX SBOM for a Delphi project.
 func runPkgSbom(projectFile string, format string, outputDir string) {
 	if projectFile == "" {
 		// Try to find a .dproj file in the current directory
@@ -965,7 +967,7 @@ func generateCycloneDxSbom(projectName string, manifest bossManifest, components
 			Version: dep.Version,
 			Purl:    dep.Purl,
 			Properties: []Property{
-				{Name: "boss:resolved", Value: fmt.Sprintf("%t", dep.Resolved)},
+				{Name: "boss:resolved", Value: strconv.FormatBool(dep.Resolved)},
 			},
 		})
 	}
@@ -999,14 +1001,14 @@ func generateSpdxSbom(projectName string, manifest bossManifest, components []sb
 	buf.WriteString("SPDXVersion: SPDX-2.3\n")
 	buf.WriteString("DataLicense: CC0-1.0\n")
 	buf.WriteString("SPDXID: SPDXRef-DOCUMENT\n")
-	buf.WriteString(fmt.Sprintf("DocumentName: %s-SBOM\n", projectName))
+	fmt.Fprintf(&buf, "DocumentName: %s-SBOM\n", projectName)
 	buf.WriteString("DocumentNamespace: https://www.pubpascal.dev/spdx/" + projectName + "-" + generateUUID() + "\n")
 	buf.WriteString("Creator: Tool: Boss-PubPascal\n")
-	buf.WriteString(fmt.Sprintf("Created: %s\n\n", time.Now().UTC().Format(time.RFC3339)))
+	fmt.Fprintf(&buf, "Created: %s\n\n", time.Now().UTC().Format(time.RFC3339))
 
-	buf.WriteString(fmt.Sprintf("PackageName: %s\n", mName))
+	fmt.Fprintf(&buf, "PackageName: %s\n", mName)
 	buf.WriteString("SPDXID: SPDXRef-Package-Root\n")
-	buf.WriteString(fmt.Sprintf("PackageVersion: %s\n", mVersion))
+	fmt.Fprintf(&buf, "PackageVersion: %s\n", mVersion)
 	buf.WriteString("PackageDownloadLocation: NOASSERTION\n")
 	buf.WriteString("FilesAnalyzed: false\n")
 	buf.WriteString("PackageLicenseConcluded: NOASSERTION\n")
@@ -1014,15 +1016,15 @@ func generateSpdxSbom(projectName string, manifest bossManifest, components []sb
 
 	for i, dep := range components {
 		depRef := fmt.Sprintf("SPDXRef-Package-Dep-%d", i+1)
-		buf.WriteString(fmt.Sprintf("PackageName: %s\n", dep.Name))
-		buf.WriteString(fmt.Sprintf("SPDXID: %s\n", depRef))
-		buf.WriteString(fmt.Sprintf("PackageVersion: %s\n", dep.Version))
+		fmt.Fprintf(&buf, "PackageName: %s\n", dep.Name)
+		fmt.Fprintf(&buf, "SPDXID: %s\n", depRef)
+		fmt.Fprintf(&buf, "PackageVersion: %s\n", dep.Version)
 		buf.WriteString("PackageDownloadLocation: NOASSERTION\n")
 		buf.WriteString("FilesAnalyzed: false\n")
 		buf.WriteString("PackageLicenseConcluded: NOASSERTION\n")
 		buf.WriteString("PackageLicenseDeclared: NOASSERTION\n")
-		buf.WriteString(fmt.Sprintf("ExternalRef: PACKAGE-MANAGER purl %s\n", dep.Purl))
-		buf.WriteString(fmt.Sprintf("Relationship: SPDXRef-Package-Root DEPENDS_ON %s\n\n", depRef))
+		fmt.Fprintf(&buf, "ExternalRef: PACKAGE-MANAGER purl %s\n", dep.Purl)
+		fmt.Fprintf(&buf, "Relationship: SPDXRef-Package-Root DEPENDS_ON %s\n\n", depRef)
 	}
 
 	if err := os.WriteFile(outputFile, buf.Bytes(), 0600); err != nil {
@@ -1052,7 +1054,7 @@ func generateUUID() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
 
-// runPkgPublishSbom uploads the generated SBOM to the portal
+// runPkgPublishSbom uploads the generated SBOM to the portal.
 func runPkgPublishSbom(slug string, version string, sbomFile string) {
 	if slug == "" || version == "" || sbomFile == "" {
 		msg.Die("❌ All parameters are required: --slug <slug> --pkgversion <ver> --file <sbom.json>")
@@ -1075,7 +1077,7 @@ func runPkgPublishSbom(slug string, version string, sbomFile string) {
 
 	publishURL := fmt.Sprintf("%s/api/packages/%s/%s/sbom", strings.TrimSuffix(config.PortalBaseUrl, "/"), slug, version)
 
-	req, err := http.NewRequest("POST", publishURL, bytes.NewBuffer(data))
+	req, err := http.NewRequest(http.MethodPost, publishURL, bytes.NewBuffer(data))
 	if err != nil {
 		msg.Die("❌ Failed to create HTTP request: %s", err)
 	}
@@ -1101,7 +1103,7 @@ func runPkgPublishSbom(slug string, version string, sbomFile string) {
 	msg.Info("SBOM successfully uploaded and published to the portal.")
 }
 
-// runPkgSpec scaffolds a starter pubpascal.json manifest file
+// runPkgSpec scaffolds a starter pubpascal.json manifest file.
 func runPkgSpec(id string, version string) {
 	if id == "" {
 		msg.Die("❌ Parameter --id is required to scaffold a manifest.")
@@ -1128,7 +1130,7 @@ func runPkgSpec(id string, version string) {
 	msg.Info("Scaffolded starter manifest in %s", fileName)
 }
 
-// runPkgPack packages the Delphi library for distribution
+// runPkgPack packages the Delphi library for distribution.
 func runPkgPack(specFile string, outputDir string) {
 	msg.Info("Packaging Delphi library based on manifest: %s", specFile)
 	// Read manifest
@@ -1168,7 +1170,7 @@ func runPkgPack(specFile string, outputDir string) {
 	msg.Info("Package bundle successfully created: %s", bundleFile)
 }
 
-// runPortalLogin handles the PubPascal portal login flow and saves the token
+// runPortalLogin handles the PubPascal portal login flow and saves the token.
 func runPortalLogin(token string, args []string) {
 	if token == "" && len(args) > 0 {
 		token = strings.TrimSpace(args[0])

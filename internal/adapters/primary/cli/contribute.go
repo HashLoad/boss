@@ -83,7 +83,7 @@ func handleForkSetupFlow(packageSlug string, pkgDir string, config *PubPascalCon
 		"packageSlug": packageSlug,
 	})
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		msg.Die("❌ Failed to create request: %s", err)
 	}
@@ -209,7 +209,7 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 		"body":        body,
 	})
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		msg.Die("❌ Failed to create request: %s", err)
 	}
@@ -244,7 +244,7 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 	msg.Info("🔗 Access your PR here: %s", res.PrUrl)
 }
 
-// Helper to run git commands
+// Helper to run git commands.
 func runGitCmd(dir string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
@@ -253,12 +253,12 @@ func runGitCmd(dir string, args ...string) (string, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("%s: %s", err, stderr.String())
+		return "", fmt.Errorf("%w: %s", err, stderr.String())
 	}
 	return strings.TrimSpace(stdout.String()), nil
 }
 
-// Helper to check if a git remote exists
+// Helper to check if a git remote exists.
 func remoteExists(dir string, remoteName string) bool {
 	out, err := runGitCmd(dir, "remote")
 	if err != nil {
@@ -273,7 +273,7 @@ func remoteExists(dir string, remoteName string) bool {
 	return false
 }
 
-// Helper to get prefix provider
+// Helper to get prefix provider.
 func depPrefix(repo string) string {
 	dep := domain.Dependency{Repository: repo}
 	return dep.GetURLPrefix()

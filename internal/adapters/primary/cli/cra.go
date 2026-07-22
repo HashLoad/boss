@@ -23,7 +23,7 @@ const (
 
 var securityEmail string
 
-// craCmdRegister registers the cra commands under the boss CLI root
+// craCmdRegister registers the cra commands under the boss CLI root.
 func craCmdRegister(root *cobra.Command) {
 	var craCmd = &cobra.Command{
 		Use:   "cra",
@@ -50,7 +50,7 @@ Run without arguments to perform a local compliance check, or use 'cra init' to 
 	root.AddCommand(craCmd)
 }
 
-// runCraCheck performs a local diagnostic of the project against CRA/Portal signals
+// runCraCheck performs a local diagnostic of the project against CRA/Portal signals.
 func runCraCheck() {
 	msg.Info("🔍 Diagnosing Cyber Resilience Act (CRA) Compliance...\n")
 
@@ -96,7 +96,7 @@ func runCraCheck() {
 	}
 }
 
-// runCraInit runs the interactive wizard to generate compliance files
+// runCraInit runs the interactive wizard to generate compliance files.
 func runCraInit() {
 	msg.Info("🚀 Cyber Resilience Act (CRA) Compliance Wizard\n")
 
