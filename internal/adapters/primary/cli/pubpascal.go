@@ -50,6 +50,11 @@ const (
 
 	// subCmdNameUpdate is the workspace sub-command that fast-forwards repos.
 	subCmdNameUpdate = "update"
+
+	// sbomFormatCycloneDx and sbomFormatSpdx are the only values accepted by
+	// 'boss sbom --format'.
+	sbomFormatCycloneDx = "cyclonedx"
+	sbomFormatSpdx      = "spdx"
 )
 
 // bossManifest mirrors the subset of boss.json needed to build an SBOM.
@@ -270,7 +275,8 @@ func pkgCmdRegister(root *cobra.Command) {
 	}
 
 	sbomCmd.Flags().StringVar(&projectFile, "project", "", "Path to the Delphi .dproj file")
-	sbomCmd.Flags().StringVar(&format, "format", "cyclonedx", "SBOM format (cyclonedx or spdx)")
+	sbomCmd.Flags().StringVar(&format, "format", sbomFormatCycloneDx,
+		fmt.Sprintf("SBOM format (%s or %s)", sbomFormatCycloneDx, sbomFormatSpdx))
 	sbomCmd.Flags().StringVar(&sbomOutputDir, "output", "./sbom", "Directory to write the SBOM to")
 
 	var specID string
@@ -893,6 +899,15 @@ func runWorkspacePush(ctx context.Context) {
 
 // runPkgSbom generates a CycloneDX or SPDX SBOM for a Delphi project.
 func runPkgSbom(projectFile string, format string, outputDir string) {
+	// Any unknown value used to fall through to CycloneDX while the command
+	// announced the format the user asked for, so "--format spdxx" reported an
+	// SPDX run and wrote a CycloneDX document. Reject it instead.
+	normalizedFormat := strings.ToLower(strings.TrimSpace(format))
+	if normalizedFormat != sbomFormatCycloneDx && normalizedFormat != sbomFormatSpdx {
+		msg.Die("❌ Unsupported SBOM format %q. Supported formats: %s, %s.",
+			format, sbomFormatCycloneDx, sbomFormatSpdx)
+	}
+
 	if projectFile == "" {
 		// Try to find a .dproj file in the current directory
 		files, err := filepath.Glob("*.dproj")
@@ -902,7 +917,7 @@ func runPkgSbom(projectFile string, format string, outputDir string) {
 		projectFile = files[0]
 	}
 
-	msg.Info("Generating %s SBOM for Delphi project: %s", strings.ToUpper(format), projectFile)
+	msg.Info("Generating %s SBOM for Delphi project: %s", strings.ToUpper(normalizedFormat), projectFile)
 
 	// Since Boss already knows the dependencies of the project, we can generate a beautiful
 	// and highly conformant CycloneDX SBOM directly by parsing the project's boss.json and boss.lock!
@@ -931,7 +946,7 @@ func runPkgSbom(projectFile string, format string, outputDir string) {
 
 	projectName := strings.TrimSuffix(filepath.Base(projectFile), ".dproj")
 
-	if strings.ToLower(format) == "spdx" {
+	if normalizedFormat == sbomFormatSpdx {
 		generateSpdxSbom(projectName, manifest, components, outputDir)
 	} else {
 		generateCycloneDxSbom(projectName, manifest, components, outputDir)
