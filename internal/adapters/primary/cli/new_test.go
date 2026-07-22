@@ -40,7 +40,7 @@ func TestNewCommandRegistration(t *testing.T) {
 
 	typeFlag := newCmd.Flags().Lookup("type")
 	if typeFlag == nil {
-		t.Error("New command should have --type flag")
+		t.Fatal("New command should have --type flag")
 	}
 	if typeFlag.DefValue != "app" {
 		t.Errorf("New command --type flag default value should be 'app', got %s", typeFlag.DefValue)
@@ -56,14 +56,8 @@ func TestNewCommandRegistration(t *testing.T) {
 func TestDoCreateProject_App(t *testing.T) {
 	tempDir := t.TempDir()
 
-	// Redirect working directory
-	oldWd, err := os.Getwd()
-	if err == nil {
-		defer func() { _ = os.Chdir(oldWd) }()
-	}
-	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
+	// Redirect the working directory; t.Chdir restores it when the test ends.
+	t.Chdir(tempDir)
 
 	// Initialize package manager
 	fs := filesystem.NewOSFileSystem()
@@ -89,14 +83,14 @@ func TestDoCreateProject_App(t *testing.T) {
 	}
 
 	// Check boss.json
-	bossJsonPath := filepath.Join(projectPath, consts.FilePackage)
-	if _, err := os.Stat(bossJsonPath); os.IsNotExist(err) {
+	bossJSONPath := filepath.Join(projectPath, consts.FilePackage)
+	if _, err := os.Stat(bossJSONPath); os.IsNotExist(err) {
 		t.Fatal("boss.json was not created")
 	}
 
-	bossBytes, err := os.ReadFile(bossJsonPath)
-	if err != nil {
-		t.Fatalf("Failed to read boss.json: %v", err)
+	bossBytes, readErr := os.ReadFile(bossJSONPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read boss.json: %v", readErr)
 	}
 
 	var pkg domain.Package
@@ -120,9 +114,9 @@ func TestDoCreateProject_App(t *testing.T) {
 		t.Fatal(".dpr file was not created")
 	}
 
-	dprBytes, err := os.ReadFile(dprPath)
-	if err != nil {
-		t.Fatalf("Failed to read .dpr file: %v", err)
+	dprBytes, readErr := os.ReadFile(dprPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read .dpr file: %v", readErr)
 	}
 	dprContent := string(dprBytes)
 	if !strings.Contains(dprContent, "program "+projectName) {
@@ -135,9 +129,9 @@ func TestDoCreateProject_App(t *testing.T) {
 		t.Fatal(".dproj file was not created")
 	}
 
-	dprojBytes, err := os.ReadFile(dprojPath)
-	if err != nil {
-		t.Fatalf("Failed to read .dproj file: %v", err)
+	dprojBytes, readErr := os.ReadFile(dprojPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read .dproj file: %v", readErr)
 	}
 	dprojContent := string(dprojBytes)
 	if !strings.Contains(dprojContent, "<ProjectGuid>") {
@@ -152,14 +146,8 @@ func TestDoCreateProject_App(t *testing.T) {
 func TestDoCreateProject_Pkg(t *testing.T) {
 	tempDir := t.TempDir()
 
-	// Redirect working directory
-	oldWd, err := os.Getwd()
-	if err == nil {
-		defer func() { _ = os.Chdir(oldWd) }()
-	}
-	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
+	// Redirect the working directory; t.Chdir restores it when the test ends.
+	t.Chdir(tempDir)
 
 	// Initialize package manager
 	fs := filesystem.NewOSFileSystem()
@@ -182,9 +170,9 @@ func TestDoCreateProject_Pkg(t *testing.T) {
 		t.Fatal(".dpk file was not created")
 	}
 
-	dpkBytes, err := os.ReadFile(dpkPath)
-	if err != nil {
-		t.Fatalf("Failed to read .dpk file: %v", err)
+	dpkBytes, readErr := os.ReadFile(dpkPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read .dpk file: %v", readErr)
 	}
 	dpkContent := string(dpkBytes)
 	if !strings.Contains(dpkContent, "package "+projectName) {
@@ -197,9 +185,9 @@ func TestDoCreateProject_Pkg(t *testing.T) {
 		t.Fatal(".dproj file was not created")
 	}
 
-	dprojBytes, err := os.ReadFile(dprojPath)
-	if err != nil {
-		t.Fatalf("Failed to read .dproj file: %v", err)
+	dprojBytes, readErr := os.ReadFile(dprojPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read .dproj file: %v", readErr)
 	}
 	dprojContent := string(dprojBytes)
 	if !strings.Contains(dprojContent, "<AppType>Package</AppType>") {
@@ -211,14 +199,8 @@ func TestDoCreateProject_Pkg(t *testing.T) {
 func TestDoCreateProject_LazarusApp(t *testing.T) {
 	tempDir := t.TempDir()
 
-	// Redirect working directory
-	oldWd, err := os.Getwd()
-	if err == nil {
-		defer func() { _ = os.Chdir(oldWd) }()
-	}
-	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
+	// Redirect the working directory; t.Chdir restores it when the test ends.
+	t.Chdir(tempDir)
 
 	// Initialize package manager
 	fs := filesystem.NewOSFileSystem()
@@ -244,14 +226,14 @@ func TestDoCreateProject_LazarusApp(t *testing.T) {
 	}
 
 	// Check boss.json
-	bossJsonPath := filepath.Join(projectPath, consts.FilePackage)
-	if _, err := os.Stat(bossJsonPath); os.IsNotExist(err) {
+	bossJSONPath := filepath.Join(projectPath, consts.FilePackage)
+	if _, err := os.Stat(bossJSONPath); os.IsNotExist(err) {
 		t.Fatal("boss.json was not created")
 	}
 
-	bossBytes, err := os.ReadFile(bossJsonPath)
-	if err != nil {
-		t.Fatalf("Failed to read boss.json: %v", err)
+	bossBytes, readErr := os.ReadFile(bossJSONPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read boss.json: %v", readErr)
 	}
 
 	var pkg domain.Package
@@ -269,9 +251,9 @@ func TestDoCreateProject_LazarusApp(t *testing.T) {
 		t.Fatal(".lpr file was not created")
 	}
 
-	lprBytes, err := os.ReadFile(lprPath)
-	if err != nil {
-		t.Fatalf("Failed to read .lpr file: %v", err)
+	lprBytes, readErr := os.ReadFile(lprPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read .lpr file: %v", readErr)
 	}
 	lprContent := string(lprBytes)
 	if !strings.Contains(lprContent, "program "+projectName) {
@@ -284,9 +266,9 @@ func TestDoCreateProject_LazarusApp(t *testing.T) {
 		t.Fatal(".lpi file was not created")
 	}
 
-	lpiBytes, err := os.ReadFile(lpiPath)
-	if err != nil {
-		t.Fatalf("Failed to read .lpi file: %v", err)
+	lpiBytes, readErr := os.ReadFile(lpiPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read .lpi file: %v", readErr)
 	}
 	lpiContent := string(lpiBytes)
 	if !strings.Contains(lpiContent, "<ProjectOptions>") {
@@ -301,14 +283,8 @@ func TestDoCreateProject_LazarusApp(t *testing.T) {
 func TestDoCreateProject_LazarusPkg(t *testing.T) {
 	tempDir := t.TempDir()
 
-	// Redirect working directory
-	oldWd, err := os.Getwd()
-	if err == nil {
-		defer func() { _ = os.Chdir(oldWd) }()
-	}
-	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
+	// Redirect the working directory; t.Chdir restores it when the test ends.
+	t.Chdir(tempDir)
 
 	// Initialize package manager
 	fs := filesystem.NewOSFileSystem()
@@ -331,9 +307,9 @@ func TestDoCreateProject_LazarusPkg(t *testing.T) {
 		t.Fatal(".lpk file was not created")
 	}
 
-	lpkBytes, err := os.ReadFile(lpkPath)
-	if err != nil {
-		t.Fatalf("Failed to read .lpk file: %v", err)
+	lpkBytes, readErr := os.ReadFile(lpkPath)
+	if readErr != nil {
+		t.Fatalf("Failed to read .lpk file: %v", readErr)
 	}
 	lpkContent := string(lpkBytes)
 	if !strings.Contains(lpkContent, "<Package Version=\"5\">") {
