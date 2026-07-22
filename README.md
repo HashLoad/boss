@@ -4,6 +4,7 @@
 
 [![Go Report Card][goReportBadge]][goReportLink]
 [![GitHub release (latest by date)][latestReleaseBadge]](https://github.com/HashLoad/boss/releases/latest)
+[![SBOM Badge][sbomBadge]](https://www.pubpascal.dev)
 [![GitHub Release Date][releaseDateBadge]](https://github.com/HashLoad/boss/releases)
 [![GitHub repo size][repoSizeBadge]](https://github.com/HashLoad/boss/archive/refs/heads/main.zip)
 [![GitHub All Releases][totalDownloadsBadge]](https://github.com/HashLoad/boss/releases)
@@ -39,281 +40,250 @@ Or you can use the following the steps below:
 
 ## 📚 Available Commands
 
-### > Init
+This section documents all commands supported by the Boss CLI, grouped in the exact order they appear in `boss --help`.
 
-Initialize a new project and create a `boss.json` file. Add `-q` or `--quiet` to skip interactive prompts and use default values.
+---
 
-```shell
-boss init
-boss init -q
-boss init --quiet
-```
+### 1. Available Commands (Legacy Core)
 
-### > Install
+These are the classic dependency management commands inherited from the original Boss engine.
 
-Install one or more dependencies with real-time progress tracking:
-
-```shell
-boss install <dependency>
-```
-
-**Progress Tracking:** Boss displays progress for each dependency being installed:
-
-```
-⏳ horse                          Waiting...
-🧬 dataset-serialize              Cloning...
-🔍 jhonson                        Checking...
-🔥 redis-client                   Installing...
-📦 boss-core                      Installed
-```
-
-The dependency name is case insensitive. For example, `boss install horse` is the same as `boss install HORSE`.
-
-```shell
-boss install horse                        # HashLoad organization on GitHub
-boss install fake/horse                   # Fake organization on GitHub
-boss install gitlab.com/fake/horse        # Fake organization on GitLab
-boss install https://gitlab.com/fake/horse # Full URL
-```
-
-You can also specify the compiler version and platform:
-
+#### > config
+Manage configuration settings for Boss (e.g., Delphi paths, Git client settings, etc.):
 ```sh
-boss install --compiler=37.0 --platform=Win64
+# Set native Git client (recommended on Windows)
+boss config git mode native
+
+# Enable shallow cloning for faster dependency checkout
+boss config git shallow true
 ```
 
-> Aliases: i, add
-
-### > Uninstall
-
-Remove a dependency from the project:
-
-```sh
-boss uninstall <dependency>
-```
-
-> Aliases: remove, rm, r, un, unlink
-
-### > Update
-
-Update all installed dependencies to their latest compatible versions:
-
-```sh
-boss update
-```
-
-> Aliases: up
-
-### > Upgrade
-
-Upgrade the Boss CLI to the latest version. Add `--dev` to upgrade to the latest pre-release:
-
-```sh
-boss upgrade
-boss upgrade --dev
-```
-
-### > Dependencies
-
+#### > dependencies
 List all project dependencies in a tree format. Add `-v` to show version information:
-
-```shell
+```sh
 boss dependencies
 boss dependencies -v
 boss dependencies <package>
-boss dependencies <package> -v
+```
+> Aliases: `dep`, `ls`, `list`, `ll`, `la`, `dependency`
+
+#### > init
+Initialize a new, minimal project configuration in the current directory and create a `boss.json` file:
+```sh
+boss init
+boss init --quiet  # Skip interactive prompts
 ```
 
-> Aliases: dep, ls, list, ll, la, dependency
+#### > install
+Install one or more dependencies defined in the `boss.json` file or add a new dependency:
+```sh
+# Install dependencies from boss.json
+boss install
 
-### > Run
+# Add and install a new dependency
+boss install github.com/HashLoad/horse
+```
+> Aliases: `i`, `add`
 
-Execute a custom script defined in your `boss.json` file. Scripts are defined in the `scripts` section:
+#### > logout
+Remove saved credentials for a private repository or registry:
+```sh
+boss logout github.com/username
+```
 
+#### > uninstall
+Remove a dependency from the current project:
+```sh
+boss uninstall <dependency>
+```
+> Aliases: `remove`, `rm`, `r`, `un`, `unlink`
+
+#### > update
+Update all installed dependencies to their latest compatible versions:
+```sh
+boss update
+```
+> Aliases: `up`
+
+#### > upgrade
+Upgrade the Boss CLI client to the latest version:
+```sh
+boss upgrade
+boss upgrade --dev  # Upgrade to the latest pre-release
+```
+
+#### > version
+Show the Boss CLI version:
+```sh
+boss version
+boss --version
+```
+> Aliases: `v`
+
+---
+
+### 2. Available Commands (new)
+
+These commands add modern project creation, compiling, and script running capabilities to Boss.
+
+#### > new
+Generate a fully structured Delphi or Lazarus project template (skeleton) in the current directory:
+```sh
+boss new my_project
+boss new my_project --ide lazarus
+boss new my_package --type pkg --ide lazarus
+```
+
+#### > pkg
+Perform Delphi package manifest operations.
+* **`pkg spec`**: Scaffolds a starter `pubpascal.json` manifest file for the package:
+  ```sh
+  boss pkg spec --id my-package --pkgversion 1.0.0
+  ```
+
+#### > run
+Execute a custom shell script defined in the `scripts` section of your `boss.json` file:
 ```json
 {
-  "name": "my-project",
   "scripts": {
-    "build": "msbuild MyProject.dproj",
-    "test": "MyProject.exe --test",
+    "build": "msbuild MyProject.dproj /p:Config=Release",
     "clean": "del /s *.dcu"
   }
 }
 ```
-
 ```sh
 boss run build
-boss run test
 boss run clean
 ```
 
-### > Login
+---
 
-Register credentials for a repository. Useful for private repositories:
+### 3. Available Commands (pubpascal)
 
+These commands integrate your local development workflow with the PubPascal Portal.
+
+#### > login
+Authenticate your local environment with the PubPascal portal using a Personal Access Token (PAT):
 ```sh
-boss login <repo>
-boss login <repo> -u UserName -p Password
-boss login <repo> -s -k PrivateKey -p PassPhrase  # SSH authentication
+# Authenticate using a personal access token
+boss login --token <pat>
 ```
+#### > contribute
+Contribute to a third-party package by automating repository forking and Pull Request creation.
+* **Fork & Setup**: Automatically forks the upstream package and configures your local git remotes (`origin` for your fork and `upstream` for the original):
+  ```sh
+  boss contribute github.com/HashLoad/horse
+  ```
+* **Submit Pull Request**: Once your commits are ready, push changes and submit a Pull Request to the original repository with one command:
+  ```sh
+  boss contribute github.com/HashLoad/horse --pr --title "Fix memory leak" --body "..."
+  ```
 
-> Aliases: adduser, add-user
+#### > workspace
+Manage multi-repository PubPascal workspaces locally.
+* **`workspace clone`**: Clones a workspace and all its member repositories, checking out the reference each one is pinned to:
+  ```sh
+  boss workspace clone <workspace-id>
+  boss workspace clone <workspace-id> --codename my-branch
+  ```
+* **`workspace status`**: Show Git status (ahead/behind/dirty) for all repositories in the workspace:
+  ```sh
+  boss workspace status
+  ```
+* **`workspace update`**: Fast-forward each repository on its current branch:
+  ```sh
+  boss workspace update
+  ```
+* **`workspace push`**: Push committed changes for each repository that has an upstream branch:
+  ```sh
+  boss workspace push
+  ```
 
-### > Logout
+---
 
-Remove saved credentials for a repository:
+### 4. Cyber Resilience Act (CRA) & SBOM
 
+These native commands help you achieve 100% Cyber Resilience Act (CRA) compliance.
+
+#### > cra
+Check your project's CRA compliance status or initialize required files automatically.
+* **`cra` (Diagnose)**: Scan the local project for required CRA signals (Security Policy, SBOM). It exits with status `1` when a signal is missing, so it can be used as a CI gate:
+  ```sh
+  boss cra
+  ```
+* **`cra init` (Wizard)**: Start the interactive wizard to generate the `SECURITY.md` policy and `sbom.cdx.json` SBOM:
+  ```sh
+  boss cra init
+  boss cra init --email security@yourcompany.com  # Silent/CI mode
+  ```
+
+#### > sbom
+Generate a standard CycloneDX or SPDX Software Bill of Materials (SBOM) for your Delphi project:
 ```sh
-boss logout <repo>
+# Generate CycloneDX SBOM (outputs to ./sbom/<ProjectName>.cdx.json)
+boss sbom
+
+# Specify custom project file and output path
+boss sbom --project ./src/MyProj.dproj --output ./custom-sbom-folder
+
+# Generate in SPDX format
+boss sbom --format spdx
 ```
 
-### > Version
+---
 
-Show the Boss CLI version:
+### 5. Additional Commands
 
-```shell
-boss version
-boss v
-boss -v
-boss --version
-```
-
-> Aliases: v
-
-## Global Flags
-
-### > Global (-g)
-
-Use global environment for installation. Packages installed globally are available system-wide:
-
-```sh
-boss install -g <dependency>
-boss --global install <dependency>
-```
-
-### > Debug (-d)
-
-Enable debug mode to see detailed output:
-
-```sh
-boss install --debug
-boss -d install
-```
-
-### > Help (-h)
-
-Show help for any command:
-
-```sh
-boss --help
-boss <command> --help
-```
-
-## Configuration
-
-### > Cache
-
-Manage the Boss cache. Remove all cached modules to free up disk space:
-
+#### > cache
+Manage the Boss local cache to clear downloaded modules and free up disk space:
 ```sh
 boss config cache rm
 ```
+> Aliases: `purge`, `clean`
 
-> Aliases: purge, clean
+#### > completion
+Generate the autocompletion script for the specified shell (bash, zsh, fish, or powershell):
+```sh
+boss completion powershell | Out-String | Invoke-Expression
+```
+
+---
+
+## Global Flags
+
+* **`-g, --global`**: Use global environment for installation (packages are available system-wide):
+  ```sh
+  boss install -g <dependency>
+  ```
+* **`-d, --debug`**: Enable debug mode to see detailed output:
+  ```sh
+  boss install -d
+  ```
+* **`-h, --help`**: Show help for any command:
+  ```sh
+  boss --help
+  boss install --help
+  ```
+* **`-v, --version`**: Show CLI client version:
+  ```sh
+  boss --version
+  ```
+
+## Configuration
 
 ### > Delphi Version
-
-You can configure which Delphi version BOSS should use for compilation. This is useful when you have multiple Delphi versions installed.
-
-#### List available versions
-
-Lists all detected Delphi installations (32-bit and 64-bit) with their indexes.
-
+Configure which Delphi version Boss should use for compiling packages:
 ```sh
+# List all detected Delphi installations
 boss config delphi list
-```
 
-#### Select a version
-
-Selects a specific Delphi version to use globally. You can use the index from the list command, the version number, or the version with architecture.
-
-```sh
+# Select a Delphi version to use globally
 boss config delphi use <index>
-# or
-boss config delphi use <version>
-# or
-boss config delphi use <version>-<arch>
-```
-
-Example:
-```sh
-boss config delphi use 0
 boss config delphi use 37.0
 boss config delphi use 37.0-Win64
 ```
 
-### > Git Client
 
-You can configure which Git client BOSS should use.
-
-- `embedded`: Uses the built-in go-git client (default).
-- `native`: Uses the system's installed git client (git.exe).
-
-Using `native` is recommended on Windows if you need support for `core.autocrlf` (automatic line ending conversion).
-
-```sh
-boss config git mode native
-# or
-boss config git mode embedded
-```
-
-#### Shallow Clone
-
-You can enable shallow cloning to significantly speed up dependency downloads. Shallow clones only fetch the latest commit without the full git history, reducing download size dramatically (e.g., from 127 MB to <1 MB for large repositories).
-
-```sh
-# Enable shallow clone (faster, recommended for CI/CD)
-boss config git shallow true
-
-# Disable shallow clone (full history)
-boss config git shallow false
-```
-
-**Note:** Shallow clone is disabled by default to maintain compatibility. When enabled, you won't have access to the full git history of dependencies.
-
-You can also temporarily enable shallow clone using an environment variable:
-
-```sh
-# Windows
-set BOSS_GIT_SHALLOW=1
-boss install
-
-# Linux/macOS
-BOSS_GIT_SHALLOW=1 boss install
-```
-
-### > Project Toolchain
-
-You can also specify the required compiler version and platform in your project's `boss.json` file. This ensures that everyone working on the project uses the correct toolchain.
-
-Add a `toolchain` section to your `boss.json`:
-
-```json
-{
-  "name": "my-project",
-  "version": "1.0.0",
-  "toolchain": {
-    "compiler": "37.0",
-    "platform": "Win64"
-  }
-}
-```
-
-Supported fields in `toolchain`:
-- `compiler`: The compiler version (e.g., "37.0").
-- `platform`: The target platform ("Win32" or "Win64").
-- `path`: Explicit path to the compiler (optional).
-- `strict`: If true, fails if the exact version is not found (optional).
 
 ## Samples
 
@@ -491,14 +461,17 @@ Here's a comprehensive example showing all available fields:
   - `path`: Explicit path to the compiler (optional)
   - `strict`: If `true`, fails if the exact version is not found (default: `false`)
 
-### Minimal boss.json
+### Minimal boss.json (Classic Format)
 
-The minimal valid `boss.json` file:
+A basic, classic `boss.json` showing that Boss remains fully backwards-compatible and works out of the box with just dependency definitions:
 
 ```json
 {
   "name": "my-project",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "github.com/HashLoad/horse": "^3.0.0"
+  }
 }
 ```
 
@@ -583,3 +556,4 @@ boss init -q
 [telegramBadge]: https://img.shields.io/badge/telegram-join%20channel-7289DA?style=flat-square
 [telegramLink]: https://t.me/hashload
 [repoStarsBadge]: https://img.shields.io/github/stars/hashload/boss?style=social
+[sbomBadge]: https://img.shields.io/badge/SBOM-compliant-brightgreen
