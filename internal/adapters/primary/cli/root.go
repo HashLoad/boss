@@ -22,14 +22,13 @@ const (
 // Command names, shared between each command registration and the grouping
 // pass in applyCommandGroups, which matches commands by name.
 const (
-	cmdNameNew         = "new"
-	cmdNameRun         = "run"
-	cmdNameLogin       = "login"
-	cmdNameWorkspace   = "workspace"
-	cmdNameContribute  = "contribute"
-	cmdNameCRA         = "cra"
-	cmdNamePublishSbom = "publish-sbom"
-	cmdNameVersion     = "version"
+	cmdNameNew        = "new"
+	cmdNameRun        = "run"
+	cmdNameLogin      = "login"
+	cmdNameWorkspace  = "workspace"
+	cmdNameContribute = "contribute"
+	cmdNameCRA        = "cra"
+	cmdNameVersion    = "version"
 )
 
 // Identifiers of the help groups printed by 'boss --help'.
@@ -101,19 +100,22 @@ func Execute() error {
 
 // isHelpOrVersionInvocation reports whether boss was called only to print help
 // or the version, in which case the full environment setup can be skipped.
+//
+// Only the first argument is inspected. Scanning every argument also matched
+// the flags of sub-commands -- "boss dependencies -v" asks for the version of
+// each dependency, not for the version of the CLI -- and those runs silently
+// skipped setup.Initialize, and with it the migrations and InitializePath.
 func isHelpOrVersionInvocation(args []string) bool {
 	if len(args) <= 1 {
 		return true
 	}
 
-	for _, arg := range args[1:] {
-		switch arg {
-		case "help", "-h", "--help", cmdNameVersion, "-v", "--version":
-			return true
-		}
+	switch args[1] {
+	case "help", "-h", "--help", cmdNameVersion, "-v", "--version":
+		return true
+	default:
+		return false
 	}
-
-	return false
 }
 
 // registerCommands wires every boss command into the root command.
@@ -155,7 +157,7 @@ func applyCommandGroups(root *cobra.Command) {
 			cmd.GroupID = groupIDProject
 		case cmdNameLogin, cmdNameWorkspace, cmdNameContribute:
 			cmd.GroupID = groupIDPubPascal
-		case cmdNameCRA, sbomBaseName, cmdNamePublishSbom:
+		case cmdNameCRA, sbomBaseName:
 			cmd.GroupID = groupIDCRA
 		default:
 			cmd.GroupID = groupIDLegacy

@@ -85,7 +85,7 @@ func handleForkSetupFlow(ctx context.Context, packageSlug string, pkgDir string,
 	msg.Info("🍴 Requesting Fork from portal for %s...", packageSlug)
 
 	// Call Portal API to fork
-	url := fmt.Sprintf("%s/api/packages/contribute/fork", config.PortalBaseURL)
+	url := fmt.Sprintf("%s/api/packages/contribute/fork", strings.TrimSuffix(config.PortalBaseURL, "/"))
 	requestBody, _ := json.Marshal(map[string]string{
 		"packageSlug": packageSlug,
 	})
@@ -104,11 +104,12 @@ func handleForkSetupFlow(ctx context.Context, packageSlug string, pkgDir string,
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	bodyBytes, _ := io.ReadAll(resp.Body)
+	bodyBytes, err := readPortalBody(resp)
+	if err != nil {
+		msg.Die("❌ Failed to read portal response: %s", err)
+	}
 	if resp.StatusCode != http.StatusOK {
-		var errRes map[string]string
-		_ = json.Unmarshal(bodyBytes, &errRes)
-		msg.Die("❌ Fork failed: %s", errRes["error"])
+		msg.Die("❌ Fork failed (HTTP %d): %s", resp.StatusCode, portalErrorMessage(bodyBytes))
 	}
 
 	var res struct {
@@ -226,7 +227,7 @@ func submitPullRequest(
 	body string,
 ) {
 	// Call Portal API to create PR
-	url := fmt.Sprintf("%s/api/packages/contribute/pr", config.PortalBaseURL)
+	url := fmt.Sprintf("%s/api/packages/contribute/pr", strings.TrimSuffix(config.PortalBaseURL, "/"))
 	requestBody, _ := json.Marshal(map[string]string{
 		"packageSlug": packageSlug,
 		"branch":      branch,
@@ -248,11 +249,13 @@ func submitPullRequest(
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	bodyBytes, _ := io.ReadAll(resp.Body)
+	bodyBytes, err := readPortalBody(resp)
+	if err != nil {
+		msg.Die("❌ Failed to read portal response: %s", err)
+	}
 	if resp.StatusCode != http.StatusOK {
-		var errRes map[string]string
-		_ = json.Unmarshal(bodyBytes, &errRes)
-		msg.Die("❌ Pull Request creation failed: %s", errRes["error"])
+		msg.Die("❌ Pull Request creation failed (HTTP %d): %s",
+			resp.StatusCode, portalErrorMessage(bodyBytes))
 	}
 
 	var res struct {
@@ -267,6 +270,44 @@ func submitPullRequest(
 
 	msg.Info("🎉 Pull Request successfully created.")
 	msg.Info("🔗 Access your PR here: %s", res.PrURL)
+}
+
+// maxPortalResponseBytes caps how much of a portal response is read into
+// memory. The payloads this command consumes are a handful of fields; anything
+// larger is a misbehaving or hostile endpoint, and io.ReadAll would happily
+// keep allocating for it.
+const maxPortalResponseBytes = 1 << 20 // 1 MiB
+
+// readPortalBody reads a bounded portal response body.
+func readPortalBody(resp *http.Response) ([]byte, error) {
+	return io.ReadAll(io.LimitReader(resp.Body, maxPortalResponseBytes))
+}
+
+// portalErrorMessage extracts the message of a portal error response.
+//
+// Decoding into map[string]string used to fail as a whole as soon as any value
+// of the object was not a string -- a status code, a details object -- and the
+// user was shown an empty reason. Only the field that matters is decoded now,
+// and an unexpected payload falls back to the raw body instead of to nothing.
+func portalErrorMessage(body []byte) string {
+	var errRes struct {
+		Error   string `json:"error"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(body, &errRes); err == nil {
+		if errRes.Error != "" {
+			return errRes.Error
+		}
+		if errRes.Message != "" {
+			return errRes.Message
+		}
+	}
+
+	if raw := strings.TrimSpace(string(body)); raw != "" {
+		return raw
+	}
+
+	return "the portal returned no details"
 }
 
 // Helper to run git commands.
