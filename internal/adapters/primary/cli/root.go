@@ -14,6 +14,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	appName        = "boss"
+	appDescription = "Dependency Manager for Delphi"
+)
+
 // Execute executes the root command.
 func Execute() error {
 	var versionPrint bool
@@ -21,9 +26,9 @@ func Execute() error {
 	var debug bool
 
 	var root = &cobra.Command{
-		Use:   "boss",
-		Short: "Dependency Manager for Delphi",
-		Long:  "Dependency Manager for Delphi",
+		Use:   appName,
+		Short: appDescription,
+		Long:  appDescription,
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			if debug {
 				msg.LogLevel(msg.DEBUG)
@@ -85,11 +90,11 @@ func Execute() error {
 	}
 	newGroup := &cobra.Group{
 		ID:    "new",
-		Title: "Available Commands (new):",
+		Title: "Project & Packaging:",
 	}
 	pubpascalGroup := &cobra.Group{
 		ID:    "pubpascal",
-		Title: "Available Commands (pubpascal):",
+		Title: "PubPascal Portal:",
 	}
 	craGroup := &cobra.Group{
 		ID:    "cra",
@@ -98,13 +103,18 @@ func Execute() error {
 
 	root.AddGroup(legacyGroup, newGroup, pubpascalGroup, craGroup)
 
+	// Registered before the grouping pass below: any command added afterwards
+	// keeps an empty GroupID and cobra prints it in a stray "Additional
+	// Commands" block instead of one of the groups above.
+	config.RegisterCmd(root)
+
 	for _, cmd := range root.Commands() {
 		switch cmd.Name() {
 		case "new", "pkg", "run":
 			cmd.GroupID = "new"
 		case "login", "workspace", "contribute":
 			cmd.GroupID = "pubpascal"
-		case "cra", "sbom", "scan", "publish-sbom":
+		case "cra", "sbom", "publish-sbom":
 			cmd.GroupID = "cra"
 		default:
 			cmd.GroupID = "legacy"
@@ -117,7 +127,6 @@ func Execute() error {
 		}
 	}
 
-	config.RegisterCmd(root)
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}

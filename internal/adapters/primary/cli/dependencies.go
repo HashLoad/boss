@@ -147,7 +147,7 @@ func printSingleDependency(
 
 // isOutdated checks if the dependency is outdated.
 func isOutdated(dependency domain.Dependency, version string) (dependencyStatus, string) {
-	if err := installer.GetDependency(dependency); err != nil {
+	if err := installer.GetDependency(dependency); err != nil { //nolint:staticcheck // TODO: migrate to DependencyManager
 		return updated, ""
 	}
 	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())

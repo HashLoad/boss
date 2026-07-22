@@ -2,10 +2,11 @@ package cli
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -190,7 +191,10 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 	}
 
 	msg.Info("🚀 Pushing branch '%s' to your fork (origin)...", branch)
-	if _, err := runGitCmd(pkgDir, "push", "origin", branch, "--force"); err != nil {
+	// --force-with-lease refuses the push when the remote moved since the last
+	// fetch, so a contribution can no longer overwrite work already published
+	// on the same branch. A plain --force gives no such protection.
+	if _, err := runGitCmd(pkgDir, "push", "origin", branch, "--force-with-lease"); err != nil {
 		msg.Die("❌ Failed to push branch: %s", err)
 	}
 
@@ -275,7 +279,15 @@ func depPrefix(repo string) string {
 	return dep.GetURLPrefix()
 }
 
+// generateBranchName builds a branch name unlikely to collide with an earlier
+// contribution. The previous version drew from only 10,000 values, so two
+// contributions could land on the same branch -- which, combined with a forced
+// push, silently replaced the earlier one.
 func generateBranchName() string {
-	rand.Seed(time.Now().UnixNano())
-	return fmt.Sprintf("pubpascal/patch-%d", rand.Intn(10000))
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		msg.Die("❌ Failed to generate branch name: %s", err)
+	}
+
+	return fmt.Sprintf("pubpascal/patch-%s", hex.EncodeToString(b[:]))
 }

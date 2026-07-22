@@ -15,10 +15,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	defaultPackageVersion = "1.0.0"
+	projectTypeApp        = "app"
+	projectTypePkg        = "pkg"
+)
+
 var (
-	projectType string
-	targetIDE   string
-	quietNew    bool
+	projectType string //nolint:gochecknoglobals // cobra flag variable
+	targetIDE   string //nolint:gochecknoglobals // cobra flag variable
+	quietNew    bool   //nolint:gochecknoglobals // cobra flag variable
 )
 
 const dprTemplate = `program %s;
@@ -244,7 +250,7 @@ func newCmdRegister(root *cobra.Command) {
 		},
 	}
 
-	newCmd.Flags().StringVarP(&projectType, "type", "t", "app", "type of project to generate (app or pkg)")
+	newCmd.Flags().StringVarP(&projectType, "type", "t", projectTypeApp, "type of project to generate (app or pkg)")
 	newCmd.Flags().StringVarP(&targetIDE, "ide", "i", "", "target IDE to generate for (delphi or lazarus)")
 	newCmd.Flags().BoolVarP(&quietNew, "quiet", "q", false, "without asking questions")
 
@@ -262,7 +268,7 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 	}
 
 	pType = strings.ToLower(strings.TrimSpace(pType))
-	if pType != "app" && pType != "pkg" {
+	if pType != projectTypeApp && pType != projectTypePkg {
 		msg.Die("❌ Invalid project type. Supported types: 'app' (default) or 'pkg'.")
 	}
 
@@ -308,7 +314,7 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 	// Save boss.json
 	packageData := domain.NewPackage()
 	packageData.Name = name
-	packageData.Version = "1.0.0"
+	packageData.Version = defaultPackageVersion
 	packageData.MainSrc = "src"
 
 	packageJsonPath := filepath.Join(projectDir, consts.FilePackage)
@@ -318,7 +324,7 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 
 	// Write files based on the chosen IDE
 	if ide == "lazarus" {
-		if pType == "app" {
+		if pType == projectTypeApp {
 			lprPath := filepath.Join(projectDir, name+".lpr")
 			lprContent := fmt.Sprintf(lprTemplate, name, name)
 			if err := os.WriteFile(lprPath, []byte(lprContent), 0644); err != nil {
@@ -341,7 +347,7 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 		// Write Delphi files
 		guid := generateGUID()
 		var dprojContent string
-		if pType == "app" {
+		if pType == projectTypeApp {
 			dprPath := filepath.Join(projectDir, name+".dpr")
 			dprContent := fmt.Sprintf(dprTemplate, name, name)
 			if err := os.WriteFile(dprPath, []byte(dprContent), 0644); err != nil {

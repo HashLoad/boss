@@ -127,7 +127,9 @@ func SavePubPascalConfig(config *PubPascalConfig) error {
 	configPath := GetPubPascalConfigPath()
 	dir := filepath.Dir(configPath)
 
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	// The file holds an authentication token: keep it out of reach of other
+	// accounts on the machine.
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 
@@ -136,7 +138,7 @@ func SavePubPascalConfig(config *PubPascalConfig) error {
 		return err
 	}
 
-	return os.WriteFile(configPath, data, 0644)
+	return os.WriteFile(configPath, data, 0600)
 }
 
 // pubpascalCmdRegister registers the workspace and pkg commands under the boss CLI
@@ -1168,19 +1170,15 @@ func runPkgPack(specFile string, outputDir string) {
 
 // runPortalLogin handles the PubPascal portal login flow and saves the token
 func runPortalLogin(token string, args []string) {
-	if token == "" {
-		if len(args) > 0 && strings.HasPrefix(args[0], "pdv_") {
-			token = args[0]
-		} else {
-			// Prompt interactively for the token
-			fmt.Println("Enter your PubPascal manifest:read token (pdv_...):")
-			fmt.Scanln(&token)
-			token = strings.TrimSpace(token)
-		}
+	if token == "" && len(args) > 0 {
+		token = strings.TrimSpace(args[0])
 	}
 
-	if token == "" || !strings.HasPrefix(token, "pdv_") {
-		msg.Die("❌ Error: invalid or missing token. Token must start with 'pdv_'.")
+	// The portal decides whether a token is valid. Enforcing a prefix here
+	// would break every existing client the day the portal changes its token
+	// format, so only the empty case is rejected locally.
+	if token == "" {
+		msg.Die("❌ Error: missing token. Pass it with 'boss login --token <token>'.")
 	}
 
 	config, err := LoadPubPascalConfig()
