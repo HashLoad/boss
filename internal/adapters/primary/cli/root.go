@@ -14,6 +14,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	appName        = "boss"
+	appDescription = "Dependency Manager for Delphi"
+)
+
+// Command names, shared between each command registration and the grouping
+// pass in applyCommandGroups, which matches commands by name.
+const (
+	cmdNameNew         = "new"
+	cmdNameRun         = "run"
+	cmdNameLogin       = "login"
+	cmdNameWorkspace   = "workspace"
+	cmdNameContribute  = "contribute"
+	cmdNameCRA         = "cra"
+	cmdNamePublishSbom = "publish-sbom"
+	cmdNameVersion     = "version"
+)
+
+// Identifiers of the help groups printed by 'boss --help'.
+const (
+	groupIDLegacy    = "legacy"
+	groupIDProject   = "new"
+	groupIDPubPascal = "pubpascal"
+	groupIDCRA       = "cra"
+)
+
+// flagNameVersion is the long form of the --version flag.
+const flagNameVersion = "version"
+
 // Execute executes the root command.
 func Execute() error {
 	var versionPrint bool
@@ -21,9 +50,9 @@ func Execute() error {
 	var debug bool
 
 	var root = &cobra.Command{
-		Use:   "boss",
-		Short: "Dependency Manager for Delphi",
-		Long:  "Dependency Manager for Delphi",
+		Use:   appName,
+		Short: appDescription,
+		Long:  appDescription,
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			if debug {
 				msg.LogLevel(msg.DEBUG)
@@ -44,19 +73,9 @@ func Execute() error {
 
 	root.PersistentFlags().BoolVarP(&global, "global", "g", false, "global environment")
 	root.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug")
-	root.Flags().BoolVarP(&versionPrint, "version", "v", false, "show cli version")
+	root.Flags().BoolVarP(&versionPrint, flagNameVersion, "v", false, "show cli version")
 
-	isHelpOrVersion := false
-	if len(os.Args) <= 1 {
-		isHelpOrVersion = true
-	} else {
-		for _, arg := range os.Args[1:] {
-			if arg == "help" || arg == "-h" || arg == "--help" || arg == "version" || arg == "-v" || arg == "--version" {
-				isHelpOrVersion = true
-				break
-			}
-		}
-	}
+	isHelpOrVersion := isHelpOrVersionInvocation(os.Args)
 
 	if isHelpOrVersion {
 		setup.InitializeMinimal()
@@ -64,6 +83,41 @@ func Execute() error {
 		setup.Initialize()
 	}
 
+	registerCommands(root)
+	applyCommandGroups(root)
+
+	if !isHelpOrVersion {
+		if err := gc.RunGC(false); err != nil {
+			return err
+		}
+	}
+
+	if err := root.Execute(); err != nil {
+		os.Exit(1)
+	}
+
+	return nil
+}
+
+// isHelpOrVersionInvocation reports whether boss was called only to print help
+// or the version, in which case the full environment setup can be skipped.
+func isHelpOrVersionInvocation(args []string) bool {
+	if len(args) <= 1 {
+		return true
+	}
+
+	for _, arg := range args[1:] {
+		switch arg {
+		case "help", "-h", "--help", cmdNameVersion, "-v", "--version":
+			return true
+		}
+	}
+
+	return false
+}
+
+// registerCommands wires every boss command into the root command.
+func registerCommands(root *cobra.Command) {
 	config.RegisterConfigCommand(root)
 	initCmdRegister(root)
 	newCmdRegister(root)
@@ -79,48 +133,32 @@ func Execute() error {
 	craCmdRegister(root)
 	contributeCmdRegister(root)
 
-	legacyGroup := &cobra.Group{
-		ID:    "legacy",
-		Title: "Available Commands:",
-	}
-	newGroup := &cobra.Group{
-		ID:    "new",
-		Title: "Available Commands (new):",
-	}
-	pubpascalGroup := &cobra.Group{
-		ID:    "pubpascal",
-		Title: "Available Commands (pubpascal):",
-	}
-	craGroup := &cobra.Group{
-		ID:    "cra",
-		Title: "Cyber Resilience Act (CRA) & SBOM:",
-	}
+	// Registered before the grouping pass in applyCommandGroups: any command
+	// added afterwards keeps an empty GroupID and cobra prints it in a stray
+	// "Additional Commands" block instead of one of the groups.
+	config.RegisterCmd(root)
+}
 
-	root.AddGroup(legacyGroup, newGroup, pubpascalGroup, craGroup)
+// applyCommandGroups declares the help groups and assigns every registered
+// command to one of them.
+func applyCommandGroups(root *cobra.Command) {
+	root.AddGroup(
+		&cobra.Group{ID: groupIDLegacy, Title: "Available Commands:"},
+		&cobra.Group{ID: groupIDProject, Title: "Project & Packaging:"},
+		&cobra.Group{ID: groupIDPubPascal, Title: "PubPascal Portal:"},
+		&cobra.Group{ID: groupIDCRA, Title: "Cyber Resilience Act (CRA) & SBOM:"},
+	)
 
 	for _, cmd := range root.Commands() {
 		switch cmd.Name() {
-		case "new", "pkg", "run":
-			cmd.GroupID = "new"
-		case "login", "workspace", "contribute":
-			cmd.GroupID = "pubpascal"
-		case "cra", "sbom", "scan", "publish-sbom":
-			cmd.GroupID = "cra"
+		case cmdNameNew, projectTypePkg, cmdNameRun:
+			cmd.GroupID = groupIDProject
+		case cmdNameLogin, cmdNameWorkspace, cmdNameContribute:
+			cmd.GroupID = groupIDPubPascal
+		case cmdNameCRA, sbomBaseName, cmdNamePublishSbom:
+			cmd.GroupID = groupIDCRA
 		default:
-			cmd.GroupID = "legacy"
+			cmd.GroupID = groupIDLegacy
 		}
 	}
-
-	if !isHelpOrVersion {
-		if err := gc.RunGC(false); err != nil {
-			return err
-		}
-	}
-
-	config.RegisterCmd(root)
-	if err := root.Execute(); err != nil {
-		os.Exit(1)
-	}
-
-	return nil
 }

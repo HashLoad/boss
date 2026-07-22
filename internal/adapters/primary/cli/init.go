@@ -55,12 +55,12 @@ func doInitialization(quiet bool) {
 
 	if quiet {
 		packageData.Name = folderName
-		packageData.Version = "1.0.0"
+		packageData.Version = defaultPackageVersion
 		packageData.MainSrc = "./src"
 	} else {
 		packageData.Name = getParamOrDef("Package name ("+folderName+")", folderName)
 		packageData.Homepage = getParamOrDef("Homepage", "")
-		packageData.Version = getParamOrDef("Version (1.0.0)", "1.0.0")
+		packageData.Version = getParamOrDef("Version ("+defaultPackageVersion+")", defaultPackageVersion)
 		packageData.Description = getParamOrDef("Description", "")
 		packageData.MainSrc = getParamOrDef("Source folder (./src)", "./src")
 	}

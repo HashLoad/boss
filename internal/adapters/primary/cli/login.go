@@ -18,14 +18,22 @@ func loginCmdRegister(root *cobra.Command) {
 	var privateKey string
 	var userName string
 	var password string
+	var portalToken string
 
 	var loginCmd = &cobra.Command{
 		Use:   "login",
 		Short: "Add a registry user account",
 		Example: `  Adding a new user account:
-  boss login <repo>`,
+  boss login <repo>
+
+  Authenticating against the PubPascal portal:
+  boss login --token <token>`,
 		Aliases: []string{"adduser", "add-user"},
 		Run: func(_ *cobra.Command, args []string) {
+			if portalToken != "" {
+				runPortalLogin(portalToken, args)
+				return
+			}
 			login(removeLogin, useSSH, privateKey, userName, password, args)
 		},
 	}
@@ -45,6 +53,8 @@ func loginCmdRegister(root *cobra.Command) {
 	loginCmd.Flags().StringVarP(&privateKey, "key", "k", "", "Path of ssh private key")
 	loginCmd.Flags().StringVarP(&userName, "username", "u", "", "Username")
 	loginCmd.Flags().StringVarP(&password, "password", "p", "", "Password or PassPhrase(with SSH)")
+	loginCmd.Flags().StringVar(&portalToken, "token", "",
+		"PubPascal portal token; authenticates against the portal instead of a git registry")
 	root.AddCommand(loginCmd)
 
 	root.AddCommand(logoutCmd)

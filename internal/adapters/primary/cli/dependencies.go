@@ -54,7 +54,7 @@ func dependenciesCmdRegister(root *cobra.Command) {
 	}
 
 	root.AddCommand(dependenciesCmd)
-	dependenciesCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show dependency version")
+	dependenciesCmd.Flags().BoolVarP(&showVersion, flagNameVersion, "v", false, "show dependency version")
 }
 
 // printDependencies prints the dependencies.
@@ -147,7 +147,7 @@ func printSingleDependency(
 
 // isOutdated checks if the dependency is outdated.
 func isOutdated(dependency domain.Dependency, version string) (dependencyStatus, string) {
-	if err := installer.GetDependency(dependency); err != nil {
+	if err := installer.GetDependency(dependency); err != nil { //nolint:staticcheck // TODO: migrate to DependencyManager
 		return updated, ""
 	}
 	cacheService := cache.NewCacheService(filesystem.NewOSFileSystem())
