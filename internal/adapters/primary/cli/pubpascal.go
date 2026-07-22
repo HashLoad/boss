@@ -221,14 +221,6 @@ func workspaceCmdRegister(root *cobra.Command) {
 	cloneCmd.Flags().StringVar(&codename, "codename", "", "Create work branches suffixed with this codename")
 	cloneCmd.Flags().BoolVar(&noInstall, "no-install", false, "Skip automatic boss install in cloned repositories")
 
-	var statusCmd = &cobra.Command{
-		Use:   "status",
-		Short: "Show status (ahead/behind/dirty) for each repository in the workspace",
-		Run: func(cmd *cobra.Command, _ []string) {
-			runWorkspaceStatus(cmd.Context())
-		},
-	}
-
 	var updateCmd = &cobra.Command{
 		Use:   subCmdNameUpdate,
 		Short: "Fast-forward each repository in the workspace to its pinned reference",
@@ -246,11 +238,11 @@ func workspaceCmdRegister(root *cobra.Command) {
 	}
 
 	workspaceCmd.AddCommand(cloneCmd)
-	workspaceCmd.AddCommand(statusCmd)
 	workspaceCmd.AddCommand(updateCmd)
 	workspaceCmd.AddCommand(pushCmd)
 
 	// Portal-backed and git-only sub-commands, built in their own files.
+	workspaceCmd.AddCommand(newWorkspaceStatusCmd())
 	workspaceCmd.AddCommand(newWorkspaceListCmd())
 	workspaceCmd.AddCommand(newWorkspaceSearchCmd())
 	workspaceCmd.AddCommand(newWorkspaceDiffCmd())
@@ -433,20 +425,20 @@ func resolveWorkspaceRef(ctx context.Context, config *PubPascalConfig, ref strin
 		return ref
 	}
 
-	msg.Info("Resolving workspace reference %s...", ref)
+	msg.Info("Resolving workspace reference %s...", flattenDetail(ref))
 	resolveURL := fmt.Sprintf("%s/api/workspaces/resolve?ref=%s",
 		strings.TrimSuffix(config.PortalBaseURL, "/"), url.QueryEscape(ref))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, resolveURL, nil)
 	if err != nil {
-		msg.Die("❌ Failed to create HTTP request: %s", err)
+		msg.Die("❌ Failed to create HTTP request: %s", flattenDetail(err.Error()))
 	}
 	req.Header.Set("Authorization", "Bearer "+config.AuthToken)
 
 	client := &http.Client{Timeout: portalRequestTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
-		msg.Die("❌ Network error: %s", err)
+		msg.Die("❌ Network error: %s", flattenDetail(err.Error()))
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -464,29 +456,29 @@ func resolveWorkspaceRef(ctx context.Context, config *PubPascalConfig, ref strin
 	switch resp.StatusCode {
 	case http.StatusOK:
 		if payload.ID == "" {
-			msg.Die("❌ The portal resolved %s but returned no workspace id.", ref)
+			msg.Die("❌ The portal resolved %s but returned no workspace id.", flattenDetail(ref))
 		}
-		msg.Info("  Resolved to workspace %s (%s)", payload.Name, payload.ID)
+		msg.Info("  Resolved to workspace %s (%s)", flattenDetail(payload.Name), flattenDetail(payload.ID))
 
 		return payload.ID
 	case http.StatusBadRequest:
-		hint := payload.Hint
+		hint := flattenDetail(payload.Hint)
 		if hint == "" {
 			hint = "expected <package-slug>@<version>, e.g. janus@1.0"
 		}
-		msg.Die("❌ %q is not a workspace id nor a valid reference: %s", ref, hint)
+		msg.Die("❌ %s is not a workspace id nor a valid reference: %s", flattenDetail(ref), hint)
 	case http.StatusUnauthorized, http.StatusForbidden:
 		msg.Die("❌ Unauthorized. Your portal auth token is invalid or expired.")
 	case http.StatusNotFound:
-		msg.Die("❌ No workspace of yours has %s as its root (PAI).", ref)
+		msg.Die("❌ No workspace of yours has %s as its root (PAI).", flattenDetail(ref))
 	case http.StatusConflict:
-		msg.Warn("⚠️ %s matches more than one of your workspaces:", ref)
+		msg.Warn("⚠️ %s matches more than one of your workspaces:", flattenDetail(ref))
 		for _, c := range payload.Candidates {
-			msg.Warn("     %s  %s", c.ID, c.Name)
+			msg.Warn("     %s  %s", flattenDetail(c.ID), flattenDetail(c.Name))
 		}
 		msg.Die("❌ Ambiguous reference. Clone by workspace id instead.")
 	default:
-		msg.Die("❌ Portal returned HTTP status %d while resolving %s", resp.StatusCode, ref)
+		msg.Die("❌ Portal returned HTTP status %d while resolving %s", resp.StatusCode, flattenDetail(ref))
 	}
 
 	return ref
@@ -501,20 +493,20 @@ func resolveWorkspaceRef(ctx context.Context, config *PubPascalConfig, ref strin
 // calls below still bypass the deferred Close, so the guarantee is "closed on
 // the paths that return", not "always closed".
 func fetchWorkspaceManifest(ctx context.Context, config *PubPascalConfig, workspaceID string) WorkspaceManifest {
-	msg.Info("Fetching workspace manifest for %s...", workspaceID)
+	msg.Info("Fetching workspace manifest for %s...", flattenDetail(workspaceID))
 	manifestURL := fmt.Sprintf("%s/api/workspaces/%s/manifest",
 		strings.TrimSuffix(config.PortalBaseURL, "/"), workspaceID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, manifestURL, nil)
 	if err != nil {
-		msg.Die("❌ Failed to create HTTP request: %s", err)
+		msg.Die("❌ Failed to create HTTP request: %s", flattenDetail(err.Error()))
 	}
 	req.Header.Set("Authorization", "Bearer "+config.AuthToken)
 
 	client := &http.Client{Timeout: portalRequestTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
-		msg.Die("❌ Network error: %s", err)
+		msg.Die("❌ Network error: %s", flattenDetail(err.Error()))
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -522,14 +514,16 @@ func fetchWorkspaceManifest(ctx context.Context, config *PubPascalConfig, worksp
 	case resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden:
 		msg.Die("❌ Unauthorized. Your portal auth token is invalid or expired.")
 	case resp.StatusCode == http.StatusNotFound:
-		msg.Die("❌ Workspace %s not found on the portal.", workspaceID)
+		msg.Die("❌ Workspace %s not found on the portal.", flattenDetail(workspaceID))
 	case resp.StatusCode != http.StatusOK:
 		msg.Die("❌ Portal returned HTTP status %d", resp.StatusCode)
 	}
 
 	var manifest WorkspaceManifest
 	if decodeErr := json.NewDecoder(resp.Body).Decode(&manifest); decodeErr != nil {
-		msg.Die("❌ Failed to parse manifest JSON: %s", decodeErr)
+		// A decoder error quotes the offending input, so a malformed body could
+		// smuggle a brace into the output the PubPascal host parses.
+		msg.Die("❌ Failed to parse manifest JSON: %s", flattenDetail(decodeErr.Error()))
 	}
 
 	return manifest
@@ -841,6 +835,10 @@ func mergeDprojSearchPaths(xmlStr string, paths []string) (string, bool) {
 }
 
 // runWorkspaceStatus checks git status of the repositories in the workspace.
+//
+// This is the report 'boss workspace status' has always printed, and it is
+// still what an argument-less run without --json produces. The workspace id and
+// the JSON payload are served by newWorkspaceStatusCmd, in workspace_status.go.
 func runWorkspaceStatus(ctx context.Context) {
 	cwd, err := os.Getwd()
 	if err != nil {
