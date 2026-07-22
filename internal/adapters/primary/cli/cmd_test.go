@@ -196,7 +196,14 @@ func TestPubPascalCommands(t *testing.T) {
 	if workspaceCmd == nil {
 		t.Fatal("Workspace command not found")
 	}
-	assertSubcommands(t, workspaceCmd, "Workspace", []string{"clone", "status", "update", "push"})
+	// list/search/diff/pull/commit are the sub-commands the PubPascal desktop
+	// app and the RAD Studio (OTA) plugin spawn. While they were missing, cobra
+	// answered "boss workspace pull" by printing the workspace help and exiting
+	// 0, which the app read as a successful pull.
+	assertSubcommands(t, workspaceCmd, "Workspace", []string{
+		"clone", "status", "update", "push",
+		"list", "search", "diff", "pull", "commit",
+	})
 
 	// Check pkg command and root commands
 	pkgCmd := findCommand(root, "pkg")

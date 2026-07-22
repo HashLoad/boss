@@ -249,6 +249,14 @@ func workspaceCmdRegister(root *cobra.Command) {
 	workspaceCmd.AddCommand(statusCmd)
 	workspaceCmd.AddCommand(updateCmd)
 	workspaceCmd.AddCommand(pushCmd)
+
+	// Portal-backed and git-only sub-commands, built in their own files.
+	workspaceCmd.AddCommand(newWorkspaceListCmd())
+	workspaceCmd.AddCommand(newWorkspaceSearchCmd())
+	workspaceCmd.AddCommand(newWorkspaceDiffCmd())
+	workspaceCmd.AddCommand(newWorkspacePullCmd())
+	workspaceCmd.AddCommand(newWorkspaceCommitCmd())
+
 	root.AddCommand(workspaceCmd)
 }
 
@@ -633,13 +641,13 @@ func cloneWorkspaceRepo(
 // Failures are not fatal: the repository is usable without the work branch.
 func createCodenameBranch(ctx context.Context, repoPath string, codename string) {
 	// Get current branch
-	out, ok := gitCapture(ctx, repoPath, "rev-parse", "--abbrev-ref", "HEAD")
+	out, ok := gitCapture(ctx, repoPath, "rev-parse", "--abbrev-ref", gitHeadRef)
 	if !ok {
 		return
 	}
 
 	baseBranch := strings.TrimSpace(out)
-	if baseBranch == "HEAD" || baseBranch == "" {
+	if baseBranch == gitHeadRef || baseBranch == "" {
 		return
 	}
 
@@ -932,7 +940,7 @@ func discoverModuleRepos(modulesPath string) []string {
 
 func printRepoStatus(ctx context.Context, label string, path string) {
 	// Current branch
-	branchOut, _ := gitCapture(ctx, path, "rev-parse", "--abbrev-ref", "HEAD")
+	branchOut, _ := gitCapture(ctx, path, "rev-parse", "--abbrev-ref", gitHeadRef)
 	branch := strings.TrimSpace(branchOut)
 
 	// Dirty check
@@ -961,23 +969,22 @@ func printRepoStatus(ctx context.Context, label string, path string) {
 }
 
 // runWorkspaceUpdate updates all repositories in the workspace.
+//
+// It shares its implementation with 'boss workspace pull': both fast-forward
+// every repository of the workspace, and having two copies of that loop meant
+// the two commands could drift apart. The shared version also tells a pinned
+// (detached HEAD) repository apart from a repository that genuinely failed to
+// pull, instead of reporting both as a warning.
 func runWorkspaceUpdate(ctx context.Context) {
 	msg.Info("Updating workspace repositories (pulling changes)...")
-	// Similar to status, find all repos and run `git pull`
-	cwd, err := os.Getwd()
-	if err != nil {
-		msg.Die("❌ Failed to get current directory: %s", err)
-	}
 
-	for _, repoPath := range discoverWorkspaceRepos(cwd) {
-		msg.Info("Updating %s...", filepath.Base(repoPath))
-		// #nosec G204 -- fixed git binary; repoPath is a directory found on disk
-		pullCmd := exec.CommandContext(ctx, "git", "-C", repoPath, "pull", "--ff-only")
-		pullCmd.Stdout = os.Stdout
-		pullCmd.Stderr = os.Stderr
-		if err := pullCmd.Run(); err != nil {
-			msg.Warn("  Warning: git pull failed in %s (continuing)", filepath.Base(repoPath))
-		}
+	tally := pullWorkspaceRepos(ctx, requireWorkspaceRepos())
+
+	msg.Info("Update summary: %d updated, %d skipped, %d failed.",
+		tally.updated, tally.skipped, tally.failed)
+
+	if tally.failed > 0 {
+		msg.Die("❌ %d repository(ies) could not be fast-forwarded.", tally.failed)
 	}
 }
 
