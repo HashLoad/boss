@@ -28,7 +28,8 @@ func craCmdRegister(root *cobra.Command) {
 		Use:   cmdNameCRA,
 		Short: "Cyber Resilience Act (CRA) compliance checker and assistant",
 		Long: `Diagnose and automate Cyber Resilience Act (CRA) compliance for your Delphi project.
-Run without arguments to perform a local compliance check, or use 'cra init' to generate required files.`,
+Run without arguments to perform a local compliance check, or use 'cra init' to generate required files.
+The check exits with status 1 when a required signal is missing, so it can gate a CI job.`,
 		Run: func(_ *cobra.Command, _ []string) {
 			runCraCheck()
 		},
@@ -98,11 +99,18 @@ func runCraCheck() {
 	if hasSecurity && hasSbom {
 		msg.Info("\n🎉 Your local project is 100%% CRA compliant! Commit and push these files " +
 			"to GitHub to get the Gold badge in the portal.")
-	} else {
-		msg.Info("\n💡 Tips to get 100%% CRA badge:")
-		msg.Info("1. Run 'boss cra init' to let Boss generate the SECURITY.md and SBOM automatically.")
-		msg.Info("2. Commit and push the files to your repository.")
+
+		return
 	}
+
+	msg.Info("\n💡 Tips to get 100%% CRA badge:")
+	msg.Info("1. Run 'boss cra init' to let Boss generate the SECURITY.md and SBOM automatically.")
+	msg.Info("2. Commit and push the files to your repository.")
+
+	// A checker that always exits 0 cannot gate anything: a CI job would
+	// report success on a project that has neither a security policy nor an
+	// SBOM. Non-compliant is a failure, so the exit status has to say so.
+	os.Exit(1)
 }
 
 // runCraInit runs the interactive wizard to generate compliance files.

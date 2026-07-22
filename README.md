@@ -208,7 +208,7 @@ These native commands help you achieve 100% Cyber Resilience Act (CRA) complianc
 
 #### > cra
 Check your project's CRA compliance status or initialize required files automatically.
-* **`cra` (Diagnose)**: Scan the local project for required CRA signals (Security Policy, SBOM):
+* **`cra` (Diagnose)**: Scan the local project for required CRA signals (Security Policy, SBOM). It exits with status `1` when a signal is missing, so it can be used as a CI gate:
   ```sh
   boss cra
   ```
