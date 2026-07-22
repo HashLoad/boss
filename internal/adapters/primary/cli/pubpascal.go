@@ -329,6 +329,8 @@ func runWorkspaceClone(ctx context.Context, workspaceID string, codename string,
 		msg.Die("❌ You must log in first. Run 'boss login' with your portal token.")
 	}
 
+	workspaceID = resolveWorkspaceRef(ctx, config, workspaceID)
+
 	manifest := fetchWorkspaceManifest(ctx, config, workspaceID)
 
 	msg.Info("Workspace: %s (%s)", manifest.Workspace.Name, manifest.Workspace.Description)
@@ -384,6 +386,102 @@ func runWorkspaceClone(ctx context.Context, workspaceID string, codename string,
 	if failCount > 0 {
 		os.Exit(1)
 	}
+}
+
+// isWorkspaceUUID reports whether the identifier is already a workspace UUID.
+// The manifest endpoint rejects anything else outright, so a non-UUID has to be
+// resolved before it can be used.
+func isWorkspaceUUID(id string) bool {
+	if len(id) != 36 {
+		return false
+	}
+
+	for i, r := range id {
+		switch i {
+		case 8, 13, 18, 23:
+			if r != '-' {
+				return false
+			}
+		default:
+			isHex := (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
+			if !isHex {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// resolveWorkspaceRef turns a "<package-slug>@<version>" identifier into the
+// workspace UUID the manifest endpoint expects, passing UUIDs through untouched.
+//
+// The portal offers the workspace clone command in this form -- "a workspace IS
+// the PAI at a version" -- but the manifest route accepts only UUIDs, so the
+// command shown in the web UI failed with "workspace not found" until the CLI
+// learned to call /api/workspaces/resolve first.
+func resolveWorkspaceRef(ctx context.Context, config *PubPascalConfig, ref string) string {
+	if isWorkspaceUUID(ref) {
+		return ref
+	}
+
+	msg.Info("Resolving workspace reference %s...", ref)
+	resolveURL := fmt.Sprintf("%s/api/workspaces/resolve?ref=%s",
+		strings.TrimSuffix(config.PortalBaseURL, "/"), url.QueryEscape(ref))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, resolveURL, nil)
+	if err != nil {
+		msg.Die("❌ Failed to create HTTP request: %s", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+config.AuthToken)
+
+	client := &http.Client{Timeout: portalRequestTimeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		msg.Die("❌ Network error: %s", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	var payload struct {
+		ID         string `json:"id"`
+		Name       string `json:"name"`
+		Hint       string `json:"hint"`
+		Candidates []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"candidates"`
+	}
+	_ = json.NewDecoder(resp.Body).Decode(&payload)
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		if payload.ID == "" {
+			msg.Die("❌ The portal resolved %s but returned no workspace id.", ref)
+		}
+		msg.Info("  Resolved to workspace %s (%s)", payload.Name, payload.ID)
+
+		return payload.ID
+	case http.StatusBadRequest:
+		hint := payload.Hint
+		if hint == "" {
+			hint = "expected <package-slug>@<version>, e.g. janus@1.0"
+		}
+		msg.Die("❌ %q is not a workspace id nor a valid reference: %s", ref, hint)
+	case http.StatusUnauthorized, http.StatusForbidden:
+		msg.Die("❌ Unauthorized. Your portal auth token is invalid or expired.")
+	case http.StatusNotFound:
+		msg.Die("❌ No workspace of yours has %s as its root (PAI).", ref)
+	case http.StatusConflict:
+		msg.Warn("⚠️ %s matches more than one of your workspaces:", ref)
+		for _, c := range payload.Candidates {
+			msg.Warn("     %s  %s", c.ID, c.Name)
+		}
+		msg.Die("❌ Ambiguous reference. Clone by workspace id instead.")
+	default:
+		msg.Die("❌ Portal returned HTTP status %d while resolving %s", resp.StatusCode, ref)
+	}
+
+	return ref
 }
 
 // fetchWorkspaceManifest downloads the workspace manifest from the portal.
