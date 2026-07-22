@@ -53,7 +53,8 @@ func loginCmdRegister(root *cobra.Command) {
 	loginCmd.Flags().StringVarP(&privateKey, "key", "k", "", "Path of ssh private key")
 	loginCmd.Flags().StringVarP(&userName, "username", "u", "", "Username")
 	loginCmd.Flags().StringVarP(&password, "password", "p", "", "Password or PassPhrase(with SSH)")
-	loginCmd.Flags().StringVar(&portalToken, "token", "", "PubPascal portal token; authenticates against the portal instead of a git registry")
+	loginCmd.Flags().StringVar(&portalToken, "token", "",
+		"PubPascal portal token; authenticates against the portal instead of a git registry")
 	root.AddCommand(loginCmd)
 
 	root.AddCommand(logoutCmd)

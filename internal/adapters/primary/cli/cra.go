@@ -21,26 +21,27 @@ const (
 	sbomFileName = sbomBaseName + ".cdx.json"
 )
 
-var securityEmail string
-
 // craCmdRegister registers the cra commands under the boss CLI root.
 func craCmdRegister(root *cobra.Command) {
 	var craCmd = &cobra.Command{
-		Use:   "cra",
+		Use:   cmdNameCRA,
 		Short: "Cyber Resilience Act (CRA) compliance checker and assistant",
 		Long: `Diagnose and automate Cyber Resilience Act (CRA) compliance for your Delphi project.
 Run without arguments to perform a local compliance check, or use 'cra init' to generate required files.`,
-		Run: func(cmd *cobra.Command, _ []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			runCraCheck()
 		},
 	}
 
+	var securityEmail string
+
 	var initCmd = &cobra.Command{
 		Use:   "init",
 		Short: "Start interactive wizard to make your project 100% CRA compliant",
-		Long:  "Start the interactive wizard to generate required Cyber Resilience Act (CRA) compliance files, such as SECURITY.md and sbom.cdx.json.",
-		Run: func(cmd *cobra.Command, _ []string) {
-			runCraInit()
+		Long: "Start the interactive wizard to generate required Cyber Resilience Act (CRA) " +
+			"compliance files, such as SECURITY.md and sbom.cdx.json.",
+		Run: func(_ *cobra.Command, _ []string) {
+			runCraInit(securityEmail)
 		},
 	}
 
@@ -83,12 +84,13 @@ func runCraCheck() {
 	}
 
 	// Validate boss.json exists
-	if _, err := os.Stat("boss.json"); err != nil {
+	if _, err := os.Stat(bossManifestFile); err != nil {
 		msg.Warn("⚠️ boss.json: No boss.json found in current directory.")
 	}
 
 	if hasSecurity && hasSbom {
-		msg.Info("\n🎉 Your local project is 100%% CRA compliant! Commit and push these files to GitHub to get the Gold badge in the portal.")
+		msg.Info("\n🎉 Your local project is 100%% CRA compliant! Commit and push these files " +
+			"to GitHub to get the Gold badge in the portal.")
 	} else {
 		msg.Info("\n💡 Tips to get 100%% CRA badge:")
 		msg.Info("1. Run 'boss cra init' to let Boss generate the SECURITY.md and SBOM automatically.")
@@ -97,14 +99,16 @@ func runCraCheck() {
 }
 
 // runCraInit runs the interactive wizard to generate compliance files.
-func runCraInit() {
+func runCraInit(securityEmail string) {
 	msg.Info("🚀 Cyber Resilience Act (CRA) Compliance Wizard\n")
 
 	// 1. Get security email
 	email := securityEmail
 	if email == "" {
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("📧 Enter the email address to report security vulnerabilities: ")
+		// Written straight to stdout: msg.Info would append a line break and
+		// the answer has to be typed on the same line as the question.
+		_, _ = fmt.Fprint(os.Stdout, "📧 Enter the email address to report security vulnerabilities: ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			msg.Die("❌ Failed to read email: %s", err)
@@ -117,6 +121,7 @@ func runCraInit() {
 	}
 
 	// 2. Generate SECURITY.md
+	//nolint:lll // reflowing the generated markdown would change the emitted file
 	securityContent := fmt.Sprintf(`# Security Policy
 
 ## Reporting a Vulnerability
@@ -136,7 +141,8 @@ Security fixes are applied to the latest active release. We recommend always run
 
 	// Never clobber a policy the project already has: it may be the real one.
 	if _, err := os.Stat(securityPolicyFile); err == nil {
-		msg.Warn("⚠️ '%s' already exists and was left untouched. Delete it first if you want Boss to regenerate it.", securityPolicyFile)
+		msg.Warn("⚠️ '%s' already exists and was left untouched. Delete it first if you want "+
+			"Boss to regenerate it.", securityPolicyFile)
 	} else if err := os.WriteFile(securityPolicyFile, []byte(securityContent), 0600); err != nil {
 		msg.Die("❌ Failed to write %s: %s", securityPolicyFile, err)
 	} else {
@@ -144,10 +150,10 @@ Security fixes are applied to the latest active release. We recommend always run
 	}
 
 	// 3. Generate the SBOM if boss.json is present
-	if _, err := os.Stat("boss.json"); err == nil {
+	if _, err := os.Stat(bossManifestFile); err == nil {
 		msg.Info("📦 boss.json detected. Generating Software Bill of Materials (SBOM)...")
 
-		data, err := os.ReadFile("boss.json")
+		data, err := os.ReadFile(bossManifestFile)
 		if err == nil {
 			var manifest bossManifest
 			_ = json.Unmarshal(data, &manifest)

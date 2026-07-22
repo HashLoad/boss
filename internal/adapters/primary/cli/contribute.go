@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -20,6 +21,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// contributeRequestTimeout bounds the portal calls made by 'boss contribute'.
+// Forking a repository on GitHub takes noticeably longer than a plain read.
+const contributeRequestTimeout = 30 * time.Second
+
 // contributeCmdRegister registers the contribute command.
 func contributeCmdRegister(root *cobra.Command) {
 	var prMode bool
@@ -27,16 +32,18 @@ func contributeCmdRegister(root *cobra.Command) {
 	var prBody string
 
 	var contributeCmd = &cobra.Command{
-		Use:   "contribute <package-slug>",
+		Use:   cmdNameContribute + " <package-slug>",
 		Short: "Contribute to a third-party package by automating fork and Pull Request creation",
-		Long:  `Contribute to a package. It automatically forks the repository, configures upstream/origin remotes, checkouts a new branch, and opens a Pull Request on GitHub once you are done.`,
+		Long: "Contribute to a package. It automatically forks the repository, configures " +
+			"upstream/origin remotes, checkouts a new branch, and opens a Pull Request on GitHub " +
+			"once you are done.",
 		Example: `  Start contributing to a package:
   boss contribute github.com/HashLoad/nidus
 
   Push changes and create a Pull Request on the upstream repository:
   boss contribute github.com/HashLoad/nidus --pr --title "Fix memory leak" --body "..."`,
 		Args: cobra.ExactArgs(1),
-		Run: func(_ *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			packageSlug := args[0]
 			config, err := LoadPubPascalConfig()
 			if err != nil {
@@ -61,9 +68,9 @@ func contributeCmdRegister(root *cobra.Command) {
 			}
 
 			if prMode {
-				handlePullRequestFlow(packageSlug, pkgDir, config, prTitle, prBody)
+				handlePullRequestFlow(cmd.Context(), packageSlug, pkgDir, config, prTitle, prBody)
 			} else {
-				handleForkSetupFlow(packageSlug, pkgDir, config)
+				handleForkSetupFlow(cmd.Context(), packageSlug, pkgDir, config)
 			}
 		},
 	}
@@ -74,28 +81,28 @@ func contributeCmdRegister(root *cobra.Command) {
 	root.AddCommand(contributeCmd)
 }
 
-func handleForkSetupFlow(packageSlug string, pkgDir string, config *PubPascalConfig) {
+func handleForkSetupFlow(ctx context.Context, packageSlug string, pkgDir string, config *PubPascalConfig) {
 	msg.Info("🍴 Requesting Fork from portal for %s...", packageSlug)
 
 	// Call Portal API to fork
-	url := fmt.Sprintf("%s/api/packages/contribute/fork", config.PortalBaseUrl)
+	url := fmt.Sprintf("%s/api/packages/contribute/fork", config.PortalBaseURL)
 	requestBody, _ := json.Marshal(map[string]string{
 		"packageSlug": packageSlug,
 	})
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		msg.Die("❌ Failed to create request: %s", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+config.AuthToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: contributeRequestTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
 		msg.Die("❌ Connection error: %s", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
@@ -106,8 +113,8 @@ func handleForkSetupFlow(packageSlug string, pkgDir string, config *PubPascalCon
 
 	var res struct {
 		Success   bool   `json:"success"`
-		CloneUrl  string `json:"clone_url"`
-		SshUrl    string `json:"ssh_url"`
+		CloneURL  string `json:"clone_url"`
+		SSHURL    string `json:"ssh_url"`
 		Username  string `json:"github_username"`
 		UpstreamO string `json:"upstream_owner"`
 		UpstreamR string `json:"upstream_repo"`
@@ -120,9 +127,9 @@ func handleForkSetupFlow(packageSlug string, pkgDir string, config *PubPascalCon
 
 	// Git Automation: setup remotes
 	// 1. Rename origin to upstream (if upstream doesn't exist)
-	if !remoteExists(pkgDir, "upstream") {
+	if !remoteExists(ctx, pkgDir, "upstream") {
 		msg.Info("⚙️ Renaming remote 'origin' to 'upstream'...")
-		if _, err := runGitCmd(pkgDir, "remote", "rename", "origin", "upstream"); err != nil {
+		if _, err := runGitCmd(ctx, pkgDir, "remote", "rename", "origin", "upstream"); err != nil {
 			msg.Die("❌ Failed to rename remote: %s", err)
 		}
 	} else {
@@ -130,30 +137,30 @@ func handleForkSetupFlow(packageSlug string, pkgDir string, config *PubPascalCon
 	}
 
 	// 2. Add fork as origin
-	if remoteExists(pkgDir, "origin") {
+	if remoteExists(ctx, pkgDir, "origin") {
 		msg.Info("⚙️ Removing existing 'origin' remote...")
-		if _, err := runGitCmd(pkgDir, "remote", "remove", "origin"); err != nil {
+		if _, err := runGitCmd(ctx, pkgDir, "remote", "remove", "origin"); err != nil {
 			msg.Die("❌ Failed to remove old origin: %s", err)
 		}
 	}
 
 	// Choose clone URL format (prefer SSH if git config contains git@ or SSH)
-	forkUrl := res.CloneUrl
+	forkURL := res.CloneURL
 	if auth := env.GlobalConfiguration().Auth[depPrefix(packageSlug)]; auth != nil && auth.UseSSH {
-		forkUrl = res.SshUrl
-	} else if strings.Contains(forkUrl, "git@") {
-		forkUrl = res.SshUrl
+		forkURL = res.SSHURL
+	} else if strings.Contains(forkURL, "git@") {
+		forkURL = res.SSHURL
 	}
 
 	msg.Info("⚙️ Adding Fork URL as 'origin'...")
-	if _, err := runGitCmd(pkgDir, "remote", "add", "origin", forkUrl); err != nil {
+	if _, err := runGitCmd(ctx, pkgDir, "remote", "add", "origin", forkURL); err != nil {
 		msg.Die("❌ Failed to add origin remote: %s", err)
 	}
 
 	// 3. Checkout contribution branch
 	branchName := generateBranchName()
 	msg.Info("⚙️ Creating and checking out branch: %s...", branchName)
-	if _, err := runGitCmd(pkgDir, "checkout", "-b", branchName); err != nil {
+	if _, err := runGitCmd(ctx, pkgDir, "checkout", "-b", branchName); err != nil {
 		msg.Die("❌ Failed to checkout branch: %s", err)
 	}
 
@@ -162,9 +169,16 @@ func handleForkSetupFlow(packageSlug string, pkgDir string, config *PubPascalCon
 	msg.Info("   boss contribute %s --pr", packageSlug)
 }
 
-func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalConfig, title string, body string) {
+func handlePullRequestFlow(
+	ctx context.Context,
+	packageSlug string,
+	pkgDir string,
+	config *PubPascalConfig,
+	title string,
+	body string,
+) {
 	// 1. Resolve current branch
-	branch, err := runGitCmd(pkgDir, "rev-parse", "--abbrev-ref", "HEAD")
+	branch, err := runGitCmd(ctx, pkgDir, "rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
 		msg.Die("❌ Failed to get current git branch: %s", err)
 	}
@@ -175,8 +189,8 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 
 	// 2. Resolve title and body from last commit if not provided
 	if title == "" {
-		lastCommitTitle, err := runGitCmd(pkgDir, "log", "-1", "--pretty=%s")
-		if err == nil && lastCommitTitle != "" {
+		lastCommitTitle, titleErr := runGitCmd(ctx, pkgDir, "log", "-1", "--pretty=%s")
+		if titleErr == nil && lastCommitTitle != "" {
 			title = lastCommitTitle
 		} else {
 			title = "Contribution from PubPascal Dev-Flow"
@@ -184,8 +198,8 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 	}
 
 	if body == "" {
-		lastCommitBody, err := runGitCmd(pkgDir, "log", "-1", "--pretty=%b")
-		if err == nil {
+		lastCommitBody, bodyErr := runGitCmd(ctx, pkgDir, "log", "-1", "--pretty=%b")
+		if bodyErr == nil {
 			body = lastCommitBody
 		}
 	}
@@ -194,14 +208,25 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 	// --force-with-lease refuses the push when the remote moved since the last
 	// fetch, so a contribution can no longer overwrite work already published
 	// on the same branch. A plain --force gives no such protection.
-	if _, err := runGitCmd(pkgDir, "push", "origin", branch, "--force-with-lease"); err != nil {
-		msg.Die("❌ Failed to push branch: %s", err)
+	if _, pushErr := runGitCmd(ctx, pkgDir, "push", "origin", branch, "--force-with-lease"); pushErr != nil {
+		msg.Die("❌ Failed to push branch: %s", pushErr)
 	}
 
 	msg.Info("📨 Submitting Pull Request to portal...")
+	submitPullRequest(ctx, packageSlug, config, branch, title, body)
+}
 
+// submitPullRequest asks the portal to open the Pull Request upstream.
+func submitPullRequest(
+	ctx context.Context,
+	packageSlug string,
+	config *PubPascalConfig,
+	branch string,
+	title string,
+	body string,
+) {
 	// Call Portal API to create PR
-	url := fmt.Sprintf("%s/api/packages/contribute/pr", config.PortalBaseUrl)
+	url := fmt.Sprintf("%s/api/packages/contribute/pr", config.PortalBaseURL)
 	requestBody, _ := json.Marshal(map[string]string{
 		"packageSlug": packageSlug,
 		"branch":      branch,
@@ -209,19 +234,19 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 		"body":        body,
 	})
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		msg.Die("❌ Failed to create request: %s", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+config.AuthToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: contributeRequestTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
 		msg.Die("❌ Connection error: %s", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
@@ -232,7 +257,7 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 
 	var res struct {
 		Success bool   `json:"success"`
-		PrUrl   string `json:"pr_url"`
+		PrURL   string `json:"pr_url"`
 		Head    string `json:"head"`
 		Base    string `json:"base"`
 	}
@@ -241,12 +266,13 @@ func handlePullRequestFlow(packageSlug string, pkgDir string, config *PubPascalC
 	}
 
 	msg.Info("🎉 Pull Request successfully created.")
-	msg.Info("🔗 Access your PR here: %s", res.PrUrl)
+	msg.Info("🔗 Access your PR here: %s", res.PrURL)
 }
 
 // Helper to run git commands.
-func runGitCmd(dir string, args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
+func runGitCmd(ctx context.Context, dir string, args ...string) (string, error) {
+	//nolint:gosec // G204: fixed git binary; arguments are built by this CLI
+	cmd := exec.CommandContext(ctx, "git", args...)
 	cmd.Dir = dir
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -259,8 +285,8 @@ func runGitCmd(dir string, args ...string) (string, error) {
 }
 
 // Helper to check if a git remote exists.
-func remoteExists(dir string, remoteName string) bool {
-	out, err := runGitCmd(dir, "remote")
+func remoteExists(ctx context.Context, dir string, remoteName string) bool {
+	out, err := runGitCmd(ctx, dir, "remote")
 	if err != nil {
 		return false
 	}
