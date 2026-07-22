@@ -172,14 +172,17 @@ func SavePubPascalConfig(config *PubPascalConfig) error {
 	configPath := GetPubPascalConfigPath()
 	dir := filepath.Dir(configPath)
 
-	// The file holds an authentication token: keep it out of reach of other
-	// accounts on the machine.
+	// 0700/0600 are owner-only modes on POSIX. On Windows -- the primary Delphi
+	// platform -- Go maps only the 0200 write bit onto the read-only attribute
+	// and ignores the rest, so the file is reported as 0666 and the mode buys
+	// no protection there; the token is protected only by the ACLs the user
+	// profile directory already carries.
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 
 	// Persisting the token is the whole purpose of this file: it is written
-	// with mode 0600 into the user's home and never sent anywhere else.
+	// into the user's home and never sent anywhere else.
 	// #nosec G117 -- the portal token is stored locally on purpose
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
@@ -384,8 +387,13 @@ func runWorkspaceClone(ctx context.Context, workspaceID string, codename string,
 }
 
 // fetchWorkspaceManifest downloads the workspace manifest from the portal.
-// It lives in its own function so that the response body is always closed:
-// the caller ends the process with os.Exit, which does not run deferred calls.
+//
+// It lives in its own function so the response body is closed as soon as the
+// manifest has been read, instead of staying open for the whole clone -- which
+// is what happened while this code was inlined in runWorkspaceClone, a function
+// that ends with os.Exit and therefore never runs deferred calls. The msg.Die
+// calls below still bypass the deferred Close, so the guarantee is "closed on
+// the paths that return", not "always closed".
 func fetchWorkspaceManifest(ctx context.Context, config *PubPascalConfig, workspaceID string) WorkspaceManifest {
 	msg.Info("Fetching workspace manifest for %s...", workspaceID)
 	manifestURL := fmt.Sprintf("%s/api/workspaces/%s/manifest",
