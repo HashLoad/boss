@@ -54,7 +54,7 @@ func dependenciesCmdRegister(root *cobra.Command) {
 	}
 
 	root.AddCommand(dependenciesCmd)
-	dependenciesCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show dependency version")
+	dependenciesCmd.Flags().BoolVarP(&showVersion, flagNameVersion, "v", false, "show dependency version")
 }
 
 // printDependencies prints the dependencies.

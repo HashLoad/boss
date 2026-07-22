@@ -19,6 +19,13 @@ const (
 	defaultPackageVersion = "1.0.0"
 	projectTypeApp        = "app"
 	projectTypePkg        = "pkg"
+
+	// srcDirName is the conventional sources directory of a Boss package.
+	srcDirName = "src"
+
+	// ideDelphi and ideLazarus are the IDEs 'boss new' can scaffold for.
+	ideDelphi  = "delphi"
+	ideLazarus = "lazarus"
 )
 
 var (
@@ -63,6 +70,7 @@ contains
 end.
 `
 
+//nolint:lll // wrapping the <Import> element would change the generated .dproj
 const dprojTemplate = `<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>%s</ProjectGuid>
@@ -241,7 +249,7 @@ func newCmdRegister(root *cobra.Command) {
 
   Create a new package/library in Lazarus:
   boss new my_package --type pkg --ide lazarus`,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			var name string
 			if len(args) > 0 {
 				name = args[0]
@@ -273,13 +281,13 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 	}
 
 	if !quiet && ide == "" {
-		ide = getParamOrDef("Target IDE (delphi or lazarus)", "delphi")
+		ide = getParamOrDef("Target IDE (delphi or lazarus)", ideDelphi)
 	}
 	ide = strings.ToLower(strings.TrimSpace(ide))
-	if ide == "l" || ide == "lazarus" {
-		ide = "lazarus"
+	if ide == "l" || ide == ideLazarus {
+		ide = ideLazarus
 	} else {
-		ide = "delphi"
+		ide = ideDelphi
 	}
 
 	cwd, err := os.Getwd()
@@ -293,7 +301,7 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 	}
 
 	ideTitle := "Delphi"
-	if ide == "lazarus" {
+	if ide == ideLazarus {
 		ideTitle = "Lazarus"
 	}
 
@@ -302,7 +310,7 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 	}
 
 	// Create directories
-	srcDir := filepath.Join(projectDir, "src")
+	srcDir := filepath.Join(projectDir, srcDirName)
 	testsDir := filepath.Join(projectDir, "tests")
 	if err := os.MkdirAll(srcDir, 0750); err != nil {
 		msg.Die("❌ Failed to create src directory: %v", err)
@@ -315,61 +323,74 @@ func doCreateProject(name string, pType string, ide string, quiet bool) {
 	packageData := domain.NewPackage()
 	packageData.Name = name
 	packageData.Version = defaultPackageVersion
-	packageData.MainSrc = "src"
+	packageData.MainSrc = srcDirName
 
-	packageJsonPath := filepath.Join(projectDir, consts.FilePackage)
-	if err := pkgmanager.SavePackage(packageData, packageJsonPath); err != nil {
+	packageJSONPath := filepath.Join(projectDir, consts.FilePackage)
+	if err := pkgmanager.SavePackage(packageData, packageJSONPath); err != nil {
 		msg.Die("❌ Failed to save boss.json: %v", err)
 	}
 
 	// Write files based on the chosen IDE
-	if ide == "lazarus" {
-		if pType == projectTypeApp {
-			lprPath := filepath.Join(projectDir, name+".lpr")
-			lprContent := fmt.Sprintf(lprTemplate, name, name)
-			if err := os.WriteFile(lprPath, []byte(lprContent), 0644); err != nil {
-				msg.Die("❌ Failed to create .lpr project file: %v", err)
-			}
-
-			lpiPath := filepath.Join(projectDir, name+".lpi")
-			lpiContent := fmt.Sprintf(lpiTemplate, name, name, name)
-			if err := os.WriteFile(lpiPath, []byte(lpiContent), 0644); err != nil {
-				msg.Die("❌ Failed to create .lpi project file: %v", err)
-			}
-		} else {
-			lpkPath := filepath.Join(projectDir, name+".lpk")
-			lpkContent := fmt.Sprintf(lpkTemplate, name)
-			if err := os.WriteFile(lpkPath, []byte(lpkContent), 0644); err != nil {
-				msg.Die("❌ Failed to create .lpk package file: %v", err)
-			}
-		}
+	if ide == ideLazarus {
+		writeLazarusProjectFiles(projectDir, name, pType)
 	} else {
-		// Write Delphi files
-		guid := generateGUID()
-		var dprojContent string
-		if pType == projectTypeApp {
-			dprPath := filepath.Join(projectDir, name+".dpr")
-			dprContent := fmt.Sprintf(dprTemplate, name, name)
-			if err := os.WriteFile(dprPath, []byte(dprContent), 0644); err != nil {
-				msg.Die("❌ Failed to create .dpr project file: %v", err)
-			}
-			dprojContent = fmt.Sprintf(dprojTemplate, guid, "Console", "Application", name, "dpr")
-		} else {
-			dpkPath := filepath.Join(projectDir, name+".dpk")
-			dpkContent := fmt.Sprintf(dpkTemplate, name)
-			if err := os.WriteFile(dpkPath, []byte(dpkContent), 0644); err != nil {
-				msg.Die("❌ Failed to create .dpk package file: %v", err)
-			}
-			dprojContent = fmt.Sprintf(dprojTemplate, guid, "Package", "Package", name, "dpk")
-		}
-
-		dprojPath := filepath.Join(projectDir, name+".dproj")
-		if err := os.WriteFile(dprojPath, []byte(dprojContent), 0644); err != nil {
-			msg.Die("❌ Failed to create .dproj configuration file: %v", err)
-		}
+		writeDelphiProjectFiles(projectDir, name, pType)
 	}
 
 	if !quiet {
 		msg.Info("✨ Project '%s' created successfully!", name)
+	}
+}
+
+// writeLazarusProjectFiles writes the .lpr/.lpi pair of an application, or the
+// .lpk of a package.
+func writeLazarusProjectFiles(projectDir string, name string, pType string) {
+	if pType == projectTypeApp {
+		lprPath := filepath.Join(projectDir, name+".lpr")
+		lprContent := fmt.Sprintf(lprTemplate, name, name)
+		if err := os.WriteFile(lprPath, []byte(lprContent), 0600); err != nil {
+			msg.Die("❌ Failed to create .lpr project file: %v", err)
+		}
+
+		lpiPath := filepath.Join(projectDir, name+".lpi")
+		lpiContent := fmt.Sprintf(lpiTemplate, name, name, name)
+		if err := os.WriteFile(lpiPath, []byte(lpiContent), 0600); err != nil {
+			msg.Die("❌ Failed to create .lpi project file: %v", err)
+		}
+
+		return
+	}
+
+	lpkPath := filepath.Join(projectDir, name+".lpk")
+	lpkContent := fmt.Sprintf(lpkTemplate, name)
+	if err := os.WriteFile(lpkPath, []byte(lpkContent), 0600); err != nil {
+		msg.Die("❌ Failed to create .lpk package file: %v", err)
+	}
+}
+
+// writeDelphiProjectFiles writes the .dpr/.dpk source plus the .dproj project.
+func writeDelphiProjectFiles(projectDir string, name string, pType string) {
+	guid := generateGUID()
+
+	var dprojContent string
+	if pType == projectTypeApp {
+		dprPath := filepath.Join(projectDir, name+".dpr")
+		dprContent := fmt.Sprintf(dprTemplate, name, name)
+		if err := os.WriteFile(dprPath, []byte(dprContent), 0600); err != nil {
+			msg.Die("❌ Failed to create .dpr project file: %v", err)
+		}
+		dprojContent = fmt.Sprintf(dprojTemplate, guid, "Console", "Application", name, "dpr")
+	} else {
+		dpkPath := filepath.Join(projectDir, name+".dpk")
+		dpkContent := fmt.Sprintf(dpkTemplate, name)
+		if err := os.WriteFile(dpkPath, []byte(dpkContent), 0600); err != nil {
+			msg.Die("❌ Failed to create .dpk package file: %v", err)
+		}
+		dprojContent = fmt.Sprintf(dprojTemplate, guid, "Package", "Package", name, "dpk")
+	}
+
+	dprojPath := filepath.Join(projectDir, name+".dproj")
+	if err := os.WriteFile(dprojPath, []byte(dprojContent), 0600); err != nil {
+		msg.Die("❌ Failed to create .dproj configuration file: %v", err)
 	}
 }
