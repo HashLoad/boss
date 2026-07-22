@@ -248,8 +248,8 @@ func workspaceCmdRegister(root *cobra.Command) {
 func pkgCmdRegister(root *cobra.Command) {
 	var pkgCmd = &cobra.Command{
 		Use:   projectTypePkg,
-		Short: "Delphi package operations (packaging and manifests)",
-		Long:  "Delphi package operations (packaging and manifests)",
+		Short: "Delphi package manifest operations",
+		Long:  "Delphi package manifest operations",
 	}
 
 	var projectFile string
@@ -287,22 +287,7 @@ func pkgCmdRegister(root *cobra.Command) {
 	specCmd.Flags().StringVar(&specID, "id", "", "The package ID (slug) to scaffold")
 	specCmd.Flags().StringVar(&specVersion, "pkgversion", defaultPackageVersion, "The package version")
 
-	var specFile string
-	var packOutputDir string
-
-	var packCmd = &cobra.Command{
-		Use:   "pack",
-		Short: "Build a package bundle (.dpkg) for distribution",
-		Run: func(_ *cobra.Command, _ []string) {
-			runPkgPack(specFile, packOutputDir)
-		},
-	}
-
-	packCmd.Flags().StringVar(&specFile, "spec", "pubpascal.json", "Path to the package manifest file")
-	packCmd.Flags().StringVar(&packOutputDir, "output", "./dist", "Directory to write the package bundle to")
-
 	pkgCmd.AddCommand(specCmd)
-	pkgCmd.AddCommand(packCmd)
 	root.AddCommand(pkgCmd)
 
 	root.AddCommand(sbomCmd)
@@ -1277,54 +1262,11 @@ func runPkgSpec(id string, version string) {
 	msg.Info("Scaffolded starter manifest in %s", fileName)
 }
 
-// runPkgPack packages the Delphi library for distribution.
-func runPkgPack(specFile string, outputDir string) {
-	msg.Info("Packaging Delphi library based on manifest: %s", specFile)
-	// Read manifest
-	// #nosec G304 -- the path is the manifest the user pointed --spec at
-	data, err := os.ReadFile(specFile)
-	if err != nil {
-		msg.Die("❌ Failed to read manifest file: %s", err)
-	}
-
-	var manifest struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-		Sources string `json:"sources"`
-	}
-
-	if err := json.Unmarshal(data, &manifest); err != nil {
-		msg.Die("❌ Failed to parse manifest: %s", err)
-	}
-
-	if err := os.MkdirAll(outputDir, 0750); err != nil {
-		msg.Die("❌ Failed to create output directory: %s", err)
-	}
-
-	// Create a simple tar/zip package bundle (.dpkg) containing the sources
-	// In a real implementation this would zip the sources folder. We write a stub file
-	// that acts as the package bundle for compatibility.
-	bundleName := fmt.Sprintf("%s-%s.dpkg", strings.ReplaceAll(manifest.Name, "/", "-"), manifest.Version)
-	bundleFile := filepath.Join(outputDir, bundleName)
-
-	// Write package metadata + manifest inside the bundle file
-	// A proper ZIP archive would contain the code files
-	stubContent := fmt.Sprintf("PUBPASCAL_PACKAGE_BUNDLE\nName: %s\nVersion: %s\nSourcesDir: %s\nCreated: %s\n",
-		manifest.Name, manifest.Version, manifest.Sources, time.Now().Format(time.RFC3339))
-
-	if err := os.WriteFile(bundleFile, []byte(stubContent), 0600); err != nil {
-		msg.Die("❌ Failed to write package bundle: %s", err)
-	}
-
-	msg.Info("Package bundle successfully created: %s", bundleFile)
-}
-
 // runPortalLogin handles the PubPascal portal login flow and saves the token.
-func runPortalLogin(token string, args []string) {
-	if token == "" && len(args) > 0 {
-		token = strings.TrimSpace(args[0])
-	}
-
+//
+// The caller only routes here when --token carries a value, so there is no
+// positional fallback to read: 'boss login <repo>' is the git registry flow.
+func runPortalLogin(token string) {
 	// The portal decides whether a token is valid. Enforcing a prefix here
 	// would break every existing client the day the portal changes its token
 	// format, so only the empty case is rejected locally.

@@ -31,7 +31,7 @@ func loginCmdRegister(root *cobra.Command) {
 		Aliases: []string{"adduser", "add-user"},
 		Run: func(_ *cobra.Command, args []string) {
 			if portalToken != "" {
-				runPortalLogin(portalToken, args)
+				runPortalLogin(portalToken)
 				return
 			}
 			login(removeLogin, useSSH, privateKey, userName, password, args)

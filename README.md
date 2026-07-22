@@ -136,14 +136,10 @@ boss new my_package --type pkg --ide lazarus
 ```
 
 #### > pkg
-Perform Delphi package operations for manifests and packaging.
+Perform Delphi package manifest operations.
 * **`pkg spec`**: Scaffolds a starter `pubpascal.json` manifest file for the package:
   ```sh
   boss pkg spec --id my-package --pkgversion 1.0.0
-  ```
-* **`pkg pack`**: Build a redistributable package bundle (`.dpkg`):
-  ```sh
-  boss pkg pack --spec pubpascal.json --output ./dist
   ```
 
 #### > run

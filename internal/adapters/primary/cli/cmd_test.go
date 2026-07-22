@@ -208,5 +208,5 @@ func TestPubPascalCommands(t *testing.T) {
 	}
 
 	// Check pkg subcommands
-	assertSubcommands(t, pkgCmd, "Pkg", []string{"spec", "pack"})
+	assertSubcommands(t, pkgCmd, "Pkg", []string{"spec"})
 }
