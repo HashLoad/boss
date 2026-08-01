@@ -23,6 +23,7 @@ func TestRootCommand(t *testing.T) {
 	t.Run("register commands", func(t *testing.T) {
 		// These should not panic
 		versionCmdRegister(root)
+		pubpascalCmdRegister(root)
 
 		// Verify command was added
 		if root.Commands() == nil {
@@ -39,7 +40,7 @@ func TestVersionCommand(t *testing.T) {
 	// Find the version command
 	var versionCmd *cobra.Command
 	for _, cmd := range root.Commands() {
-		if cmd.Use == "version" {
+		if cmd.Use == cmdNameVersion {
 			versionCmd = cmd
 			break
 		}
@@ -117,6 +118,8 @@ func TestCommandHelp(t *testing.T) {
 	// Register all commands
 	versionCmdRegister(root)
 	installCmdRegister(root)
+	pubpascalCmdRegister(root)
+	craCmdRegister(root)
 
 	for _, cmd := range root.Commands() {
 		t.Run(cmd.Use, func(t *testing.T) {
@@ -159,4 +162,58 @@ func TestRootHelp(t *testing.T) {
 	if output == "" {
 		t.Error("Root command should produce help output")
 	}
+}
+
+// findCommand returns the direct sub-command of parent with the given name.
+func findCommand(parent *cobra.Command, name string) *cobra.Command {
+	for _, cmd := range parent.Commands() {
+		if cmd.Name() == name {
+			return cmd
+		}
+	}
+
+	return nil
+}
+
+// assertSubcommands reports every expected sub-command missing from parent.
+func assertSubcommands(t *testing.T, parent *cobra.Command, label string, names []string) {
+	t.Helper()
+
+	for _, name := range names {
+		if findCommand(parent, name) == nil {
+			t.Errorf("%s subcommand '%s' not found", label, name)
+		}
+	}
+}
+
+// TestPubPascalCommands tests that the PubPascal commands are registered correctly.
+func TestPubPascalCommands(t *testing.T) {
+	root := &cobra.Command{Use: "boss"}
+	pubpascalCmdRegister(root)
+
+	// Check workspace command and its subcommands
+	workspaceCmd := findCommand(root, "workspace")
+	if workspaceCmd == nil {
+		t.Fatal("Workspace command not found")
+	}
+	// list/search/diff/pull/commit are the sub-commands the PubPascal desktop
+	// app and the RAD Studio (OTA) plugin spawn. While they were missing, cobra
+	// answered "boss workspace pull" by printing the workspace help and exiting
+	// 0, which the app read as a successful pull.
+	assertSubcommands(t, workspaceCmd, "Workspace", []string{
+		"clone", "status", "update", "push",
+		"list", "search", "diff", "pull", "commit",
+	})
+
+	// Check pkg command and root commands
+	pkgCmd := findCommand(root, "pkg")
+	if pkgCmd == nil {
+		t.Fatal("Pkg command not found")
+	}
+	if findCommand(root, "sbom") == nil {
+		t.Error("Root command 'sbom' not found")
+	}
+
+	// Check pkg subcommands
+	assertSubcommands(t, pkgCmd, "Pkg", []string{"spec"})
 }

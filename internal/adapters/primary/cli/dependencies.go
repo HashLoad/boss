@@ -54,7 +54,7 @@ func dependenciesCmdRegister(root *cobra.Command) {
 	}
 
 	root.AddCommand(dependenciesCmd)
-	dependenciesCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show dependency version")
+	dependenciesCmd.Flags().BoolVarP(&showVersion, flagNameVersion, "v", false, "show dependency version")
 }
 
 // printDependencies prints the dependencies.
@@ -71,7 +71,9 @@ func printDependencies(showVersion bool) {
 
 	main := tree.AddBranch(pkg.Name + ":")
 	deps := pkg.GetParsedDependencies()
-	printDeps(nil, deps, pkg.Lock, main, showVersion)
+	visited := make(map[string]bool)
+	visited[pkg.Name] = true
+	printDeps(nil, deps, pkg.Lock, main, showVersion, visited)
 	msg.Info(tree.String())
 }
 
@@ -80,7 +82,8 @@ func printDeps(dep *domain.Dependency,
 	deps []domain.Dependency,
 	lock domain.PackageLock,
 	tree treeprint.Tree,
-	showVersion bool) {
+	showVersion bool,
+	visited map[string]bool) {
 	var localTree treeprint.Tree
 
 	if dep != nil {
@@ -90,12 +93,25 @@ func printDeps(dep *domain.Dependency,
 	}
 
 	for _, dep := range deps {
-		pkgModule, err := pkgmanager.LoadPackageOther(filepath.Join(env.GetModulesDir(), dep.Name(), consts.FilePackage))
+		name := dep.Name()
+		if visited[name] {
+			localTree.AddBranch(name + " <- circular dependency")
+			continue
+		}
+
+		// Copy visited map to avoid side effects across sibling branches
+		newVisited := make(map[string]bool)
+		for k, v := range visited {
+			newVisited[k] = v
+		}
+		newVisited[name] = true
+
+		pkgModule, err := pkgmanager.LoadPackageOther(filepath.Join(env.GetModulesDir(), name, consts.FilePackage))
 		if err != nil {
 			printSingleDependency(&dep, lock, localTree, showVersion)
 		} else {
 			subDeps := pkgModule.GetParsedDependencies()
-			printDeps(&dep, subDeps, lock, localTree, showVersion)
+			printDeps(&dep, subDeps, lock, localTree, showVersion, newVisited)
 		}
 	}
 }
