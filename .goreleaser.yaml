@@ -13,8 +13,9 @@ builds:
       - windows
       - darwin
     ldflags:
-      - github.com/hashload/boss/internal/version.metadata={{.Version}}
-      - github.com/hashload/boss/internal/version.gitCommit={{.Commit}}
+      - -s -w
+      - -X github.com/hashload/boss/internal/version.version={{.Tag}}
+      - -X github.com/hashload/boss/internal/version.gitCommit={{.FullCommit}}
 
 archives:
   - formats: [ tar.gz ]
