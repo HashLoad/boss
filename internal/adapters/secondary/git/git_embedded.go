@@ -26,7 +26,7 @@ func CloneCacheEmbedded(config env.ConfigProvider, dep domain.Dependency) (*git.
 	storageCache := makeStorageCache(config, dep)
 	worktreeFileSystem := createWorktreeFs(config, dep)
 	url := dep.GetURL()
-	auth := config.GetAuth(dep.GetURLPrefix())
+	auth := config.GetAuthForURL(dep.GetURLPrefix(), url)
 
 	cloneOpts := &git.CloneOptions{
 		URL:  url,
@@ -73,9 +73,12 @@ func UpdateCacheEmbedded(config env.ConfigProvider, dep domain.Dependency) (*git
 
 	err = repository.Fetch(&git.FetchOptions{
 		Force: true,
-		Auth:  config.GetAuth(dep.GetURLPrefix())})
+		Auth:  config.GetAuthForURL(dep.GetURLPrefix(), remoteURL(repository, dep))})
 	if err != nil && err.Error() != "already up-to-date" {
-		msg.Debug("Error to fetch repository of %s: %s", dep.Repository, err)
+		// The cached copy is still usable, so this is not fatal -- but it is the
+		// difference between "up to date" and "whatever was cached last time",
+		// which the user has to be able to see.
+		msg.Warn("⚠️ Could not update %s, using the cached copy: %s", dep.Repository, err)
 	}
 	if err := initSubmodules(config, dep, repository); err != nil {
 		return nil, err
@@ -133,6 +136,6 @@ func PullEmbedded(config env.ConfigProvider, dep domain.Dependency) error {
 	}
 	return worktree.Pull(&git.PullOptions{
 		Force: true,
-		Auth:  config.GetAuth(dep.GetURLPrefix()),
+		Auth:  config.GetAuthForURL(dep.GetURLPrefix(), remoteURL(repository, dep)),
 	})
 }

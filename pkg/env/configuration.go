@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
@@ -127,7 +128,53 @@ func (a *Auth) SetPassPhrase(passphrase string) {
 	}
 }
 
+// usesSSHTransport reports whether rawURL is fetched over SSH.
+func usesSSHTransport(rawURL string) bool {
+	switch {
+	case strings.HasPrefix(rawURL, "ssh://"):
+		return true
+	case strings.HasPrefix(rawURL, "http://"),
+		strings.HasPrefix(rawURL, "https://"),
+		strings.HasPrefix(rawURL, "git://"),
+		strings.HasPrefix(rawURL, "file://"):
+		return false
+	default:
+		// scp-like syntax: [user@]host:path
+		return strings.Contains(rawURL, "@")
+	}
+}
+
+// GetAuthForURL returns the authentication method for a repository, but only
+// when the stored credential fits the transport rawURL will use.
+//
+// The credential is keyed by host, while the transport comes from the URL the
+// repository actually fetches from. Those two disagree whenever a cache was
+// cloned over HTTPS before an SSH login was configured for that host. Handing
+// an SSH credential to the HTTP transport makes go-git fail the fetch with
+// "invalid auth method" -- older versions silently ignored it instead, which is
+// why this only started biting after the go-git upgrade.
+//
+// Returning nil means "fetch anonymously", which is what go-git used to do on
+// its own and is correct for the public repositories this affects. A private
+// repository reached over the wrong transport still fails, as it always did.
+func (c *Configuration) GetAuthForURL(repo, rawURL string) transport.AuthMethod {
+	auth := c.Auth[repo]
+	if auth == nil {
+		return nil
+	}
+
+	if rawURL != "" && auth.UseSSH != usesSSHTransport(rawURL) {
+		msg.Debug("Skipping the credential stored for %s: it does not fit the transport of %s", repo, rawURL)
+		return nil
+	}
+
+	return c.GetAuth(repo)
+}
+
 // GetAuth returns the authentication method for a repository.
+//
+// Prefer GetAuthForURL when the URL being reached is known: this one cannot
+// tell whether the credential fits the transport.
 func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 	auth := c.Auth[repo]
 

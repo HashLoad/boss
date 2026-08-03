@@ -33,6 +33,23 @@ func UpdateCache(config env.ConfigProvider, dep domain.Dependency) (*goGit.Repos
 	return UpdateCacheNative(dep)
 }
 
+// remoteURL returns the URL the repository actually fetches from.
+//
+// This is not always dep.GetURL(): a cache cloned before an SSH login was
+// configured for the host keeps its original HTTPS remote, and the credential
+// has to be picked for the transport in use, not for the one the manifest
+// would produce today.
+func remoteURL(repository *goGit.Repository, dep domain.Dependency) string {
+	if repository != nil {
+		if remote, err := repository.Remote(goGit.DefaultRemoteName); err == nil {
+			if urls := remote.Config().URLs; len(urls) > 0 {
+				return urls[0]
+			}
+		}
+	}
+	return dep.GetURL()
+}
+
 func initSubmodules(config env.ConfigProvider, dep domain.Dependency, repository *goGit.Repository) error {
 	worktree, err := repository.Worktree()
 	if err != nil {
@@ -46,7 +63,7 @@ func initSubmodules(config env.ConfigProvider, dep domain.Dependency, repository
 	err = submodules.Update(&goGit.SubmoduleUpdateOptions{
 		Init:              true,
 		RecurseSubmodules: goGit.DefaultSubmoduleRecursionDepth,
-		Auth:              config.GetAuth(dep.GetURLPrefix()),
+		Auth:              config.GetAuthForURL(dep.GetURLPrefix(), remoteURL(repository, dep)),
 	})
 	if err != nil {
 		return err
@@ -70,7 +87,7 @@ func GetVersions(config env.ConfigProvider, repository *goGit.Repository, dep do
 	err := repository.Fetch(&goGit.FetchOptions{
 		Force: true,
 		Prune: true,
-		Auth:  config.GetAuth(dep.GetURLPrefix()),
+		Auth:  config.GetAuthForURL(dep.GetURLPrefix(), remoteURL(repository, dep)),
 		RefSpecs: []gitConfig.RefSpec{
 			"refs/*:refs/*",
 			"HEAD:refs/heads/HEAD",

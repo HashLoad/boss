@@ -12,6 +12,7 @@ type ConfigProvider interface {
 	GetDelphiPath() string
 	GetGitEmbedded() bool
 	GetAuth(repo string) transport.AuthMethod
+	GetAuthForURL(repo, rawURL string) transport.AuthMethod
 	GetPurgeTime() int
 	GetInternalRefreshRate() int
 	GetLastPurge() time.Time
