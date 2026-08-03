@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v4
+      - uses: jdx/mise-action@v4.2.3
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11.4"
