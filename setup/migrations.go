@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -46,62 +45,58 @@ func six() {
 	}
 }
 
-// seven migrates the auth configuration
+// seven migrates the auth configuration from the legacy AES-CFB fields
+// (x/y/z, written by Boss up to v3.0.12) to the current ones.
 //
-//nolint:gocognit // Complex migration logic
+// It reads the legacy values off the in-memory configuration rather than
+// re-reading the file: by the time migrations run, the configuration may
+// already have been saved once during startup, and reading from disk would
+// only ever see what the current struct serialises.
+//
+// A credential that cannot be decrypted is dropped with a warning instead of
+// aborting: an undecryptable legacy value is recoverable with `boss login`,
+// while dying here leaves the user with no way to run Boss at all.
 func seven() {
-	bossCfg := filepath.Join(env.GetBossHome(), consts.BossConfigFile)
-	if _, err := os.Stat(bossCfg); os.IsNotExist(err) {
-		return
-	}
-	file, err := os.Open(bossCfg) // #nosec G304 -- Reading Boss configuration file from known location
-	if err != nil {
-		msg.Warn("⚠️ Migration 7: could not open config file: %v", err)
-		return
-	}
-	defer func() { _ = file.Close() }()
+	configuration := env.GlobalConfiguration()
+	migrated := false
 
-	data := map[string]any{}
-
-	if err := json.NewDecoder(file).Decode(&data); err != nil {
-		msg.Warn("⚠️ Migration 7: could not decode config: %v", err)
-		return
-	}
-
-	auth, found := data["auth"].(map[string]any)
-	if !found {
-		return
-	}
-
-	for key, value := range auth {
-		authMap, ok := value.(map[string]any)
-		if !ok {
+	for repo, auth := range configuration.Auth {
+		if auth == nil {
 			continue
 		}
 
-		if user, found := authMap["x"]; found {
-			decryptedUser, err := oldDecrypt(user)
-			if err != nil {
-				msg.Die("❌ Migration 7: critical - failed to decrypt user for %s: %v", key, err)
+		if auth.LegacyUser != "" {
+			if decrypted, err := oldDecrypt(auth.LegacyUser); err != nil {
+				msg.Warn("⚠️ Migration 7: could not migrate the user for %s: %v", repo, err)
+			} else {
+				auth.SetUser(decrypted)
 			}
-			env.GlobalConfiguration().Auth[key].SetUser(decryptedUser)
 		}
 
-		if pass, found := authMap["y"]; found {
-			decryptedPassword, err := oldDecrypt(pass)
-			if err != nil {
-				msg.Die("❌ Migration 7: critical - failed to decrypt password for %s: %v", key, err)
+		if auth.LegacyPass != "" {
+			if decrypted, err := oldDecrypt(auth.LegacyPass); err != nil {
+				msg.Warn("⚠️ Migration 7: could not migrate the password for %s: %v", repo, err)
+			} else {
+				auth.SetPass(decrypted)
 			}
-			env.GlobalConfiguration().Auth[key].SetPass(decryptedPassword)
 		}
 
-		if passPhrase, found := authMap["z"]; found {
-			decryptedPassPhrase, err := oldDecrypt(passPhrase)
-			if err != nil {
-				msg.Die("❌ Migration 7: critical - failed to decrypt passphrase for %s: %v", key, err)
+		if auth.LegacyPassPhrase != "" {
+			if decrypted, err := oldDecrypt(auth.LegacyPassPhrase); err != nil {
+				msg.Warn("⚠️ Migration 7: could not migrate the passphrase for %s: %v", repo, err)
+			} else if decrypted != "" {
+				auth.SetPassPhrase(decrypted)
 			}
-			env.GlobalConfiguration().Auth[key].SetPassPhrase(decryptedPassPhrase)
 		}
+
+		if auth.LegacyUser != "" || auth.LegacyPass != "" || auth.LegacyPassPhrase != "" {
+			auth.LegacyUser, auth.LegacyPass, auth.LegacyPassPhrase = "", "", ""
+			migrated = true
+		}
+	}
+
+	if migrated {
+		configuration.SaveConfiguration()
 	}
 }
 

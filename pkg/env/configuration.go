@@ -46,10 +46,22 @@ type Auth struct {
 	User       string `json:"user,omitempty"`
 	Pass       string `json:"pass,omitempty"`
 	PassPhrase string `json:"keypass,omitempty"`
+
+	// Legacy credentials written by Boss up to v3.0.12, encrypted with the old
+	// AES-CFB scheme. They are kept on the struct so that saving a configuration
+	// that has not been migrated yet round-trips them instead of dropping them.
+	// Migration 7 consumes and clears these fields.
+	LegacyUser       string `json:"x,omitempty"`
+	LegacyPass       string `json:"y,omitempty"`
+	LegacyPassPhrase string `json:"z,omitempty"`
 }
 
 // GetUser returns the decrypted username.
+// An empty value means "not set" and is returned as-is, without decrypting.
 func (a *Auth) GetUser() string {
+	if a.User == "" {
+		return ""
+	}
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.User)
 	if err != nil {
 		msg.Err("❌ Failed to decrypt user.")
@@ -59,10 +71,14 @@ func (a *Auth) GetUser() string {
 }
 
 // GetPassword returns the decrypted password.
+// An empty value means "not set" and is returned as-is, without decrypting.
 func (a *Auth) GetPassword() string {
+	if a.Pass == "" {
+		return ""
+	}
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.Pass)
 	if err != nil {
-		msg.Die("❌ Failed to decrypt pass: %s", err)
+		msg.Die("❌ Failed to decrypt pass: %s\n   Run 'boss login' to store the credential again.", err)
 		return ""
 	}
 
@@ -70,10 +86,15 @@ func (a *Auth) GetPassword() string {
 }
 
 // GetPassPhrase returns the decrypted passphrase.
+// An empty value means "the key has no passphrase" and is returned as-is: SSH
+// keys without a passphrase legitimately have nothing stored here.
 func (a *Auth) GetPassPhrase() string {
+	if a.PassPhrase == "" {
+		return ""
+	}
 	ret, err := crypto.Decrypt(crypto.MachineKey(), a.PassPhrase)
 	if err != nil {
-		msg.Die("❌ Failed to decrypt PassPhrase: %s", err)
+		msg.Die("❌ Failed to decrypt PassPhrase: %s\n   Run 'boss login' to store the credential again.", err)
 		return ""
 	}
 	return ret
@@ -120,14 +141,14 @@ func (c *Configuration) GetAuth(repo string) transport.AuthMethod {
 		}
 		var signer ssh.Signer
 
-		if auth.GetPassPhrase() != "" {
-			signer, err = ssh.ParsePrivateKeyWithPassphrase(pem, []byte(auth.GetPassPhrase()))
+		if passPhrase := auth.GetPassPhrase(); passPhrase != "" {
+			signer, err = ssh.ParsePrivateKeyWithPassphrase(pem, []byte(passPhrase))
 		} else {
 			signer, err = ssh.ParsePrivateKey(pem)
 		}
 
 		if err != nil {
-			msg.Die("❌ Failed to parse SSH private key: %v", err)
+			msg.Die("❌ Failed to parse SSH private key: %v\n   Run 'boss login' to store the key and its passphrase again.", err)
 		}
 		return &sshGit.PublicKeys{User: "git", Signer: signer}
 
