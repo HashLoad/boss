@@ -73,8 +73,8 @@ func TestLegacyAuthFieldsSurviveLoadAndSave(t *testing.T) {
 	}
 
 	configPath := filepath.Join(tempDir, consts.BossConfigFile)
-	if err := os.WriteFile(configPath, data, 0600); err != nil {
-		t.Fatalf("Failed to write config file: %v", err)
+	if writeErr := os.WriteFile(configPath, data, 0600); writeErr != nil {
+		t.Fatalf("Failed to write config file: %v", writeErr)
 	}
 
 	config, err := env.LoadConfiguration(tempDir)
