@@ -61,36 +61,7 @@ func seven() {
 	migrated := false
 
 	for repo, auth := range configuration.Auth {
-		if auth == nil {
-			continue
-		}
-
-		if auth.LegacyUser != "" {
-			if decrypted, err := oldDecrypt(auth.LegacyUser); err != nil {
-				msg.Warn("⚠️ Migration 7: could not migrate the user for %s: %v", repo, err)
-			} else {
-				auth.SetUser(decrypted)
-			}
-		}
-
-		if auth.LegacyPass != "" {
-			if decrypted, err := oldDecrypt(auth.LegacyPass); err != nil {
-				msg.Warn("⚠️ Migration 7: could not migrate the password for %s: %v", repo, err)
-			} else {
-				auth.SetPass(decrypted)
-			}
-		}
-
-		if auth.LegacyPassPhrase != "" {
-			if decrypted, err := oldDecrypt(auth.LegacyPassPhrase); err != nil {
-				msg.Warn("⚠️ Migration 7: could not migrate the passphrase for %s: %v", repo, err)
-			} else if decrypted != "" {
-				auth.SetPassPhrase(decrypted)
-			}
-		}
-
-		if auth.LegacyUser != "" || auth.LegacyPass != "" || auth.LegacyPassPhrase != "" {
-			auth.LegacyUser, auth.LegacyPass, auth.LegacyPassPhrase = "", "", ""
+		if migrateLegacyAuth(repo, auth) {
 			migrated = true
 		}
 	}
@@ -98,6 +69,49 @@ func seven() {
 	if migrated {
 		configuration.SaveConfiguration()
 	}
+}
+
+// migrateLegacyAuth converts one entry's legacy credentials and clears them,
+// reporting whether anything was converted.
+func migrateLegacyAuth(repo string, auth *env.Auth) bool {
+	if auth == nil {
+		return false
+	}
+	if auth.LegacyUser == "" && auth.LegacyPass == "" && auth.LegacyPassPhrase == "" {
+		return false
+	}
+
+	if decrypted, ok := decryptLegacy(repo, "user", auth.LegacyUser); ok {
+		auth.SetUser(decrypted)
+	}
+	if decrypted, ok := decryptLegacy(repo, "password", auth.LegacyPass); ok {
+		auth.SetPass(decrypted)
+	}
+	// An empty passphrase means the key has none, and storing it back would only
+	// re-create the value migration 7 exists to retire.
+	if decrypted, ok := decryptLegacy(repo, "passphrase", auth.LegacyPassPhrase); ok && decrypted != "" {
+		auth.SetPassPhrase(decrypted)
+	}
+
+	auth.LegacyUser, auth.LegacyPass, auth.LegacyPassPhrase = "", "", ""
+
+	return true
+}
+
+// decryptLegacy decrypts one legacy value, warning instead of aborting when it
+// cannot be read. It reports false when there was nothing to convert.
+func decryptLegacy(repo, field, value string) (string, bool) {
+	if value == "" {
+		return "", false
+	}
+
+	decrypted, err := oldDecrypt(value)
+	if err != nil {
+		msg.Warn("⚠️ Migration 7: could not migrate the %s for %s: %v", field, repo, err)
+		return "", false
+	}
+
+	return decrypted, true
 }
 
 // cleanup cleans up the internal global directory.
