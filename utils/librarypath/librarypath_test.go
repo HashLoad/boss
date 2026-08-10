@@ -46,6 +46,51 @@ func TestCleanPath(t *testing.T) {
 	}
 }
 
+// TestCleanEmpty tests empty string removal from a slice.
+func TestCleanEmpty(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []string
+		want []string
+	}{
+		{
+			name: "no empties",
+			in:   []string{"a", "b"},
+			want: []string{"a", "b"},
+		},
+		{
+			name: "single empty",
+			in:   []string{"a", "", "b"},
+			want: []string{"a", "b"},
+		},
+		{
+			name: "multiple empties",
+			in:   []string{"", "a", "", "b", ""},
+			want: []string{"a", "b"},
+		},
+		{
+			name: "all empty",
+			in:   []string{"", ""},
+			want: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := cleanEmpty(tt.in)
+
+			if len(result) != len(tt.want) {
+				t.Fatalf("cleanEmpty() = %v, want %v", result, tt.want)
+			}
+			for i, v := range result {
+				if v != tt.want[i] {
+					t.Errorf("cleanEmpty()[%d] = %q, want %q", i, v, tt.want[i])
+				}
+			}
+		})
+	}
+}
+
 // TestGetNewBrowsingPaths tests browsing paths retrieval.
 func TestGetNewBrowsingPaths(t *testing.T) {
 	tempDir := t.TempDir()

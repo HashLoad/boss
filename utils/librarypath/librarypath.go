@@ -13,8 +13,6 @@ import (
 
 	"github.com/hashload/boss/pkg/pkgmanager"
 
-	"slices"
-
 	"github.com/hashload/boss/internal/core/domain"
 	"github.com/hashload/boss/pkg/consts"
 	"github.com/hashload/boss/pkg/env"
@@ -204,12 +202,13 @@ func getDefaultPath(fullPath bool, rootPath string) []string {
 
 // cleanEmpty removes empty strings from a slice.
 func cleanEmpty(paths []string) []string {
-	for index, value := range paths {
-		if value == "" {
-			paths = slices.Delete(paths, index, index+1)
+	cleaned := paths[:0]
+	for _, value := range paths {
+		if value != "" {
+			cleaned = append(cleaned, value)
 		}
 	}
-	return paths
+	return cleaned
 }
 
 // getNewBrowsingPathsFromDir returns a list of new browsing paths from a directory.
