@@ -5,8 +5,6 @@
 package librarypath
 
 import (
-	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/hashload/boss/pkg/consts"
@@ -103,8 +101,7 @@ func updateGlobalBrowsingByProject(dprojName string, setReadOnly bool) {
 		}
 
 		splitPaths := strings.Split(paths, ";")
-		rootPath := filepath.Join(env.GetCurrentDir(), path.Dir(dprojName))
-		newSplitPaths := GetNewBrowsingPaths(splitPaths, false, rootPath, setReadOnly)
+		newSplitPaths := GetNewBrowsingPaths(splitPaths, false, dprojRootPath(dprojName), setReadOnly)
 		newPaths := strings.Join(newSplitPaths, ";")
 		err = delphiPlatform.SetStringValue(BrowsingPathRegistry, newPaths)
 		if err != nil {

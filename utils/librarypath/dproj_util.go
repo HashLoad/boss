@@ -4,7 +4,6 @@ package librarypath
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -128,6 +127,18 @@ func updateGlobalBrowsingPath(pkg *domain.Package) {
 	}
 }
 
+// dprojRootPath returns the directory a project file's own paths are relative to.
+// dprojName is always an absolute, OS-native path (GetProjectNames builds every entry
+// with filepath.Join), so its parent has to be resolved with filepath.Dir. path.Dir
+// only understands "/": on Windows it finds no separator in a backslash path and
+// answers ".", and on POSIX it answers correctly but the caller then joined that
+// absolute result onto the working directory, doubling the path. Both ways the
+// project's real directory was lost. Kept in this file, rather than inlined, so the
+// Windows-only browsing path caller shares one definition with the .dproj caller.
+func dprojRootPath(dprojName string) string {
+	return filepath.Dir(dprojName)
+}
+
 // updateLibraryPathProject updates the library path in the project file.
 func updateLibraryPathProject(dprojName string) {
 	doc := etree.NewDocument()
@@ -151,11 +162,7 @@ func updateLibraryPathProject(dprojName string) {
 			if child == nil {
 				child = createTagLibraryPath(children)
 			}
-			rootPath := filepath.Join(env.GetCurrentDir(), path.Dir(dprojName))
-			if _, err = os.Stat(rootPath); os.IsNotExist(err) {
-				rootPath = env.GetCurrentDir()
-			}
-			processCurrentPath(child, rootPath)
+			processCurrentPath(child, dprojRootPath(dprojName))
 		}
 	}
 
