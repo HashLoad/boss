@@ -62,6 +62,11 @@ func UninstallModules(args []string, noSave bool) {
 
 	for _, arg := range args {
 		dependencyRepository := ParseDependency(arg)
+		// Drop any ":version"/"@version" suffix so the argument matches the
+		// stored key regardless of how the dependency was installed.
+		if url, _ := parseURLAndVersion(dependencyRepository); url != "" {
+			dependencyRepository = url
+		}
 		pkg.UninstallDependency(dependencyRepository)
 	}
 

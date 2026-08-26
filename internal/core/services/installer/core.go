@@ -54,7 +54,7 @@ func newInstallContext(config env.ConfigProvider, pkg *domain.Package, options I
 	requestedDeps := make(map[string]bool)
 	if len(options.Args) > 0 {
 		for _, arg := range options.Args {
-			requestedDeps[strings.ToLower(domain.RepositoryName(ParseDependency(arg)))] = true
+			requestedDeps[strings.ToLower(requestedDependencyName(arg))] = true
 		}
 	}
 
@@ -172,8 +172,9 @@ func collectDependenciesToInstall(pkg *domain.Package, args []string) []domain.D
 	var filtered []domain.Dependency
 	for _, arg := range args {
 		// Compare by normalized name: boss.json keys may lack the protocol
-		// prefix the user typed (EnsureDependency strips it on save).
-		requestedName := domain.RepositoryName(ParseDependency(arg))
+		// prefix the user typed, and the argument may carry a version suffix
+		// (EnsureDependency strips both on save).
+		requestedName := requestedDependencyName(arg)
 		for _, dep := range allDeps {
 			if strings.EqualFold(dep.Name(), requestedName) {
 				filtered = append(filtered, dep)
