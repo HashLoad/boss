@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	git2 "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -16,6 +17,17 @@ import (
 	"github.com/hashload/boss/pkg/env"
 	"github.com/hashload/boss/pkg/msg"
 )
+
+// gitCommand builds a system git command. On Windows it forces core.longpaths=true
+// so checkouts of repositories with paths beyond MAX_PATH (260 chars) don't fail
+// with "Filename too long" when the user's git config lacks that setting.
+func gitCommand(args ...string) *exec.Cmd {
+	if runtime.GOOS == "windows" {
+		args = append([]string{"-c", "core.longpaths=true"}, args...)
+	}
+	//nolint:gosec,nolintlint // Git command with controlled arguments
+	return exec.CommandContext(context.Background(), "git", args...) // #nosec G204 -- Controlled git command
+}
 
 func checkHasGitClient() {
 	command := exec.CommandContext(context.Background(), "where", "git")
@@ -66,8 +78,7 @@ func doClone(dep domain.Dependency) error {
 
 	args = append(args, dep.GetURL(), dirModule)
 
-	//nolint:gosec,nolintlint // Git command with controlled and validated repository URL
-	cmd := exec.CommandContext(context.Background(), "git", args...) // #nosec G204 -- Controlled git clone command
+	cmd := gitCommand(args...)
 
 	if err = runCommand(cmd); err != nil {
 		return err
@@ -99,13 +110,13 @@ func getWrapperFetch(dep domain.Dependency) error {
 	}
 
 	writeDotGitFile(dep)
-	cmdReset := exec.CommandContext(context.Background(), "git", "reset", "--hard")
+	cmdReset := gitCommand("reset", "--hard")
 	cmdReset.Dir = dirModule
 	if err := runCommand(cmdReset); err != nil {
 		return err
 	}
 
-	cmd := exec.CommandContext(context.Background(), "git", "fetch", "--all")
+	cmd := gitCommand("fetch", "--all")
 	cmd.Dir = dirModule
 
 	if err := runCommand(cmd); err != nil {
@@ -122,7 +133,7 @@ func getWrapperFetch(dep domain.Dependency) error {
 
 func initSubmodulesNative(dep domain.Dependency) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
-	cmd := exec.CommandContext(context.Background(), "git", "submodule", "update", "--init", "--recursive")
+	cmd := gitCommand("submodule", "update", "--init", "--recursive")
 	cmd.Dir = dirModule
 
 	if err := runCommand(cmd); err != nil {
@@ -134,8 +145,7 @@ func initSubmodulesNative(dep domain.Dependency) error {
 // CheckoutNative switches the dependency repository to the given reference using system git.
 func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
-	cmd := exec.CommandContext(context.Background(),
-		"git", "checkout", "-f", referenceName.Short()) // #nosec G204 -- Controlled git checkout command
+	cmd := gitCommand("checkout", "-f", referenceName.Short())
 	cmd.Dir = dirModule
 	return runCommand(cmd)
 }
@@ -143,7 +153,7 @@ func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName)
 // PullNative fetches and merges updates using system git.
 func PullNative(dep domain.Dependency) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
-	cmd := exec.CommandContext(context.Background(), "git", "pull", "--force")
+	cmd := gitCommand("pull", "--force")
 	cmd.Dir = dirModule
 	return runCommand(cmd)
 }
