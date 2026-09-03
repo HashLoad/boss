@@ -532,17 +532,22 @@ func (ic *installContext) checkoutAndUpdate(
 		return err
 	}
 
-	if !ic.progress.IsEnabled() {
-		msg.Debug("  📥 Pulling latest changes for %s", dep.Name())
-	}
-	err = git.Pull(ic.config, dep)
-
-	if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
-		warnMsg := fmt.Sprintf("Error on pull from dependency %s\n%s", dep.Repository, err)
+	// Pulling only makes sense on a branch; a tag checkout leaves the
+	// worktree in detached HEAD state, where git pull fails with
+	// "You are not currently on a branch."
+	if referenceName.IsBranch() {
 		if !ic.progress.IsEnabled() {
-			msg.Warn("  " + warnMsg)
+			msg.Debug("  📥 Pulling latest changes for %s", dep.Name())
 		}
-		ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
+		err = git.Pull(ic.config, dep)
+
+		if err != nil && !errors.Is(err, goGit.NoErrAlreadyUpToDate) {
+			warnMsg := fmt.Sprintf("Error on pull from dependency %s\n%s", dep.Repository, err)
+			if !ic.progress.IsEnabled() {
+				msg.Warn("  " + warnMsg)
+			}
+			ic.addWarning(fmt.Sprintf("%s: %s", dep.Name(), warnMsg))
+		}
 	}
 
 	// Normalize line endings to CRLF on Windows (Issue #197)
