@@ -634,6 +634,10 @@ func (ic *installContext) verifyDependencyCompatibility(dep domain.Dependency) (
 	depPath := filepath.Join(ic.modulesDir, dep.Name())
 	depPkg, err := pkgmanager.LoadPackageOther(filepath.Join(depPath, "boss.json"))
 	if err != nil {
+		// A dependency without a boss.json declares no engine constraints.
+		if errors.Is(err, os.ErrNotExist) {
+			return "", nil
+		}
 		return "", err
 	}
 
