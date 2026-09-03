@@ -48,8 +48,9 @@ func NewPackage() *Package {
 
 // AddDependency adds or updates a dependency in the package.
 func (p *Package) AddDependency(dep string, ver string) {
+	depName := RepositoryName(dep)
 	for key := range p.Dependencies {
-		if strings.EqualFold(key, dep) {
+		if strings.EqualFold(key, dep) || strings.EqualFold(RepositoryName(key), depName) {
 			p.Dependencies[key] = ver
 			return
 		}
@@ -74,8 +75,9 @@ func (p *Package) GetParsedDependencies() []Dependency {
 // UninstallDependency removes a dependency from the package.
 func (p *Package) UninstallDependency(dep string) {
 	if p.Dependencies != nil {
+		depName := RepositoryName(dep)
 		for key := range p.Dependencies {
-			if strings.EqualFold(key, dep) {
+			if strings.EqualFold(key, dep) || strings.EqualFold(RepositoryName(key), depName) {
 				delete(p.Dependencies, key)
 				return
 			}

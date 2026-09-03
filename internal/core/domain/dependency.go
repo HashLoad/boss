@@ -154,6 +154,15 @@ func (p *Dependency) GetKey() string {
 	return strings.ToLower(p.Repository)
 }
 
+// RepositoryName returns the normalized, collision-free name for a raw
+// repository string, ignoring protocol, credentials and a .git suffix.
+// Use it to compare user-supplied dependency arguments against boss.json
+// keys, which may or may not carry a protocol prefix.
+func RepositoryName(repo string) string {
+	d := Dependency{Repository: repo}
+	return d.Name()
+}
+
 // NeedsVersionUpdate checks if a version update is needed based on semver comparison.
 func NeedsVersionUpdate(currentVersion, newVersion string) bool {
 	parsedNew, err := semver.NewVersion(newVersion)

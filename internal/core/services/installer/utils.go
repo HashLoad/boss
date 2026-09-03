@@ -59,6 +59,18 @@ func parseURLAndVersion(input string) (string, string) {
 	return url, version
 }
 
+// requestedDependencyName normalizes a user-supplied dependency argument —
+// optionally carrying a ":version" or "@version" suffix — to the same
+// collision-free name boss.json keys resolve to.
+func requestedDependencyName(arg string) string {
+	parsed := ParseDependency(arg)
+	url, _ := parseURLAndVersion(parsed)
+	if url == "" {
+		url = parsed
+	}
+	return domain.RepositoryName(url)
+}
+
 // EnsureDependency ensures that the dependencies are added to the package.
 func EnsureDependency(pkg *domain.Package, args []string) {
 	for _, dependency := range args {
