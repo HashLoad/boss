@@ -134,6 +134,8 @@ func initSubmodulesNative(dep domain.Dependency) error {
 // CheckoutNative switches the dependency repository to the given reference using system git.
 func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
+	writeDotGitFile(dep)
+	defer func() { _ = os.Remove(filepath.Join(dirModule, ".git")) }()
 	cmd := exec.CommandContext(context.Background(),
 		"git", "checkout", "-f", referenceName.Short()) // #nosec G204 -- Controlled git checkout command
 	cmd.Dir = dirModule
@@ -143,6 +145,8 @@ func CheckoutNative(dep domain.Dependency, referenceName plumbing.ReferenceName)
 // PullNative fetches and merges updates using system git.
 func PullNative(dep domain.Dependency) error {
 	dirModule := filepath.Join(env.GetModulesDir(), dep.Name())
+	writeDotGitFile(dep)
+	defer func() { _ = os.Remove(filepath.Join(dirModule, ".git")) }()
 	cmd := exec.CommandContext(context.Background(), "git", "pull", "--force")
 	cmd.Dir = dirModule
 	return runCommand(cmd)
@@ -154,7 +158,11 @@ func runCommand(cmd *exec.Cmd) error {
 
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
-	cmd.Env = os.Environ()
+	// Stop git from discovering an enclosing repository (e.g. the user's own
+	// project) when a module's .git link file is missing: a bare
+	// "git checkout"/"git pull" in modules/<dep> would otherwise run against
+	// the parent work tree and silently switch the user's project branch.
+	cmd.Env = append(os.Environ(), "GIT_CEILING_DIRECTORIES="+env.GetModulesDir())
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
